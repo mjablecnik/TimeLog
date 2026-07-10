@@ -54,7 +54,7 @@ struct TimeLogLockScreenView: View {
             .buttonStyle(.plain)
             .frame(minWidth: 60, minHeight: 60)
         } else if context.state.isPaused {
-            HStack(spacing: 12) {
+            HStack(spacing: 4) {
                 Button(intent: ResumeTimerIntent()) {
                     Image(systemName: "play.circle.fill")
                         .font(.system(size: 38))
@@ -71,7 +71,7 @@ struct TimeLogLockScreenView: View {
                 .frame(minWidth: 60, minHeight: 60)
             }
         } else {
-            HStack(spacing: 12) {
+            HStack(spacing: 4) {
                 Button(intent: PauseTimerIntent()) {
                     Image(systemName: "pause.circle.fill")
                         .font(.system(size: 38))
