@@ -46,45 +46,40 @@ struct TimeLogLockScreenView: View {
     @ViewBuilder
     private var controlButtons: some View {
         if context.state.isCompleted {
-            Button(intent: StopTimerIntent()) {
+            Link(destination: URL(string: "timelogapp://action/stop")!) {
                 Image(systemName: "xmark.circle.fill")
                     .font(.system(size: 38))
                     .foregroundColor(Color(hex: "#E88A66"))
             }
-            .buttonStyle(.plain)
             .frame(minWidth: 60, minHeight: 60)
         } else if context.state.isPaused {
             HStack(spacing: 4) {
-                Button(intent: ResumeTimerIntent()) {
+                Link(destination: URL(string: "timelogapp://action/resume")!) {
                     Image(systemName: "play.circle.fill")
                         .font(.system(size: 38))
                         .foregroundColor(Color(hex: "#E88A66"))
                 }
-                .buttonStyle(.plain)
                 .frame(minWidth: 60, minHeight: 60)
-                Button(intent: StopTimerIntent()) {
+                Link(destination: URL(string: "timelogapp://action/stop")!) {
                     Image(systemName: "stop.circle.fill")
                         .font(.system(size: 38))
                         .foregroundColor(Color(hex: "#EEE6DC").opacity(0.4))
                 }
-                .buttonStyle(.plain)
                 .frame(minWidth: 60, minHeight: 60)
             }
         } else {
             HStack(spacing: 4) {
-                Button(intent: PauseTimerIntent()) {
+                Link(destination: URL(string: "timelogapp://action/pause")!) {
                     Image(systemName: "pause.circle.fill")
                         .font(.system(size: 38))
                         .foregroundColor(Color(hex: "#E88A66"))
                 }
-                .buttonStyle(.plain)
                 .frame(minWidth: 60, minHeight: 60)
-                Button(intent: StopTimerIntent()) {
+                Link(destination: URL(string: "timelogapp://action/stop")!) {
                     Image(systemName: "stop.circle.fill")
                         .font(.system(size: 38))
                         .foregroundColor(Color(hex: "#EEE6DC").opacity(0.4))
                 }
-                .buttonStyle(.plain)
                 .frame(minWidth: 60, minHeight: 60)
             }
         }
