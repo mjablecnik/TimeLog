@@ -1,30 +1,35 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
+import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:timelog_app/main.dart';
+import 'package:timelog_app/app.dart';
+import 'package:timelog_app/data/database.dart';
+import 'package:timelog_app/providers/database_provider.dart';
+import 'package:timelog_app/ui/widgets/bottom_nav.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets('TimeLogApp smoke test', (WidgetTester tester) async {
+    // Use in-memory SQLite so the 3-second init timer resolves immediately
+    final inMemoryDb = AppDatabase.forTesting(NativeDatabase.memory());
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          appDatabaseProvider.overrideWithValue(inMemoryDb),
+        ],
+        child: const TimeLogApp(),
+      ),
+    );
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+    // Allow async providers (DB init, stream) to settle
+    await tester.pump(Duration.zero);
+    await tester.pump(const Duration(milliseconds: 100));
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    // Verify basic structure renders without error
+    expect(find.byType(MaterialApp), findsOneWidget);
+    expect(find.byType(AppBottomNav), findsOneWidget);
+
+    await inMemoryDb.close();
   });
 }
