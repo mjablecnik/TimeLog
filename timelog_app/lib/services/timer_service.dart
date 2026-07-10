@@ -209,10 +209,11 @@ class TimerNotifier extends StateNotifier<TimerState> with WidgetsBindingObserve
     if (state.status != TimerStatus.running && state.status != TimerStatus.paused) return;
     _ticker?.cancel();
     _ticker = null;
+    final finishTime = DateTime.now();
     state = state.copyWith(
       status: TimerStatus.ringing,
       secondsLeft: 0,
-      endAt: null,
+      endAt: finishTime,
     );
     _saveState();
     _alarm.play();
