@@ -5,7 +5,7 @@ A countdown timer app with time tracking capabilities built with Flutter.
 ## Requirements
 
 - Flutter SDK (Dart ^3.10.4)
-- For Linux desktop: `clang`, `cmake`, `ninja-build`, `pkg-config`, `libgtk-3-dev`
+- For Linux desktop: `clang`, `cmake`, `ninja-build`, `pkg-config`, `libgtk-3-dev`, `libgstreamer1.0-dev`, `libgstreamer-plugins-base1.0-dev`
 
 ## Setup
 
