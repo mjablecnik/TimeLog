@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/theme.dart';
 import '../../providers/theme_provider.dart';
@@ -7,6 +8,7 @@ import '../../providers/timer_provider.dart';
 import '../../services/timer_service.dart';
 import '../painters/ring_painter.dart';
 import '../widgets/description_sheet.dart';
+import '../widgets/duration_adjuster.dart';
 import '../widgets/ringing_overlay.dart';
 import '../widgets/theme_dots.dart';
 import '../widgets/timer_controls.dart';
@@ -27,22 +29,56 @@ class _TimerScreenState extends ConsumerState<TimerScreen> {
   int _adjustedMinutes = 20;
   bool _sheetOpen = false;
 
+  @override
+  void initState() {
+    super.initState();
+    _loadAdjustedMinutes();
+  }
+
+  Future<void> _loadAdjustedMinutes() async {
+    final prefs = await SharedPreferences.getInstance();
+    final saved = prefs.getInt('timer_adjustedMinutes');
+    if (!mounted) return;
+    if (saved != null) {
+      setState(() {
+        _adjustedMinutes = saved;
+      });
+    } else {
+      final timerState = ref.read(timerProvider);
+      final fromState = (timerState.totalSeconds / 60).round();
+      if (fromState >= _minDurationMinutes && fromState <= _maxDurationMinutes) {
+        setState(() {
+          _adjustedMinutes = fromState;
+        });
+      }
+    }
+  }
+
+  Future<void> _saveAdjustedMinutes(int minutes) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('timer_adjustedMinutes', minutes);
+  }
+
   void _incrementDuration() {
+    final newMinutes = (_adjustedMinutes + _durationStep).clamp(
+      _minDurationMinutes,
+      _maxDurationMinutes,
+    );
     setState(() {
-      _adjustedMinutes = (_adjustedMinutes + _durationStep).clamp(
-        _minDurationMinutes,
-        _maxDurationMinutes,
-      );
+      _adjustedMinutes = newMinutes;
     });
+    _saveAdjustedMinutes(newMinutes);
   }
 
   void _decrementDuration() {
+    final newMinutes = (_adjustedMinutes - _durationStep).clamp(
+      _minDurationMinutes,
+      _maxDurationMinutes,
+    );
     setState(() {
-      _adjustedMinutes = (_adjustedMinutes - _durationStep).clamp(
-        _minDurationMinutes,
-        _maxDurationMinutes,
-      );
+      _adjustedMinutes = newMinutes;
     });
+    _saveAdjustedMinutes(newMinutes);
   }
 
   void _showDescriptionSheet(BuildContext context, AppThemeData theme, TimerState timerState) {
@@ -58,7 +94,7 @@ class _TimerScreenState extends ConsumerState<TimerScreen> {
       builder: (_) => DescriptionSheet(
         theme: theme,
         sessionStart: timerState.sessionStart ?? DateTime.now(),
-        endedAt: _ringStartedAt ?? DateTime.now(),
+        endedAt: timerState.endAt ?? _ringStartedAt ?? DateTime.now(),
       ),
     ).whenComplete(() {
       _sheetOpen = false;
@@ -161,32 +197,13 @@ class _TimerScreenState extends ConsumerState<TimerScreen> {
 
                 // Duration adjuster (idle only)
                 if (isIdle) ...[
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      _StepButton(
-                        icon: Icons.remove,
-                        theme: theme,
-                        enabled: _adjustedMinutes > _minDurationMinutes,
-                        onPressed: _decrementDuration,
-                      ),
-                      const SizedBox(width: 16),
-                      Text(
-                        '$_adjustedMinutes min',
-                        style: TextStyle(
-                          color: theme.dim,
-                          fontFamily: 'Sora',
-                          fontSize: 15,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      _StepButton(
-                        icon: Icons.add,
-                        theme: theme,
-                        enabled: _adjustedMinutes < _maxDurationMinutes,
-                        onPressed: _incrementDuration,
-                      ),
-                    ],
+                  DurationAdjuster(
+                    minutes: _adjustedMinutes,
+                    onIncrement: _incrementDuration,
+                    onDecrement: _decrementDuration,
+                    min: _minDurationMinutes,
+                    max: _maxDurationMinutes,
+                    theme: theme,
                   ),
                   const SizedBox(height: 24),
                 ] else
@@ -226,40 +243,5 @@ class _TimerScreenState extends ConsumerState<TimerScreen> {
       case TimerStatus.logging:
         return 'LOGGING';
     }
-  }
-}
-
-class _StepButton extends StatelessWidget {
-  final IconData icon;
-  final AppThemeData theme;
-  final bool enabled;
-  final VoidCallback onPressed;
-
-  const _StepButton({
-    required this.icon,
-    required this.theme,
-    required this.enabled,
-    required this.onPressed,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: enabled ? onPressed : null,
-      child: Container(
-        width: 36,
-        height: 36,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: theme.panel,
-          border: Border.all(color: theme.border),
-        ),
-        child: Icon(
-          icon,
-          size: 18,
-          color: enabled ? theme.dim : theme.faint,
-        ),
-      ),
-    );
   }
 }
