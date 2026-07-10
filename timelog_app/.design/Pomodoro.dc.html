@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body { margin: 0; }
+  textarea, input { font-family: 'Sora', system-ui, sans-serif; }
+  a { color: inherit; }
+  @keyframes ringpulse { 0%,100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.06); opacity: 0.85; } }
+  @keyframes fadein { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+</style>
+</helmet>
+<div style="{{ rootStyle }}">
+
+  <div style="{{ glowStyle }}"></div>
+
+  <!-- Header -->
+  <div style="display:flex;align-items:center;justify-content:space-between;position:relative;z-index:2;">
+    <div style="display:flex;align-items:center;gap:9px;">
+      <div style="{{ brandDotStyle }}"></div>
+      <span style="font-size:15px;font-weight:600;letter-spacing:0.02em;">Minutka</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:9px;">
+      <sc-for list="{{ themeDots }}" as="d" hint-placeholder-count="3">
+        <button onClick="{{ d.onSelect }}" style="{{ d.style }}" title="{{ d.name }}"></button>
+      </sc-for>
+    </div>
+  </div>
+
+  <!-- ============ TIMER PAGE ============ -->
+  <sc-if value="{{ isTimer }}" hint-placeholder-val="{{ true }}">
+  <div style="flex:1;display:flex;flex-direction:column;position:relative;z-index:2;">
+
+    <!-- Duration adjuster (only when ready) -->
+    <sc-if value="{{ showDuration }}" hint-placeholder-val="{{ true }}">
+      <div style="display:flex;align-items:center;justify-content:center;gap:16px;margin-top:26px;">
+        <button onClick="{{ onDurDown }}" style="{{ stepBtnStyle }}">−</button>
+        <div style="display:flex;flex-direction:column;align-items:center;min-width:96px;">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:26px;font-weight:400;letter-spacing:-0.01em;">{{ durationMin }}</span>
+          <span style="font-size:10.5px;letter-spacing:0.18em;text-transform:uppercase;color:{{ faint }};margin-top:2px;">minut</span>
+        </div>
+        <button onClick="{{ onDurUp }}" style="{{ stepBtnStyle }}">+</button>
+      </div>
+    </sc-if>
+    <sc-if value="{{ showRunningSpacer }}" hint-placeholder-val="{{ false }}">
+      <div style="height:26px;"></div>
+    </sc-if>
+
+    <!-- Timer ring -->
+    <div style="position:relative;width:288px;height:288px;margin:30px auto 0;">
+      <svg width="288" height="288" viewBox="0 0 288 288" style="transform:rotate(-90deg);">
+        <circle cx="144" cy="144" r="131" fill="none" stroke="{{ trackColor }}" stroke-width="9"></circle>
+        <circle cx="144" cy="144" r="131" fill="none" stroke="{{ accent }}" stroke-width="9" stroke-linecap="round" stroke-dasharray="{{ circumference }}" stroke-dashoffset="{{ dashOffset }}" style="transition:stroke-dashoffset 0.5s linear;filter:drop-shadow(0 0 7px {{ glowSoft }});"></circle>
+      </svg>
+      <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+        <div style="font-size:11px;font-weight:500;letter-spacing:0.22em;text-transform:uppercase;color:{{ dim }};">{{ phaseLabel }}</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:64px;font-weight:300;line-height:1;margin-top:12px;letter-spacing:-0.02em;font-variant-numeric:tabular-nums;">{{ timeText }}</div>
+        <div style="font-size:12px;color:{{ faint }};margin-top:12px;max-width:190px;text-align:center;line-height:1.4;">{{ hintLabel }}</div>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div style="display:flex;align-items:center;justify-content:center;gap:16px;margin-top:34px;">
+      <button onClick="{{ onReset }}" style="{{ sideBtnStyle }}">↺</button>
+      <button onClick="{{ onToggle }}" style="{{ playStyle }}">{{ playLabel }}</button>
+      <button onClick="{{ onFinishNow }}" style="{{ finishBtnStyle }}">✓</button>
+    </div>
+
+    <div style="flex:1;"></div>
+    <div style="text-align:center;font-size:11px;color:{{ faint }};line-height:1.5;padding:0 20px;">{{ footHint }}</div>
+  </div>
+  </sc-if>
+
+  <!-- ============ HISTORY PAGE ============ -->
+  <sc-if value="{{ isHistory }}" hint-placeholder-val="{{ false }}">
+  <div style="flex:1;display:flex;flex-direction:column;position:relative;z-index:2;margin-top:22px;min-height:0;">
+
+    <!-- Date nav -->
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+      <button onClick="{{ onPrevDay }}" style="{{ navArrowStyle }}">‹</button>
+      <div style="flex:1;text-align:center;position:relative;">
+        <div style="font-size:16px;font-weight:600;">{{ dayTitle }}</div>
+        <div style="font-size:11.5px;color:{{ faint }};margin-top:2px;">{{ daySub }}</div>
+        <input type="date" value="{{ selectedDate }}" max="{{ today }}" onChange="{{ onPickDate }}" style="position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer;" />
+      </div>
+      <button onClick="{{ onNextDay }}" style="{{ navArrowNextStyle }}">›</button>
+    </div>
+
+    <!-- Summary -->
+    <div style="display:flex;gap:10px;margin-top:16px;">
+      <div style="{{ statStyle }}">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:400;">{{ dayCount }}</div>
+        <div style="font-size:10.5px;letter-spacing:0.12em;text-transform:uppercase;color:{{ faint }};margin-top:3px;">záznamů</div>
+      </div>
+      <div style="{{ statStyle }}">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:400;">{{ dayTotal }}</div>
+        <div style="font-size:10.5px;letter-spacing:0.12em;text-transform:uppercase;color:{{ faint }};margin-top:3px;">celkem</div>
+      </div>
+    </div>
+
+    <!-- List -->
+    <div style="flex:1;overflow-y:auto;margin-top:18px;display:flex;flex-direction:column;gap:9px;padding-bottom:6px;">
+      <sc-for list="{{ dayRecords }}" as="r" hint-placeholder-count="0">
+        <div style="{{ recStyle }}">
+          <div style="display:flex;align-items:center;gap:9px;">
+            <span style="{{ r.timeChipStyle }}">{{ r.timeRange }}</span>
+            <span style="font-size:11px;color:{{ faint }};font-family:'JetBrains Mono',monospace;">{{ r.durLabel }}</span>
+            <div style="flex:1;"></div>
+            <button onClick="{{ r.onEdit }}" style="{{ iconBtnStyle }}">✎</button>
+            <button onClick="{{ r.onDelete }}" style="{{ iconBtnStyle }}">✕</button>
+          </div>
+          <div style="{{ r.descStyle }}">{{ r.description }}</div>
+        </div>
+      </sc-for>
+      <sc-if value="{{ dayEmpty }}" hint-placeholder-val="{{ true }}">
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 20px;gap:10px;">
+          <div style="{{ emptyIconStyle }}">◷</div>
+          <div style="font-size:14px;font-weight:500;">Žádné záznamy</div>
+          <div style="font-size:12px;color:{{ faint }};max-width:200px;line-height:1.5;">V tento den nemáte žádné zaznamenané úseky.</div>
+        </div>
+      </sc-if>
+    </div>
+  </div>
+  </sc-if>
+
+  <!-- Bottom nav -->
+  <div style="{{ bottomNavStyle }}">
+    <sc-for list="{{ navItems }}" as="n" hint-placeholder-count="2">
+      <button onClick="{{ n.onSelect }}" style="{{ n.style }}">
+        <span style="font-size:17px;line-height:1;">{{ n.icon }}</span>
+        <span style="font-size:11px;font-weight:500;letter-spacing:0.02em;">{{ n.label }}</span>
+      </button>
+    </sc-for>
+  </div>
+
+  <!-- ============ RINGING OVERLAY ============ -->
+  <sc-if value="{{ isRinging }}" hint-placeholder-val="{{ false }}">
+    <div style="{{ overlayStyle }}">
+      <div style="{{ ringBadgeStyle }}">◷</div>
+      <div style="font-size:22px;font-weight:600;margin-top:26px;">Čas vypršel</div>
+      <div style="font-size:13px;color:{{ dim }};margin-top:8px;">Uplynulo {{ durationMin }} minut.</div>
+      <button onClick="{{ onDismissRing }}" style="{{ dismissBtnStyle }}">Zastavit</button>
+    </div>
+  </sc-if>
+
+  <!-- ============ LOGGING SHEET ============ -->
+  <sc-if value="{{ isLogging }}" hint-placeholder-val="{{ false }}">
+    <div style="{{ sheetScrimStyle }}">
+      <div style="{{ sheetStyle }}">
+        <div style="width:38px;height:4px;border-radius:2px;background:{{ trackColor }};margin:0 auto 18px;"></div>
+        <div style="font-size:18px;font-weight:600;">Co jsi dělal?</div>
+        <div style="font-size:12.5px;color:{{ dim }};margin-top:5px;">{{ logRange }}</div>
+        <textarea value="{{ draft }}" onChange="{{ onDraftChange }}" placeholder="Popiš uplynulých {{ durationMin }} minut…" style="{{ textareaStyle }}"></textarea>
+        <div style="display:flex;gap:10px;margin-top:16px;">
+          <button onClick="{{ onSkipLog }}" style="{{ ghostBtnStyle }}">Přeskočit</button>
+          <button onClick="{{ onSaveLog }}" style="{{ primaryBtnStyle }}">Uložit a spustit</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ============ EDIT SHEET ============ -->
+  <sc-if value="{{ isEditing }}" hint-placeholder-val="{{ false }}">
+    <div style="{{ sheetScrimStyle }}">
+      <div style="{{ sheetStyle }}">
+        <div style="width:38px;height:4px;border-radius:2px;background:{{ trackColor }};margin:0 auto 18px;"></div>
+        <div style="font-size:18px;font-weight:600;">Upravit záznam</div>
+        <div style="font-size:12.5px;color:{{ dim }};margin-top:5px;">{{ editRange }}</div>
+        <textarea value="{{ editDraft }}" onChange="{{ onEditChange }}" placeholder="Popis…" style="{{ textareaStyle }}"></textarea>
+        <div style="display:flex;gap:10px;margin-top:16px;">
+          <button onClick="{{ onCancelEdit }}" style="{{ ghostBtnStyle }}">Zrušit</button>
+          <button onClick="{{ onSaveEdit }}" style="{{ primaryBtnStyle }}">Uložit</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:390,&quot;height&quot;:844},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;ember&quot;,&quot;midnight&quot;,&quot;paper&quot;],&quot;default&quot;:&quot;ember&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Vzhled&quot;},&quot;duration&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:20,&quot;min&quot;:5,&quot;max&quot;:60,&quot;step&quot;:5,&quot;unit&quot;:&quot;min&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Timer&quot;}}">
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    const saved = this.load();
+    const dur = saved.durationMin || Math.max(5, Math.min(60, props.duration || 20));
+    this.state = {
+      theme: saved.theme || props.theme || 'ember',
+      page: 'timer',
+      durationMin: dur,
+      mode: 'ready',            // ready | running | paused | ringing | logging
+      secondsLeft: dur * 60,
+      sessionStart: null,       // epoch ms when current run began
+      endAt: null,              // scheduled finish epoch ms
+      records: saved.records || [],
+      pending: null,            // {start,end}
+      draft: '',
+      editingId: null,
+      editDraft: '',
+      selectedDate: this.dateKey(Date.now()),
+      ...(saved.timer || {}),   // restores mode/secondsLeft/sessionStart/endAt if mid-run
+    };
+  }
+
+  // ---------- persistence ----------
+  KEY = 'minutka_v1';
+  load() {
+    try { return JSON.parse(localStorage.getItem(this.KEY)) || {}; } catch (e) { return {}; }
+  }
+  persist() {
+    const s = this.state;
+    const timer = (s.mode === 'running' || s.mode === 'paused' || s.mode === 'ringing')
+      ? { mode: s.mode, secondsLeft: s.secondsLeft, sessionStart: s.sessionStart, endAt: s.endAt }
+      : null;
+    try {
+      localStorage.setItem(this.KEY, JSON.stringify({
+        theme: s.theme, durationMin: s.durationMin, records: s.records, timer,
+      }));
+    } catch (e) {}
+  }
+  componentDidUpdate() { this.persist(); }
+
+  // ---------- lifecycle ----------
+  componentDidMount() {
+    this.recompute();
+    this.tick = setInterval(() => this.recompute(), 400);
+    this.onVis = () => this.recompute();
+    document.addEventListener('visibilitychange', this.onVis);
+  }
+  componentWillUnmount() {
+    clearInterval(this.tick);
+    this.stopBeep();
+    document.removeEventListener('visibilitychange', this.onVis);
+  }
+
+  recompute() {
+    const s = this.state;
+    if (s.mode !== 'running') return;
+    const left = Math.max(0, Math.round((s.endAt - Date.now()) / 1000));
+    if (left <= 0) {
+      this.setState({ mode: 'ringing', secondsLeft: 0 }, () => this.startBeep());
+    } else if (left !== s.secondsLeft) {
+      this.setState({ secondsLeft: left });
+    }
+  }
+
+  // ---------- audio (minutka) ----------
+  beepOnce() {
+    try {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+      this.ac = this.ac || new AC();
+      const t = this.ac.currentTime;
+      [0, 0.16].forEach((off, i) => {
+        const o = this.ac.createOscillator(), g = this.ac.createGain();
+        o.connect(g); g.connect(this.ac.destination);
+        o.type = 'square'; o.frequency.value = 880;
+        g.gain.setValueAtTime(0.0001, t + off);
+        g.gain.exponentialRampToValueAtTime(0.22, t + off + 0.01);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + off + 0.11);
+        o.start(t + off); o.stop(t + off + 0.12);
+      });
+    } catch (e) {}
+  }
+  startBeep() {
+    this.stopBeep();
+    this.beepOnce();
+    this.beeper = setInterval(() => this.beepOnce(), 1000);
+    if (navigator.vibrate) { try { navigator.vibrate([300, 150, 300]); } catch (e) {} }
+  }
+  stopBeep() { if (this.beeper) { clearInterval(this.beeper); this.beeper = null; } }
+
+  // ---------- timer controls ----------
+  clampDur(m) { return Math.max(5, Math.min(60, m)); }
+  changeDur(delta) {
+    if (this.state.mode !== 'ready') return;
+    this.setState(s => {
+      const d = this.clampDur(s.durationMin + delta);
+      return { durationMin: d, secondsLeft: d * 60 };
+    });
+  }
+  toggle() {
+    const s = this.state;
+    if (s.mode === 'ready') {
+      const now = Date.now();
+      this.setState({ mode: 'running', sessionStart: now, endAt: now + s.secondsLeft * 1000 });
+    } else if (s.mode === 'running') {
+      this.setState({ mode: 'paused', secondsLeft: Math.max(0, Math.round((s.endAt - Date.now()) / 1000)) });
+    } else if (s.mode === 'paused') {
+      this.setState({ mode: 'running', endAt: Date.now() + s.secondsLeft * 1000 });
+    }
+  }
+  reset() {
+    this.stopBeep();
+    this.setState(s => ({ mode: 'ready', secondsLeft: s.durationMin * 60, sessionStart: null, endAt: null }));
+  }
+  finishNow() {
+    const s = this.state;
+    if (s.mode !== 'running' && s.mode !== 'paused') return;
+    this.stopBeep();
+    this.setState({ mode: 'logging', pending: { start: s.sessionStart, end: Date.now() }, draft: '' });
+  }
+  dismissRing() {
+    const s = this.state;
+    this.stopBeep();
+    this.setState({ mode: 'logging', pending: { start: s.sessionStart, end: s.endAt }, draft: '' });
+  }
+
+  startFresh() {
+    const now = Date.now();
+    this.setState(s => ({
+      mode: 'running', sessionStart: now, endAt: now + s.durationMin * 60 * 1000,
+      secondsLeft: s.durationMin * 60, pending: null, draft: '',
+    }));
+  }
+  saveLog() {
+    const s = this.state;
+    const rec = { id: 'r' + Date.now(), start: s.pending.start, end: s.pending.end, description: s.draft.trim() };
+    this.setState({ records: [rec, ...s.records] }, () => this.startFresh());
+  }
+  skipLog() {
+    const s = this.state;
+    const rec = { id: 'r' + Date.now(), start: s.pending.start, end: s.pending.end, description: '' };
+    this.setState({ records: [rec, ...s.records] }, () => this.startFresh());
+  }
+
+  // ---------- edit / delete ----------
+  beginEdit(id) {
+    const r = this.state.records.find(x => x.id === id);
+    this.setState({ editingId: id, editDraft: r ? r.description : '' });
+  }
+  saveEdit() {
+    const id = this.state.editingId;
+    this.setState(s => ({
+      records: s.records.map(r => r.id === id ? { ...r, description: s.editDraft.trim() } : r),
+      editingId: null, editDraft: '',
+    }));
+  }
+  deleteRec(id) {
+    this.setState(s => ({ records: s.records.filter(r => r.id !== id) }));
+  }
+
+  // ---------- date helpers ----------
+  dateKey(ms) {
+    const d = new Date(ms);
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+  shiftDay(delta) {
+    const [y, m, d] = this.state.selectedDate.split('-').map(Number);
+    const dt = new Date(y, m - 1, d + delta);
+    const key = this.dateKey(dt.getTime());
+    if (delta > 0 && key > this.dateKey(Date.now())) return;
+    this.setState({ selectedDate: key });
+  }
+  fmtTime(ms) {
+    const d = new Date(ms);
+    return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+  }
+  fmtClock(sec) {
+    const m = Math.floor(sec / 60), s = sec % 60;
+    return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+  }
+  durMinutes(a, b) { return Math.max(1, Math.round((b - a) / 60000)); }
+
+  themeDef(key) {
+    const T = {
+      ember: {
+        name: 'Ember', bg: '#1A1310', text: '#EEE6DC', accent: '#E88A66', ink: '#1a120e',
+        panel: 'rgba(255,255,255,0.045)', border: 'rgba(255,255,255,0.08)', track: 'rgba(255,255,255,0.07)',
+        dim: 'rgba(238,230,220,0.55)', faint: 'rgba(238,230,220,0.4)', glow: 'rgba(232,138,102,0.5)', glowSoft: 'rgba(232,138,102,0.6)',
+      },
+      midnight: {
+        name: 'Midnight', bg: '#0F1319', text: '#E6EAF2', accent: '#78B4C4', ink: '#08131a',
+        panel: 'rgba(255,255,255,0.04)', border: 'rgba(255,255,255,0.07)', track: 'rgba(255,255,255,0.06)',
+        dim: 'rgba(230,234,242,0.55)', faint: 'rgba(230,234,242,0.38)', glow: 'rgba(120,180,196,0.4)', glowSoft: 'rgba(120,180,196,0.55)',
+      },
+      paper: {
+        name: 'Paper', bg: '#F3EEE6', text: '#2B2420', accent: '#C25E3C', ink: '#FBF7F1',
+        panel: 'rgba(43,36,32,0.035)', border: 'rgba(43,36,32,0.11)', track: 'rgba(43,36,32,0.09)',
+        dim: 'rgba(43,36,32,0.58)', faint: 'rgba(43,36,32,0.42)', glow: 'rgba(194,94,60,0.2)', glowSoft: 'rgba(194,94,60,0.4)',
+      },
+    };
+    return T[key] || T.ember;
+  }
+
+  renderVals() {
+    const s = this.state;
+    const t = this.themeDef(s.theme);
+    const total = s.durationMin * 60;
+    const secs = (s.mode === 'ready') ? total : s.secondsLeft;
+    const progress = 1 - secs / total;
+    const circumference = 2 * Math.PI * 131;
+
+    const phaseMap = { ready: 'Připraveno', running: 'Běží', paused: 'Pauza', ringing: 'Hotovo', logging: 'Záznam' };
+
+    // theme dots
+    const themeDots = ['ember', 'midnight', 'paper'].map(k => {
+      const td = this.themeDef(k);
+      const active = s.theme === k;
+      return {
+        name: td.name,
+        onSelect: () => this.setState({ theme: k }),
+        style: `width:16px;height:16px;border-radius:50%;cursor:pointer;padding:0;background:${td.accent};border:2px solid ${active ? t.text : 'transparent'};box-shadow:${active ? '0 0 0 2px ' + t.bg + ' inset' : 'none'};opacity:${active ? 1 : 0.55};transition:all 0.2s ease;`,
+      };
+    });
+
+    // nav
+    const navItems = [
+      { key: 'timer', label: 'Timer', icon: '◷' },
+      { key: 'history', label: 'Historie', icon: '≣' },
+    ].map(n => {
+      const active = s.page === n.key;
+      return {
+        onSelect: () => this.setState({ page: n.key }),
+        icon: n.icon, label: n.label,
+        style: `flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:9px 0;border:none;background:none;cursor:pointer;color:${active ? t.accent : t.faint};transition:color 0.2s ease;`,
+      };
+    });
+
+    // ---- history data ----
+    const dayRecs = s.records
+      .filter(r => this.dateKey(r.start) === s.selectedDate)
+      .sort((a, b) => b.start - a.start);
+    const totalMin = dayRecs.reduce((acc, r) => acc + this.durMinutes(r.start, r.end), 0);
+    const dayTotal = totalMin >= 60 ? (Math.floor(totalMin / 60) + 'h ' + (totalMin % 60) + 'm') : (totalMin + 'm');
+
+    const todayKey = this.dateKey(Date.now());
+    const yestKey = this.dateKey(Date.now() - 86400000);
+    let dayTitle;
+    if (s.selectedDate === todayKey) dayTitle = 'Dnes';
+    else if (s.selectedDate === yestKey) dayTitle = 'Včera';
+    else {
+      const [y, m, d] = s.selectedDate.split('-').map(Number);
+      dayTitle = new Date(y, m - 1, d).toLocaleDateString('cs-CZ', { weekday: 'long' });
+      dayTitle = dayTitle.charAt(0).toUpperCase() + dayTitle.slice(1);
+    }
+    const [yy, mm, dd] = s.selectedDate.split('-').map(Number);
+    const daySub = new Date(yy, mm - 1, dd).toLocaleDateString('cs-CZ', { day: 'numeric', month: 'long', year: 'numeric' });
+
+    const dayRecords = dayRecs.map(r => ({
+      timeRange: this.fmtTime(r.start) + '–' + this.fmtTime(r.end),
+      durLabel: this.durMinutes(r.start, r.end) + ' min',
+      description: r.description || 'Bez popisu',
+      onEdit: () => this.beginEdit(r.id),
+      onDelete: () => this.deleteRec(r.id),
+      timeChipStyle: `font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:500;color:${t.accent};letter-spacing:0.02em;`,
+      descStyle: `font-size:13.5px;line-height:1.45;margin-top:9px;color:${r.description ? t.text : t.faint};font-style:${r.description ? 'normal' : 'italic'};white-space:pre-wrap;`,
+    }));
+
+    // shared styles
+    const sheetBtnBase = 'flex:1;padding:13px 0;border-radius:13px;font-size:13.5px;font-weight:600;cursor:pointer;font-family:Sora,sans-serif;transition:all 0.18s ease;';
+
+    return {
+      // theme tokens
+      accent: t.accent, dim: t.dim, faint: t.faint, trackColor: t.track, glowSoft: t.glowSoft,
+
+      rootStyle: `width:390px;min-height:844px;margin:0 auto;background:${t.bg};color:${t.text};font-family:'Sora',system-ui,sans-serif;display:flex;flex-direction:column;padding:22px 20px 0;position:relative;overflow:hidden;`,
+      glowStyle: `position:absolute;top:-140px;left:50%;transform:translateX(-50%);width:440px;height:440px;border-radius:50%;background:${t.glow};filter:blur(95px);opacity:0.6;pointer-events:none;transition:background 0.5s ease;`,
+      brandDotStyle: `width:9px;height:9px;border-radius:50%;background:${t.accent};box-shadow:0 0 12px ${t.glowSoft};`,
+      themeDots,
+      navItems,
+
+      isTimer: s.page === 'timer',
+      isHistory: s.page === 'history',
+
+      // timer
+      showDuration: s.mode === 'ready',
+      showRunningSpacer: s.mode !== 'ready',
+      durationMin: s.durationMin,
+      circumference,
+      dashOffset: circumference * (1 - progress),
+      phaseLabel: phaseMap[s.mode] || '',
+      timeText: this.fmtClock(secs),
+      hintLabel: s.mode === 'ready' ? 'Klepni na start' : (s.mode === 'paused' ? 'Pozastaveno' : 'Nech běžet – pípne po dojetí'),
+      footHint: s.mode === 'ready' ? 'Odpočet běží i na pozadí.' : 'Až čas dojede, zapíšeš, co jsi dělal.',
+      onDurDown: () => this.changeDur(-5),
+      onDurUp: () => this.changeDur(5),
+      onToggle: () => this.toggle(),
+      onReset: () => this.reset(),
+      onFinishNow: () => this.finishNow(),
+      playLabel: s.mode === 'running' ? '❚❚' : '▶',
+      stepBtnStyle: `width:44px;height:44px;border-radius:50%;border:1px solid ${t.border};background:${t.panel};color:${t.text};font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;`,
+      sideBtnStyle: `width:52px;height:52px;border-radius:50%;border:1px solid ${t.border};background:${t.panel};color:${t.dim};font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;`,
+      finishBtnStyle: `width:52px;height:52px;border-radius:50%;border:1px solid ${t.border};background:${t.panel};color:${t.dim};font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;`,
+      playStyle: `width:80px;height:80px;border-radius:50%;border:none;background:${t.accent};color:${t.ink};font-size:${s.mode === 'running' ? 22 : 26}px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding-left:${s.mode === 'running' ? 0 : 4}px;box-shadow:0 8px 28px ${t.glow};`,
+
+      // history
+      selectedDate: s.selectedDate,
+      today: todayKey,
+      dayTitle, daySub,
+      onPrevDay: () => this.shiftDay(-1),
+      onNextDay: () => this.shiftDay(1),
+      onPickDate: (e) => { if (e.target.value) this.setState({ selectedDate: e.target.value }); },
+      navArrowStyle: `width:42px;height:42px;flex:none;border-radius:12px;border:1px solid ${t.border};background:${t.panel};color:${t.text};font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;`,
+      navArrowNextStyle: `width:42px;height:42px;flex:none;border-radius:12px;border:1px solid ${t.border};background:${t.panel};color:${s.selectedDate >= todayKey ? t.faint : t.text};font-size:22px;cursor:${s.selectedDate >= todayKey ? 'default' : 'pointer'};display:flex;align-items:center;justify-content:center;line-height:1;`,
+      statStyle: `flex:1;background:${t.panel};border:1px solid ${t.border};border-radius:15px;padding:15px 16px;`,
+      dayCount: dayRecs.length,
+      dayTotal,
+      dayRecords,
+      dayEmpty: dayRecs.length === 0,
+      recStyle: `background:${t.panel};border:1px solid ${t.border};border-radius:15px;padding:14px 15px;animation:fadein 0.25s ease;`,
+      iconBtnStyle: `width:30px;height:30px;border-radius:9px;border:none;background:none;color:${t.faint};font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;`,
+      emptyIconStyle: `font-size:38px;color:${t.faint};opacity:0.6;`,
+
+      bottomNavStyle: `display:flex;gap:6px;margin:8px -20px 0;padding:6px 20px calc(env(safe-area-inset-bottom) + 10px);border-top:1px solid ${t.border};background:${t.bg};position:relative;z-index:2;`,
+
+      // ringing overlay
+      isRinging: s.mode === 'ringing',
+      overlayStyle: `position:absolute;inset:0;z-index:20;background:${t.bg};display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px;text-align:center;`,
+      ringBadgeStyle: `width:120px;height:120px;border-radius:50%;background:${t.accent};color:${t.ink};font-size:54px;display:flex;align-items:center;justify-content:center;box-shadow:0 0 60px ${t.glow};animation:ringpulse 1s ease-in-out infinite;`,
+      dismissBtnStyle: `margin-top:38px;padding:15px 44px;border-radius:15px;border:none;background:${t.accent};color:${t.ink};font-size:15px;font-weight:600;cursor:pointer;box-shadow:0 8px 28px ${t.glow};`,
+
+      // logging sheet
+      isLogging: s.mode === 'logging',
+      logRange: s.pending ? (this.fmtTime(s.pending.start) + ' – ' + this.fmtTime(s.pending.end)) : '',
+      draft: s.draft,
+      onDraftChange: (e) => this.setState({ draft: e.target.value }),
+      onSaveLog: () => this.saveLog(),
+      onSkipLog: () => this.skipLog(),
+
+      // edit sheet
+      isEditing: s.editingId != null,
+      editRange: (() => { const r = s.records.find(x => x.id === s.editingId); return r ? (this.fmtTime(r.start) + ' – ' + this.fmtTime(r.end) + '  ·  ' + this.dateKey(r.start)) : ''; })(),
+      editDraft: s.editDraft,
+      onEditChange: (e) => this.setState({ editDraft: e.target.value }),
+      onSaveEdit: () => this.saveEdit(),
+      onCancelEdit: () => this.setState({ editingId: null, editDraft: '' }),
+
+      // shared sheet styles
+      sheetScrimStyle: `position:absolute;inset:0;z-index:25;background:rgba(0,0,0,0.5);display:flex;align-items:flex-end;animation:fadein 0.2s ease;`,
+      sheetStyle: `width:100%;background:${t.bg};border-top:1px solid ${t.border};border-radius:24px 24px 0 0;padding:18px 20px calc(env(safe-area-inset-bottom) + 22px);box-shadow:0 -20px 50px rgba(0,0,0,0.4);`,
+      textareaStyle: `width:100%;min-height:96px;resize:none;margin-top:16px;background:${t.panel};border:1px solid ${t.border};border-radius:13px;padding:13px 14px;color:${t.text};font-size:14px;line-height:1.5;outline:none;`,
+      ghostBtnStyle: sheetBtnBase + `background:${t.panel};border:1px solid ${t.border};color:${t.text};`,
+      primaryBtnStyle: sheetBtnBase + `background:${t.accent};border:none;color:${t.ink};box-shadow:0 6px 20px ${t.glow};`,
+    };
+  }
+}
+</script>
+</body>
+</html>
