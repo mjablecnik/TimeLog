@@ -48,36 +48,36 @@ struct TimeLogLockScreenView: View {
         if context.state.isCompleted {
             Link(destination: URL(string: "timelogapp://action/stop")!) {
                 Image(systemName: "xmark.circle.fill")
-                    .font(.title2)
+                    .font(.system(size: 32))
                     .foregroundColor(Color(hex: "#E88A66"))
             }
             .frame(minWidth: 60, minHeight: 60)
         } else if context.state.isPaused {
-            HStack(spacing: 8) {
+            HStack(spacing: 12) {
                 Link(destination: URL(string: "timelogapp://action/resume")!) {
                     Image(systemName: "play.circle.fill")
-                        .font(.title2)
+                        .font(.system(size: 32))
                         .foregroundColor(Color(hex: "#E88A66"))
                 }
                 .frame(minWidth: 60, minHeight: 60)
                 Link(destination: URL(string: "timelogapp://action/stop")!) {
                     Image(systemName: "stop.circle.fill")
-                        .font(.title2)
+                        .font(.system(size: 32))
                         .foregroundColor(Color(hex: "#EEE6DC").opacity(0.4))
                 }
                 .frame(minWidth: 60, minHeight: 60)
             }
         } else {
-            HStack(spacing: 8) {
+            HStack(spacing: 12) {
                 Link(destination: URL(string: "timelogapp://action/pause")!) {
                     Image(systemName: "pause.circle.fill")
-                        .font(.title2)
+                        .font(.system(size: 32))
                         .foregroundColor(Color(hex: "#E88A66"))
                 }
                 .frame(minWidth: 60, minHeight: 60)
                 Link(destination: URL(string: "timelogapp://action/stop")!) {
                     Image(systemName: "stop.circle.fill")
-                        .font(.title2)
+                        .font(.system(size: 32))
                         .foregroundColor(Color(hex: "#EEE6DC").opacity(0.4))
                 }
                 .frame(minWidth: 60, minHeight: 60)
@@ -202,6 +202,9 @@ struct TimeLogLiveActivity: Widget {
                 .font(.system(.caption2, design: .monospaced))
                 .foregroundColor(Color(hex: "#E88A66"))
                 .monospacedDigit()
+                .multilineTextAlignment(.trailing)
+                .frame(maxWidth: 48)
+                .minimumScaleFactor(0.7)
         }
     }
 }

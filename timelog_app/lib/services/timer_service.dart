@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../core/config.dart';
 import 'alarm_service.dart';
 import 'live_activity_channel.dart';
+import 'notification_service.dart';
 
 part 'timer_service.freezed.dart';
 
@@ -34,8 +35,9 @@ class TimerNotifier extends StateNotifier<TimerState> with WidgetsBindingObserve
   Timer? _ticker;
   final AlarmService _alarm;
   final LiveActivityChannel _liveActivity;
+  final NotificationService _notifications;
 
-  TimerNotifier(this._alarm, this._liveActivity)
+  TimerNotifier(this._alarm, this._liveActivity, this._notifications)
       : super(TimerState(
           status: TimerStatus.idle,
           totalSeconds: TimerConfig.defaultDurationMinutes * 60,
@@ -160,6 +162,7 @@ class TimerNotifier extends StateNotifier<TimerState> with WidgetsBindingObserve
     _startTicker();
     _saveState();
     _liveActivity.startActivity(endAt: endAt, totalSeconds: state.totalSeconds);
+    _notifications.scheduleTimerNotification(endAt: endAt);
   }
 
   void pause() {
@@ -172,6 +175,7 @@ class TimerNotifier extends StateNotifier<TimerState> with WidgetsBindingObserve
     );
     _saveState();
     _liveActivity.updateActivity(update: LiveActivityUpdate.paused);
+    _notifications.cancelTimerNotification();
   }
 
   void resume() {
@@ -184,6 +188,7 @@ class TimerNotifier extends StateNotifier<TimerState> with WidgetsBindingObserve
     _startTicker();
     _saveState();
     _liveActivity.updateActivity(update: LiveActivityUpdate.resumed);
+    _notifications.scheduleTimerNotification(endAt: endAt);
   }
 
   void setDuration(int minutes) {
@@ -197,6 +202,7 @@ class TimerNotifier extends StateNotifier<TimerState> with WidgetsBindingObserve
     _ticker = null;
     _alarm.stop();
     _liveActivity.endActivity();
+    _notifications.cancelTimerNotification();
     state = TimerState(
       status: TimerStatus.idle,
       totalSeconds: state.totalSeconds,
@@ -209,6 +215,7 @@ class TimerNotifier extends StateNotifier<TimerState> with WidgetsBindingObserve
     if (state.status != TimerStatus.running && state.status != TimerStatus.paused) return;
     _ticker?.cancel();
     _ticker = null;
+    _notifications.cancelTimerNotification();
     final finishTime = DateTime.now();
     state = state.copyWith(
       status: TimerStatus.ringing,
@@ -243,6 +250,7 @@ class TimerNotifier extends StateNotifier<TimerState> with WidgetsBindingObserve
     _startTicker();
     _saveState();
     _liveActivity.startActivity(endAt: endAt, totalSeconds: totalSeconds);
+    _notifications.scheduleTimerNotification(endAt: endAt);
   }
 
   void _handleLockScreenAction(String action) {

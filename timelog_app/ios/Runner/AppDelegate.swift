@@ -1,5 +1,6 @@
 import Flutter
 import UIKit
+import UserNotifications
 
 @main
 @objc class AppDelegate: FlutterAppDelegate {
@@ -12,7 +13,81 @@ import UIKit
     ) -> Bool {
         GeneratedPluginRegistrant.register(with: self)
         setupLiveActivityChannel()
+        setupNotificationChannel()
         return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+    }
+
+    // MARK: - Notifications
+
+    private func setupNotificationChannel() {
+        guard let controller = window?.rootViewController as? FlutterViewController else { return }
+
+        let channel = FlutterMethodChannel(
+            name: "com.jablecnik.timelog/notifications",
+            binaryMessenger: controller.binaryMessenger
+        )
+
+        channel.setMethodCallHandler { call, result in
+            switch call.method {
+            case "requestPermission":
+                UNUserNotificationCenter.current().requestAuthorization(
+                    options: [.alert, .sound, .badge]
+                ) { granted, _ in
+                    DispatchQueue.main.async { result(granted) }
+                }
+
+            case "scheduleNotification":
+                guard let args = call.arguments as? [String: Any],
+                      let endAtMs = args["endAtMs"] as? Int64 else {
+                    result(nil)
+                    return
+                }
+                let endAt = Date(timeIntervalSince1970: Double(endAtMs) / 1000.0)
+                self.scheduleTimerNotification(at: endAt)
+                result(nil)
+
+            case "cancelNotification":
+                UNUserNotificationCenter.current().removePendingNotificationRequests(
+                    withIdentifiers: ["timelog_timer_alarm"]
+                )
+                UNUserNotificationCenter.current().removeDeliveredNotifications(
+                    withIdentifiers: ["timelog_timer_alarm"]
+                )
+                result(nil)
+
+            default:
+                result(FlutterMethodNotImplemented)
+            }
+        }
+    }
+
+    private func scheduleTimerNotification(at date: Date) {
+        let center = UNUserNotificationCenter.current()
+
+        // Remove any existing scheduled notification
+        center.removePendingNotificationRequests(withIdentifiers: ["timelog_timer_alarm"])
+
+        let content = UNMutableNotificationContent()
+        content.title = "TimeLog"
+        content.body = "Timer complete!"
+        content.sound = UNNotificationSound(named: UNNotificationSoundName("alarm.mp3"))
+        content.interruptionLevel = .timeSensitive
+
+        let interval = date.timeIntervalSinceNow
+        guard interval > 0 else { return }
+
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: interval, repeats: false)
+        let request = UNNotificationRequest(
+            identifier: "timelog_timer_alarm",
+            content: content,
+            trigger: trigger
+        )
+
+        center.add(request) { error in
+            if let error = error {
+                print("[Notification] Failed to schedule: \(error)")
+            }
+        }
     }
 
     private func setupLiveActivityChannel() {
