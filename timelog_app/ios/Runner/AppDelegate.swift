@@ -14,6 +14,7 @@ import UserNotifications
         GeneratedPluginRegistrant.register(with: self)
         setupLiveActivityChannel()
         setupNotificationChannel()
+        observeWidgetActions()
         return super.application(application, didFinishLaunchingWithOptions: launchOptions)
     }
 
@@ -161,5 +162,44 @@ import UserNotifications
         guard !action.isEmpty else { return true }
         methodChannel?.invokeMethod("onLockScreenAction", arguments: ["action": action])
         return true
+    }
+
+    // MARK: - Widget Intent Actions (App Group + Darwin Notification)
+
+    private func observeWidgetActions() {
+        let center = CFNotificationCenterGetDarwinNotifyCenter()
+        let observer = Unmanaged.passUnretained(self).toOpaque()
+        CFNotificationCenterAddObserver(
+            center,
+            observer,
+            { _, observer, _, _, _ in
+                guard let observer = observer else { return }
+                let appDelegate = Unmanaged<AppDelegate>.fromOpaque(observer).takeUnretainedValue()
+                DispatchQueue.main.async {
+                    appDelegate.handlePendingWidgetAction()
+                }
+            },
+            "com.jablecnik.timelog.action" as CFString,
+            nil,
+            .deliverImmediately
+        )
+        // Also check on app resume in case notification was missed
+        handlePendingWidgetAction()
+    }
+
+    func handlePendingWidgetAction() {
+        guard let defaults = UserDefaults(suiteName: "group.com.jablecnik.timelogApp"),
+              let action = defaults.string(forKey: "pendingAction"),
+              !action.isEmpty else { return }
+        // Clear the pending action
+        defaults.removeObject(forKey: "pendingAction")
+        defaults.synchronize()
+        // Forward to Flutter
+        methodChannel?.invokeMethod("onLockScreenAction", arguments: ["action": action])
+    }
+
+    override func applicationDidBecomeActive(_ application: UIApplication) {
+        super.applicationDidBecomeActive(application)
+        handlePendingWidgetAction()
     }
 }
