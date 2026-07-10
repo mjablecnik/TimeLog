@@ -21,6 +21,7 @@
 		AAAA000100000000AAAA001E /* LiveActivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA000100000000AAAA001F /* LiveActivityManager.swift */; };
 		78A318202AECB46A00862997 /* FlutterGeneratedPluginSwiftPackage in Frameworks */ = {isa = PBXBuildFile; productRef = 78A3181F2AECB46A00862997 /* FlutterGeneratedPluginSwiftPackage */; };
 		AAAA000100000000AAAA0020 /* alarm.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = AAAA000100000000AAAA0021 /* alarm.mp3 */; };
+		AAAA000100000000AAAA0025 /* alarm.caf in Resources */ = {isa = PBXBuildFile; fileRef = AAAA000100000000AAAA0024 /* alarm.caf */; };
 		AAAA000100000000AAAA0022 /* TimeLogIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAAA000100000000AAAA0023 /* TimeLogIntents.swift */; };
 /* End PBXBuildFile section */
 
@@ -88,6 +89,7 @@
 		AAAA000100000000AAAA0005 /* TimeLogWidgetExtension-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "TimeLogWidgetExtension-Info.plist"; sourceTree = "<group>"; };
 		AAAA000100000000AAAA001F /* LiveActivityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveActivityManager.swift; sourceTree = "<group>"; };
 		AAAA000100000000AAAA0021 /* alarm.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = alarm.mp3; sourceTree = "<group>"; };
+		AAAA000100000000AAAA0024 /* alarm.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = alarm.caf; sourceTree = "<group>"; };
 		AAAA000100000000AAAA0023 /* TimeLogIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeLogIntents.swift; sourceTree = "<group>"; };
 		78E0A7A72DC9AD7400C4905E /* FlutterGeneratedPluginSwiftPackage */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = FlutterGeneratedPluginSwiftPackage; path = Flutter/ephemeral/Packages/FlutterGeneratedPluginSwiftPackage; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -164,6 +166,7 @@
 				74858FAE1ED2DC5600515810 /* AppDelegate.swift */,
 				AAAA000100000000AAAA001F /* LiveActivityManager.swift */,
 				AAAA000100000000AAAA0021 /* alarm.mp3 */,
+				AAAA000100000000AAAA0024 /* alarm.caf */,
 				74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */,
 			);
 			path = Runner;
@@ -306,6 +309,7 @@
 				97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */,
 				97C146FC1CF9000F007C117D /* Main.storyboard in Resources */,
 				AAAA000100000000AAAA0020 /* alarm.mp3 in Resources */,
+				AAAA000100000000AAAA0025 /* alarm.caf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

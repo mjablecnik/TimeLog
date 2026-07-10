@@ -71,7 +71,7 @@ import UserNotifications
         let content = UNMutableNotificationContent()
         content.title = "TimeLog"
         content.body = "Timer complete!"
-        content.sound = UNNotificationSound(named: UNNotificationSoundName("alarm.mp3"))
+        content.sound = UNNotificationSound(named: UNNotificationSoundName("alarm.caf"))
         content.interruptionLevel = .timeSensitive
 
         let interval = date.timeIntervalSinceNow
