@@ -1,16 +1,52 @@
 # timelog_app
 
-A new Flutter project.
+A countdown timer app with time tracking capabilities built with Flutter.
 
-## Getting Started
+## Requirements
 
-This project is a starting point for a Flutter application.
+- Flutter SDK (Dart ^3.10.4)
+- For Linux desktop: `clang`, `cmake`, `ninja-build`, `pkg-config`, `libgtk-3-dev`
 
-A few resources to get you started if this is your first Flutter project:
+## Setup
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+Install Flutter dependencies:
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+```sh
+flutter pub get
+```
+
+## Running
+
+```sh
+flutter run -d linux
+```
+
+## Building
+
+Build for Linux desktop:
+
+```sh
+flutter build linux
+```
+
+The output binary is at `build/linux/x64/release/bundle/timelog_app`.
+
+## Code generation
+
+This project uses `build_runner` for code generation (Drift, Freezed, Riverpod). Run after changing annotated files:
+
+```sh
+dart run build_runner build --delete-conflicting-outputs
+```
+
+## Tests
+
+```sh
+flutter test
+```
+
+## Linting
+
+```sh
+flutter analyze
+```
