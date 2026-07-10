@@ -61,12 +61,8 @@ class LiveActivityManager {
                     isCompleted: false
                 )
             case "resume":
-                newState = TimeLogAttributes.ContentState(
-                    endAt: current.endAt,
-                    isPaused: false,
-                    pausedSecondsLeft: nil,
-                    isCompleted: false
-                )
+                // endAt is passed separately via updateLiveActivityWithEndAt
+                return
             case "complete":
                 newState = TimeLogAttributes.ContentState(
                     endAt: current.endAt,
@@ -78,6 +74,19 @@ class LiveActivityManager {
                 return
             }
             await activity.update(.init(state: newState, staleDate: nil))
+        }
+    }
+
+    func updateLiveActivityResume(newEndAt: Date) {
+        guard let activity = currentActivity else { return }
+        Task {
+            let newState = TimeLogAttributes.ContentState(
+                endAt: newEndAt,
+                isPaused: false,
+                pausedSecondsLeft: nil,
+                isCompleted: false
+            )
+            await activity.update(.init(state: newState, staleDate: newEndAt.addingTimeInterval(60)))
         }
     }
 

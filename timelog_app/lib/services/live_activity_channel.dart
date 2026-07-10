@@ -21,14 +21,21 @@ class LiveActivityChannel {
     }
   }
 
-  Future<void> updateActivity({required LiveActivityUpdate update}) async {
+  Future<void> updateActivity({
+    required LiveActivityUpdate update,
+    DateTime? endAt,
+  }) async {
     final action = switch (update) {
       LiveActivityUpdate.paused => 'pause',
       LiveActivityUpdate.resumed => 'resume',
       LiveActivityUpdate.completed => 'complete',
     };
     try {
-      await _channel.invokeMethod<void>('updateLiveActivity', {'action': action});
+      final args = <String, dynamic>{'action': action};
+      if (endAt != null) {
+        args['endAt'] = endAt.millisecondsSinceEpoch;
+      }
+      await _channel.invokeMethod<void>('updateLiveActivity', args);
     } catch (_) {}
   }
 
@@ -47,11 +54,13 @@ class LiveActivityChannel {
     }
   }
 
-  void setLockScreenActionHandler(void Function(String action) handler) {
+  void setLockScreenActionHandler(void Function(String action, {int? endAtMs}) handler) {
     _channel.setMethodCallHandler((call) async {
       if (call.method == 'onLockScreenAction') {
-        final action = call.arguments['action'] as String?;
-        if (action != null) handler(action);
+        final args = call.arguments as Map?;
+        final action = args?['action'] as String?;
+        final endAtMs = args?['endAtMs'] as int?;
+        if (action != null) handler(action, endAtMs: endAtMs);
       }
     });
   }

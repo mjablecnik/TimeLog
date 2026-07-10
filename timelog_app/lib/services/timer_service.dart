@@ -187,7 +187,7 @@ class TimerNotifier extends StateNotifier<TimerState> with WidgetsBindingObserve
     );
     _startTicker();
     _saveState();
-    _liveActivity.updateActivity(update: LiveActivityUpdate.resumed);
+    _liveActivity.updateActivity(update: LiveActivityUpdate.resumed, endAt: endAt);
     _notifications.scheduleTimerNotification(endAt: endAt);
   }
 
@@ -253,15 +253,35 @@ class TimerNotifier extends StateNotifier<TimerState> with WidgetsBindingObserve
     _notifications.scheduleTimerNotification(endAt: endAt);
   }
 
-  void _handleLockScreenAction(String action) {
+  void _handleLockScreenAction(String action, {int? endAtMs}) {
     switch (action) {
       case 'pause':
         pause();
       case 'resume':
-        resume();
+        if (endAtMs != null) {
+          // Resume with the endAt calculated by the widget intent
+          _resumeWithEndAt(DateTime.fromMillisecondsSinceEpoch(endAtMs));
+        } else {
+          resume();
+        }
       case 'stop':
         stop();
     }
+  }
+
+  void _resumeWithEndAt(DateTime endAt) {
+    if (state.status != TimerStatus.paused) return;
+    final secondsLeft = endAt.difference(DateTime.now()).inSeconds;
+    if (secondsLeft <= 0) return;
+    state = state.copyWith(
+      status: TimerStatus.running,
+      secondsLeft: secondsLeft,
+      endAt: endAt,
+    );
+    _startTicker();
+    _saveState();
+    // Live Activity already updated by the intent, no need to update again
+    _notifications.scheduleTimerNotification(endAt: endAt);
   }
 
   void _startTicker() {

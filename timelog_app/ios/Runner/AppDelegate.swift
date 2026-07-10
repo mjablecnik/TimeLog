@@ -123,7 +123,12 @@ import UserNotifications
                 case "updateLiveActivity":
                     if let args = call.arguments as? [String: Any],
                        let action = args["action"] as? String {
-                        manager.updateLiveActivity(action: action)
+                        if action == "resume", let endAtMs = (args["endAt"] as? NSNumber)?.int64Value {
+                            let endAt = Date(timeIntervalSince1970: Double(endAtMs) / 1000.0)
+                            manager.updateLiveActivityResume(newEndAt: endAt)
+                        } else {
+                            manager.updateLiveActivity(action: action)
+                        }
                     }
                     result(nil)
 
@@ -193,9 +198,20 @@ import UserNotifications
               !action.isEmpty else { return }
         // Clear the pending action
         defaults.removeObject(forKey: "pendingAction")
+
+        // For resume, pass the new endAt that was calculated by the intent
+        var arguments: [String: Any] = ["action": action]
+        if action == "resume" {
+            let resumedEndAt = defaults.double(forKey: "resumedEndAt")
+            if resumedEndAt > 0 {
+                arguments["endAtMs"] = Int64(resumedEndAt * 1000)
+                defaults.removeObject(forKey: "resumedEndAt")
+            }
+        }
+
         defaults.synchronize()
         // Forward to Flutter
-        methodChannel?.invokeMethod("onLockScreenAction", arguments: ["action": action])
+        methodChannel?.invokeMethod("onLockScreenAction", arguments: arguments)
     }
 
     override func applicationDidBecomeActive(_ application: UIApplication) {
