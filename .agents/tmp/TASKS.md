@@ -11,7 +11,7 @@
 - [x] 4. [HIGH] Run `dart run build_runner build` to regenerate `database.g.dart`
 - [x] 5. [HIGH] Create `lib/services/project_service.dart` — load/save project names via SharedPreferences
 - [x] 6. [HIGH] Add project service provider to `lib/providers/database_provider.dart`
-- [ ] 7. [HIGH] Update `DatabaseService.updateDescription()` to accept and persist optional project field
+- [x] 7. [HIGH] Update `DatabaseService.updateDescription()` to accept and persist optional project field
 - [ ] 8. [HIGH] Add project autocomplete field to `lib/ui/widgets/description_sheet.dart` (visible for Práce/Volná práce)
 - [ ] 9. [HIGH] Add project autocomplete field to `lib/ui/widgets/edit_sheet.dart` (visible for Práce/Volná práce)
 - [ ] 10. [MEDIUM] Display project name in `lib/ui/widgets/history_entry_card.dart` when present

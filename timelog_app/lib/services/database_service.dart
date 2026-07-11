@@ -31,6 +31,7 @@ class DatabaseService {
     int id,
     String description, {
     String? activityType,
+    Value<String?> project = const Value.absent(),
   }) async {
     await (_db.update(_db.timeEntries)..where((t) => t.id.equals(id))).write(
       TimeEntriesCompanion(
@@ -38,6 +39,7 @@ class DatabaseService {
         activityType: activityType == null
             ? const Value.absent()
             : Value(activityType),
+        project: project,
       ),
     );
   }
