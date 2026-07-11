@@ -189,6 +189,20 @@ class _HistoryEntryCardState extends ConsumerState<HistoryEntryCard> {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
+          if (entry.project != null && entry.project!.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(
+              entry.project!,
+              style: TextStyle(
+                fontFamily: 'Sora',
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: theme.dim,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
           if (_deleteError != null) ...[
             const SizedBox(height: 6),
             Text(

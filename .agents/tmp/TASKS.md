@@ -14,7 +14,7 @@
 - [x] 7. [HIGH] Update `DatabaseService.updateDescription()` to accept and persist optional project field
 - [x] 8. [HIGH] Add project autocomplete field to `lib/ui/widgets/description_sheet.dart` (visible for Práce/Volná práce)
 - [x] 9. [HIGH] Add project autocomplete field to `lib/ui/widgets/edit_sheet.dart` (visible for Práce/Volná práce)
-- [ ] 10. [MEDIUM] Display project name in `lib/ui/widgets/history_entry_card.dart` when present
+- [x] 10. [MEDIUM] Display project name in `lib/ui/widgets/history_entry_card.dart` when present
 
 ## Feature 3: Statistics Screen
 
