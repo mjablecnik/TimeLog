@@ -10,7 +10,7 @@
 - [x] 8. [HIGH] Load last-submitted values as fallback in DescriptionSheet — in `initState`, when no draft is provided (`initialDescription == null` and `!isPrefillMode`), load last-submitted values from SharedPreferences and use them as initial form values
 - [x] 9. [HIGH] Add reset (X) button to DescriptionSheet — always-visible IconButton (close/clear icon) in the header row that clears description text, resets activity type to `activityTypes.first`, and clears the project field; minimum 44×44px touch target
 - [x] 10. [HIGH] Extend StatsData to include raw entries — add a `List<TimeEntry> entries` field to `StatsData` and pass the raw entries through from the statistics provider
-- [ ] 11. [HIGH] Create TimelinePainter CustomPainter — new file `lib/ui/painters/timeline_painter.dart` that paints a single horizontal bar with colored blocks for each entry, gaps as empty space, and hour markers below
+- [x] 11. [HIGH] Create TimelinePainter CustomPainter — new file `lib/ui/painters/timeline_painter.dart` that paints a single horizontal bar with colored blocks for each entry, gaps as empty space, and hour markers below
 - [ ] 12. [HIGH] Implement daily timeline in statistics screen — add a timeline widget (using TimelinePainter) above the stats body in daily mode, showing one bar for the selected day
 - [ ] 13. [HIGH] Implement weekly timeline in statistics screen — in weekly mode, show 7 stacked timeline bars (one per day, Mon–Sun) with Czech day labels (Po, Út, St, Čt, Pá, So, Ne)
 - [ ] 14. [MEDIUM] Handle edge cases in timeline painter — dynamic time range based on first/last entry (fallback 6:00–24:00), handle entries with zero duration, handle overlapping entries gracefully
