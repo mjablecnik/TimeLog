@@ -2,7 +2,7 @@
 
 - [x] 1. [HIGH] Add dependencies to pubspec.yaml — add `flutter_local_notifications` and `timezone` packages with pinned versions
 - [x] 2. [HIGH] Create ReminderService (`lib/services/reminder_service.dart`) — initialize flutter_local_notifications plugin with iOS settings, implement `initialize()`, `requestPermission()`, `scheduleDailyReminder(TimeOfDay)`, `cancelReminder()`, and notification tap callback that exposes the payload
-- [ ] 3. [HIGH] Create ReminderSettings data class and ReminderProvider (`lib/providers/reminder_provider.dart`) — StateNotifier holding `{enabled, hour, minute}`, loads from SharedPreferences, exposes `toggleEnabled()` and `setTime(TimeOfDay)`, calls ReminderService to schedule/cancel
+- [x] 3. [HIGH] Create ReminderSettings data class and ReminderProvider (`lib/providers/reminder_provider.dart`) — StateNotifier holding `{enabled, hour, minute}`, loads from SharedPreferences, exposes `toggleEnabled()` and `setTime(TimeOfDay)`, calls ReminderService to schedule/cancel
 - [ ] 4. [HIGH] Create SettingsScreen (`lib/ui/screens/settings_screen.dart`) — 4th tab screen with "Daily Reminder" toggle and time picker row; request permission on enable, show snackbar if denied, cancel/reschedule on time change
 - [ ] 5. [HIGH] Add Settings tab to bottom navigation — add 4th nav item (gear/settings icon) to `bottom_nav.dart` and wire `SettingsScreen` into `_MainShell` in `app.dart`
 - [ ] 6. [HIGH] Initialize ReminderService on app start (`main.dart`) — call `ReminderService.initialize()` before `runApp`, handle launch notification payload to detect "start_timer" action
