@@ -19,8 +19,10 @@ class DatabaseService {
   }
 
   Future<List<TimeEntry>> getEntriesForDay(DateTime day) async {
-    final start = _dayStart(day);
-    final end = _dayEnd(day);
+    return await getEntriesForRange(_dayStart(day), _dayEnd(day));
+  }
+
+  Future<List<TimeEntry>> getEntriesForRange(DateTime start, DateTime end) async {
     return await (_db.select(_db.timeEntries)
           ..where((t) => t.startTime.isBetweenValues(start.toIso8601String(), end.toIso8601String()))
           ..orderBy([(t) => OrderingTerm(expression: t.startTime, mode: OrderingMode.desc)]))
