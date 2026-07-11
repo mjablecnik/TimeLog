@@ -1,5 +1,11 @@
 # Memory
 
+## /tmp setup artifacts (flutter-wrap, clang-wrap, gst-dev) do not persist between agent runs
+- Project: timelog_app
+- Problem: `/tmp/flutter-wrap`, `/tmp/clang-wrap`, and `/tmp/gst-dev` (built per the wrapper/gstreamer-dev recipes below) are gone at the start of each new run/container — they must be recreated every time, not just verified. Also, a naive existence check like `ls /tmp/gst-dev/.../pkgconfig/ 2>/dev/null | head -5 && echo exists || echo missing` is a false positive: piping `ls` into `head` means the `&&`/`||` branch on the pipeline's exit status (from `head`, which always succeeds even on empty input), not on `ls`'s exit status, so it reports "exists" even when the directory is missing.
+- Solution: At the start of any build task, just recreate all three wrapper dirs unconditionally (cheap, idempotent) rather than probing for them first. If you do want to check existence, test the actual target file directly, e.g. `test -f /tmp/gst-dev/usr/include/gstreamer-1.0/gst/gst.h && echo exists || echo missing` (no pipe).
+- Source: from-brief, 2026-07-11
+
 ## audioplayers_linux crashes on startup (uncaught C++ exception) unless GStreamer plugin binaries are installed, not just -dev headers
 - Project: timelog_app
 - Problem: `flutter build linux` succeeds and `flutter analyze`/`flutter test` pass cleanly (all use only `libgstreamer1.0-dev`/`libgstreamer-plugins-base1.0-dev`), but the built binary aborts immediately on startup with `terminate called after throwing an instance of 'char const*'` / SIGABRT the first time it constructs an `AudioPlayer` (audioplayers_linux plugin, alarm sound). Root cause (confirmed via gdb backtrace, `AudioPlayer::AudioPlayer` in `audioplayers_linux-*/linux/audio_player.cc:17`): `gst_element_factory_make("playbin", NULL)` returns null because the `playbin` GStreamer element is shipped in the `gstreamer1.0-plugins-base` runtime package, which is NOT a dependency of the `-dev` packages used at build time. `audio_player.cc` throws a raw `throw "Not all elements could be created.";` (bare C-string, not a subclass of `std::exception`) from inside a GLib platform-message callback, which is never caught anywhere up the call stack (flutter engine → GTK → GLib main loop → `main()`), so it always terminates the whole process, not just the failing plugin call.

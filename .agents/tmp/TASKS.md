@@ -1,19 +1,24 @@
 # Tasks
 
-- [x] 1. [HIGH] Add `activityType` column to `TimeEntries` table in `lib/data/time_entry.dart` — `TextColumn get activityType => text().withDefault(const Constant('Práce'))();`
-- [x] 2. [HIGH] Bump `schemaVersion` to 2 in `lib/data/database.dart` and add migration strategy to add the `activity_type` column to existing databases
-- [x] 3. [HIGH] Run `dart run build_runner build --delete-conflicting-outputs` to regenerate `database.g.dart` with the new column
-- [x] 4. [HIGH] Modify `finishNow()` in `lib/services/timer_service.dart` — transition to `TimerStatus.logging` instead of `ringing`, do NOT call `_alarm.play()`, set `endAt` to `DateTime.now()`, keep `sessionStart`
-- [x] 5. [HIGH] Add `stopAndLog()` method to `TimerNotifier` in `lib/services/timer_service.dart` — stop ticker, cancel notifications/live activity, capture `endAt = DateTime.now()`, transition to `logging` state (preserving `sessionStart` and `endAt`)
-- [x] 6. [HIGH] Modify `_restoreState()` in `lib/services/timer_service.dart` — when restoring `ringing` status, transition directly to `logging` instead of playing alarm (auto-dismiss on app open)
-- [x] 7. [HIGH] Modify `didChangeAppLifecycleState` in `lib/services/timer_service.dart` — when app resumes and state is `ringing`, call `dismissRinging()` immediately
-- [x] 8. [HIGH] Add confirmation dialog to Stop button in `lib/ui/widgets/timer_controls.dart` — show AlertDialog "Do you really want to reset the timer?", on confirm call `notifier.stopAndLog()`, on cancel do nothing
-- [x] 9. [HIGH] Add activity type selector to `lib/ui/widgets/description_sheet.dart` — row of 4 selectable chips (`Práce`, `Volný čas`, `Odpočinek`, `Spánek`), load last selection from SharedPreferences, save on change, include in `TimeEntriesCompanion` on submit
-- [x] 10. [MEDIUM] Add activity type selector to `lib/ui/widgets/edit_sheet.dart` — same chip row, pre-select the entry's current type, update on save
-- [x] 11. [MEDIUM] Display activity type in `lib/ui/widgets/history_entry_card.dart` — show a small styled label/badge with `entry.activityType` next to the time range
-- [x] 12. [MEDIUM] Change date format in `lib/ui/widgets/day_navigator.dart` — update `_dayLabel()` fallback format from `YYYY-MM-DD` to `d. M. yyyy` (e.g., `9. 7. 2026`)
-- [x] 13. [MEDIUM] Update `toDateLabel()` in `lib/core/extensions.dart` — match the new `d. M. yyyy` format for consistency
-- [x] 14. [MEDIUM] Remove `ThemeDots` widget from `lib/ui/screens/history_screen.dart` — delete the widget and its surrounding spacing, keep it only on `TimerScreen`
-- [x] 15. [LOW] Verify `timer_screen.dart` listener handles the new `stopAndLog()` → `logging` transition correctly (the existing `prev?.status != TimerStatus.logging && next.status == TimerStatus.logging` check should trigger `_showDescriptionSheet` with correct `sessionStart` and `endAt`)
-- [x] 16. [LOW] Run `flutter analyze` and fix any lint issues introduced by the changes
-- [x] 17. [LOW] Build the app (`flutter build linux --release`) to verify no compile errors
+- [x] 1. [HIGH] Create `lib/core/activity_types.dart` — define `activityTypes` list (Práce, Volný čas, Odpočinek, Spánek, Cvičení) and a `activityTypeColor(String type)` helper that returns the distinct color for each type
+- [x] 2. [HIGH] Update `lib/data/time_entry.dart` — relax `description` column constraint from `min: 1` to `min: 0` to allow empty descriptions (skip feature)
+- [x] 3. [HIGH] Update `lib/data/database.dart` — bump schema to version 3, add migration that removes the min-length constraint on description column (SQLite: no-op, drift handles in Dart)
+- [x] 4. [HIGH] Run `dart run build_runner build --delete-conflicting-outputs` to regenerate `database.g.dart`
+- [x] 5. [HIGH] Add `LogTrigger` enum (`stop`, `finish`) and fields `prefillDescription`, `prefillActivityType`, `logTrigger` to `TimerState` in `lib/services/timer_service.dart`
+- [x] 6. [HIGH] Add `_isForeground` bool to `TimerNotifier`, update it in `didChangeAppLifecycleState`, initialize to `true`
+- [x] 7. [HIGH] Modify `_recalculate()` in `TimerNotifier` — when timer expires and `_isForeground == true`, transition directly to `logging` (skip ringing/alarm); otherwise keep existing ringing behavior
+- [x] 8. [HIGH] Add `savePrefill(String description, String activityType)` and `clearPrefill()` methods to `TimerNotifier`, persist prefill values in SharedPreferences
+- [x] 9. [HIGH] Modify `stopAndLog()` to set `logTrigger = LogTrigger.stop` and `clearPrefill()`; modify `finishNow()` and ringing→logging transitions to set `logTrigger = LogTrigger.finish`
+- [x] 10. [HIGH] Restore prefill values in `_restoreState()` from SharedPreferences
+- [x] 11. [HIGH] Run `dart run build_runner build --delete-conflicting-outputs` to regenerate `timer_service.freezed.dart` with new fields
+- [x] 12. [HIGH] Update `lib/ui/widgets/description_sheet.dart` — accept `initialDescription`, `initialActivityType`, `triggeredByStop`, and `isPrefillMode` params; pre-fill controller and type selector from these values
+- [x] 13. [HIGH] Add "Skip" button to `DescriptionSheet` — saves entry with empty description and selected activity type, then calls `autoRestart()` or `stop()` based on `triggeredByStop`
+- [x] 14. [HIGH] Update submit logic in `DescriptionSheet` — when `triggeredByStop == true` call `notifier.stop()` instead of `notifier.autoRestart()`; when `isPrefillMode == true` call `notifier.savePrefill()` + `notifier.resume()` and pop sheet
+- [x] 15. [HIGH] Add pre-fill button to `lib/ui/screens/timer_screen.dart` — show an icon button (edit_note) when status is running/paused; on tap, pause timer and open `DescriptionSheet` in prefill mode with current prefill values
+- [x] 16. [HIGH] Update `_showDescriptionSheet` in `timer_screen.dart` — pass `triggeredByStop` (from `timerState.logTrigger`), `initialDescription` and `initialActivityType` (from prefill state)
+- [x] 17. [MEDIUM] Update `lib/ui/widgets/description_sheet.dart` — use `activityTypeColor()` from `activity_types.dart` for chip styling (colored border/text when selected)
+- [x] 18. [MEDIUM] Update `lib/ui/widgets/edit_sheet.dart` — import and use `activityTypes` list from `activity_types.dart` (adds Cvičení), apply `activityTypeColor()` to chips
+- [x] 19. [MEDIUM] Update `lib/ui/widgets/history_entry_card.dart` — use `activityTypeColor()` for the activity badge text/border color
+- [x] 20. [MEDIUM] Clear `logTrigger` when timer transitions to idle (in `stop()` method) to avoid stale state
+- [x] 21. [LOW] Run `flutter analyze` and fix any lint issues introduced by the changes
+- [x] 22. [LOW] Build the app (`flutter build linux --release`) to verify no compile errors
