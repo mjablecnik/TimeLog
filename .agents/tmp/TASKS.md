@@ -6,7 +6,7 @@
 
 ## Feature 2: Project Field
 
-- [ ] 2. [HIGH] Add nullable `project` column to `TimeEntries` table in `lib/data/time_entry.dart`
+- [x] 2. [HIGH] Add nullable `project` column to `TimeEntries` table in `lib/data/time_entry.dart`
 - [ ] 3. [HIGH] Add schema v4 migration in `lib/data/database.dart` to add the project column
 - [ ] 4. [HIGH] Run `dart run build_runner build` to regenerate `database.g.dart`
 - [ ] 5. [HIGH] Create `lib/services/project_service.dart` — load/save project names via SharedPreferences
