@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/activity_types.dart';
 import '../../core/theme.dart';
 import '../../data/database.dart';
 import '../../providers/database_provider.dart';
-
-const _activityTypes = ['Práce', 'Volný čas', 'Odpočinek', 'Spánek'];
 
 class EditSheet extends ConsumerStatefulWidget {
   final AppThemeData theme;
@@ -121,8 +120,12 @@ class _EditSheetState extends ConsumerState<EditSheet> {
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
-                  children: _activityTypes.map((type) {
+                  children: activityTypes.map((type) {
                     final isSelected = type == _selectedType;
+                    final color = activityTypeColor(
+                      type,
+                      isDark: theme.themeKey != AppTheme.paper,
+                    );
                     return GestureDetector(
                       onTap: () => setState(() => _selectedType = type),
                       child: Container(
@@ -131,16 +134,18 @@ class _EditSheetState extends ConsumerState<EditSheet> {
                           vertical: 8,
                         ),
                         decoration: BoxDecoration(
-                          color: isSelected ? theme.accent : theme.panel,
+                          color: isSelected
+                              ? color.withValues(alpha: 0.2)
+                              : theme.panel,
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(
-                            color: isSelected ? theme.accent : theme.border,
+                            color: isSelected ? color : theme.border,
                           ),
                         ),
                         child: Text(
                           type,
                           style: TextStyle(
-                            color: isSelected ? theme.ink : theme.text,
+                            color: isSelected ? color : theme.text,
                             fontFamily: 'Sora',
                             fontSize: 13,
                             fontWeight: FontWeight.w600,

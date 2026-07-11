@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/activity_types.dart';
 import '../../core/theme.dart';
 import '../../data/database.dart';
 import '../../providers/database_provider.dart';
@@ -140,23 +141,31 @@ class _HistoryEntryCardState extends ConsumerState<HistoryEntryCard> {
                   ),
                 ),
               ),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: theme.background,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: theme.border),
-                ),
-                child: Text(
-                  entry.activityType,
-                  style: TextStyle(
-                    fontFamily: 'Sora',
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: theme.dim,
-                  ),
-                ),
+              Builder(
+                builder: (context) {
+                  final color = activityTypeColor(
+                    entry.activityType,
+                    isDark: theme.themeKey != AppTheme.paper,
+                  );
+                  return Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: color),
+                    ),
+                    child: Text(
+                      entry.activityType,
+                      style: TextStyle(
+                        fontFamily: 'Sora',
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: color,
+                      ),
+                    ),
+                  );
+                },
               ),
               const SizedBox(width: 8),
               Text(
