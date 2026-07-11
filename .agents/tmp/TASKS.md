@@ -19,7 +19,7 @@
 ## Feature 3: Statistics Screen
 
 - [x] 11. [HIGH] Add `getEntriesForRange(DateTime start, DateTime end)` method to `DatabaseService`
-- [ ] 12. [HIGH] Create statistics data model (StatsData with breakdowns by type and project)
+- [x] 12. [HIGH] Create statistics data model (StatsData with breakdowns by type and project)
 - [ ] 13. [HIGH] Create `lib/providers/statistics_provider.dart` with period/date state and computed stats
 - [ ] 14. [HIGH] Create `lib/ui/painters/bar_painter.dart` — CustomPainter for horizontal percentage bars
 - [ ] 15. [HIGH] Create `lib/ui/screens/statistics_screen.dart` — main statistics page with period toggle, breakdowns, and untracked time

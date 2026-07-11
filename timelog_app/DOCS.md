@@ -30,6 +30,7 @@ timelog_app/
       time_entry.dart              # Drift TimeEntries table definition
       database.dart                # AppDatabase (Drift), schema migrations
       database.g.dart              # Generated (build_runner) — do not hand-edit
+      stats_data.dart              # StatsPeriod enum + StatsData aggregation model
     providers/
       database_provider.dart       # AppDatabase / DatabaseService providers
       history_provider.dart        # Selected day + day's entries stream
