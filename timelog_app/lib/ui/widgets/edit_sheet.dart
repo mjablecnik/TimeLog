@@ -25,6 +25,8 @@ class _EditSheetState extends ConsumerState<EditSheet> {
   late final TextEditingController _controller;
   TextEditingController? _projectController;
   late String _selectedType;
+  late DateTime _startTime;
+  late DateTime _endTime;
   String? _error;
   bool _saving = false;
   List<String> _knownProjects = [];
@@ -36,7 +38,38 @@ class _EditSheetState extends ConsumerState<EditSheet> {
     _controller = TextEditingController(text: widget.entry.description);
     _initialProject = widget.entry.project ?? '';
     _selectedType = widget.entry.activityType;
+    _startTime = DateTime.parse(widget.entry.startTime).toLocal();
+    _endTime = DateTime.parse(widget.entry.endTime).toLocal();
     _loadKnownProjects();
+  }
+
+  String _formatTime(DateTime dt) {
+    final h = dt.hour.toString().padLeft(2, '0');
+    final m = dt.minute.toString().padLeft(2, '0');
+    return '$h:$m';
+  }
+
+  Future<void> _pickTime(bool isStart) async {
+    final current = isStart ? _startTime : _endTime;
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(current),
+    );
+    if (picked == null) return;
+    setState(() {
+      final updated = DateTime(
+        current.year,
+        current.month,
+        current.day,
+        picked.hour,
+        picked.minute,
+      );
+      if (isStart) {
+        _startTime = updated;
+      } else {
+        _endTime = updated;
+      }
+    });
   }
 
   Future<void> _loadKnownProjects() async {
@@ -136,6 +169,28 @@ class _EditSheetState extends ConsumerState<EditSheet> {
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
                   ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _TimeField(
+                        theme: theme,
+                        label: 'Start',
+                        time: _formatTime(_startTime),
+                        onTap: () => _pickTime(true),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _TimeField(
+                        theme: theme,
+                        label: 'End',
+                        time: _formatTime(_endTime),
+                        onTap: () => _pickTime(false),
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 16),
                 Wrap(
@@ -318,6 +373,58 @@ class _EditSheetState extends ConsumerState<EditSheet> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _TimeField extends StatelessWidget {
+  final AppThemeData theme;
+  final String label;
+  final String time;
+  final VoidCallback onTap;
+
+  const _TimeField({
+    required this.theme,
+    required this.label,
+    required this.time,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: theme.panel,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: theme.border),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                color: theme.faint,
+                fontFamily: 'Sora',
+                fontSize: 11,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              time,
+              style: TextStyle(
+                color: theme.text,
+                fontFamily: 'Sora',
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
