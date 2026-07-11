@@ -1,7 +1,7 @@
 # TASKS — TimeLog App: Round 4
 
 - [x] 1. [HIGH] Add cancel button to DescriptionSheet in prefill mode — add a "Zrušit" TextButton (or X IconButton) visible only when `isPrefillMode == true`, that calls `Navigator.of(context).pop()` without saving any data
-- [ ] 2. [HIGH] Ensure timer resumes after prefill sheet cancel — in `timer_screen.dart` `_showPrefillSheet`, add logic in `whenComplete` to resume timer if it's still paused (safety net for cancel path)
+- [x] 2. [HIGH] Ensure timer resumes after prefill sheet cancel — in `timer_screen.dart` `_showPrefillSheet`, add logic in `whenComplete` to resume timer if it's still paused (safety net for cancel path)
 - [ ] 3. [HIGH] Extend DatabaseService to support updating entry times — add `startTime` and `endTime` optional parameters to `updateDescription` (or create a new `updateEntry` method) that writes updated ISO8601 time strings
 - [ ] 4. [HIGH] Add time display and editing to EditSheet — show current start/end times as tappable HH:mm fields, open `showTimePicker` on tap, store selected times in local state
 - [ ] 5. [HIGH] Add time validation in EditSheet — validate that end time is after start time before saving, show error message if invalid

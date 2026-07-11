@@ -130,6 +130,9 @@ class _TimerScreenState extends ConsumerState<TimerScreen> {
       ),
     ).whenComplete(() {
       _sheetOpen = false;
+      if (ref.read(timerProvider).status == TimerStatus.paused) {
+        notifier.resume();
+      }
     });
   }
 
