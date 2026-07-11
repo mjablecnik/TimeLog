@@ -16,7 +16,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -26,6 +26,10 @@ class AppDatabase extends _$AppDatabase {
         onUpgrade: (Migrator m, int from, int to) async {
           if (from < 2) {
             await m.addColumn(timeEntries, timeEntries.activityType);
+          }
+          if (from < 3) {
+            // No SQL change needed: the description min-length constraint
+            // is enforced by drift at the Dart layer, not a SQL CHECK.
           }
         },
       );

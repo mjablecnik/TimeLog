@@ -53,7 +53,7 @@ class $TimeEntriesTable extends TimeEntries
     aliasedName,
     false,
     additionalChecks: GeneratedColumn.checkTextLength(
-      minTextLength: 1,
+      minTextLength: 0,
       maxTextLength: 500,
     ),
     type: DriftSqlType.string,
