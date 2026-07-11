@@ -47,6 +47,12 @@ class TimerNotifier extends StateNotifier<TimerState> with WidgetsBindingObserve
   final NotificationService _notifications;
   bool _isForeground = true;
 
+  /// Resolves once persisted timer state (if any) has been applied to
+  /// [state]. Callers that need an accurate idle check right after creating
+  /// the notifier (e.g. auto-starting from a notification tap) should await
+  /// this first.
+  late final Future<void> restored;
+
   TimerNotifier(this._alarm, this._liveActivity, this._notifications)
       : super(TimerState(
           status: TimerStatus.idle,
@@ -55,7 +61,7 @@ class TimerNotifier extends StateNotifier<TimerState> with WidgetsBindingObserve
         )) {
     WidgetsBinding.instance.addObserver(this);
     _liveActivity.setLockScreenActionHandler(_handleLockScreenAction);
-    _restoreState();
+    restored = _restoreState();
   }
 
   @override
