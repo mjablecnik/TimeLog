@@ -95,6 +95,37 @@ class _TimerScreenState extends ConsumerState<TimerScreen> {
         theme: theme,
         sessionStart: timerState.sessionStart ?? DateTime.now(),
         endedAt: timerState.endAt ?? _ringStartedAt ?? DateTime.now(),
+        initialDescription: timerState.prefillDescription,
+        initialActivityType: timerState.prefillActivityType,
+        triggeredByStop: timerState.logTrigger == LogTrigger.stop,
+      ),
+    ).whenComplete(() {
+      _sheetOpen = false;
+    });
+  }
+
+  void _showPrefillSheet(BuildContext context, AppThemeData theme, TimerState timerState) {
+    if (_sheetOpen) return;
+    _sheetOpen = true;
+
+    final notifier = ref.read(timerProvider.notifier);
+    if (timerState.status == TimerStatus.running) {
+      notifier.pause();
+    }
+
+    showModalBottomSheet<void>(
+      context: context,
+      isDismissible: false,
+      enableDrag: false,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => DescriptionSheet(
+        theme: theme,
+        sessionStart: timerState.sessionStart ?? DateTime.now(),
+        endedAt: DateTime.now(),
+        initialDescription: timerState.prefillDescription,
+        initialActivityType: timerState.prefillActivityType,
+        isPrefillMode: true,
       ),
     ).whenComplete(() {
       _sheetOpen = false;
@@ -211,6 +242,15 @@ class _TimerScreenState extends ConsumerState<TimerScreen> {
 
                 // Controls
                 TimerControls(theme: theme, adjustedMinutes: _adjustedMinutes),
+
+                if (status == TimerStatus.running || status == TimerStatus.paused) ...[
+                  const SizedBox(height: 16),
+                  IconButton(
+                    onPressed: () => _showPrefillSheet(context, theme, timerState),
+                    icon: Icon(Icons.edit_note_rounded, color: theme.dim),
+                    tooltip: 'Pre-fill description',
+                  ),
+                ],
 
                 const Spacer(),
               ],

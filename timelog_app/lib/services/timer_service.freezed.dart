@@ -22,6 +22,9 @@ mixin _$TimerState {
   int get secondsLeft => throw _privateConstructorUsedError;
   DateTime? get sessionStart => throw _privateConstructorUsedError;
   DateTime? get endAt => throw _privateConstructorUsedError;
+  String? get prefillDescription => throw _privateConstructorUsedError;
+  String? get prefillActivityType => throw _privateConstructorUsedError;
+  LogTrigger? get logTrigger => throw _privateConstructorUsedError;
 
   /// Create a copy of TimerState
   /// with the given fields replaced by the non-null parameter values.
@@ -43,6 +46,9 @@ abstract class $TimerStateCopyWith<$Res> {
     int secondsLeft,
     DateTime? sessionStart,
     DateTime? endAt,
+    String? prefillDescription,
+    String? prefillActivityType,
+    LogTrigger? logTrigger,
   });
 }
 
@@ -66,6 +72,9 @@ class _$TimerStateCopyWithImpl<$Res, $Val extends TimerState>
     Object? secondsLeft = null,
     Object? sessionStart = freezed,
     Object? endAt = freezed,
+    Object? prefillDescription = freezed,
+    Object? prefillActivityType = freezed,
+    Object? logTrigger = freezed,
   }) {
     return _then(
       _value.copyWith(
@@ -89,6 +98,18 @@ class _$TimerStateCopyWithImpl<$Res, $Val extends TimerState>
                 ? _value.endAt
                 : endAt // ignore: cast_nullable_to_non_nullable
                       as DateTime?,
+            prefillDescription: freezed == prefillDescription
+                ? _value.prefillDescription
+                : prefillDescription // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            prefillActivityType: freezed == prefillActivityType
+                ? _value.prefillActivityType
+                : prefillActivityType // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            logTrigger: freezed == logTrigger
+                ? _value.logTrigger
+                : logTrigger // ignore: cast_nullable_to_non_nullable
+                      as LogTrigger?,
           )
           as $Val,
     );
@@ -110,6 +131,9 @@ abstract class _$$TimerStateImplCopyWith<$Res>
     int secondsLeft,
     DateTime? sessionStart,
     DateTime? endAt,
+    String? prefillDescription,
+    String? prefillActivityType,
+    LogTrigger? logTrigger,
   });
 }
 
@@ -132,6 +156,9 @@ class __$$TimerStateImplCopyWithImpl<$Res>
     Object? secondsLeft = null,
     Object? sessionStart = freezed,
     Object? endAt = freezed,
+    Object? prefillDescription = freezed,
+    Object? prefillActivityType = freezed,
+    Object? logTrigger = freezed,
   }) {
     return _then(
       _$TimerStateImpl(
@@ -155,6 +182,18 @@ class __$$TimerStateImplCopyWithImpl<$Res>
             ? _value.endAt
             : endAt // ignore: cast_nullable_to_non_nullable
                   as DateTime?,
+        prefillDescription: freezed == prefillDescription
+            ? _value.prefillDescription
+            : prefillDescription // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        prefillActivityType: freezed == prefillActivityType
+            ? _value.prefillActivityType
+            : prefillActivityType // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        logTrigger: freezed == logTrigger
+            ? _value.logTrigger
+            : logTrigger // ignore: cast_nullable_to_non_nullable
+                  as LogTrigger?,
       ),
     );
   }
@@ -169,6 +208,9 @@ class _$TimerStateImpl implements _TimerState {
     required this.secondsLeft,
     this.sessionStart,
     this.endAt,
+    this.prefillDescription,
+    this.prefillActivityType,
+    this.logTrigger,
   });
 
   @override
@@ -181,10 +223,16 @@ class _$TimerStateImpl implements _TimerState {
   final DateTime? sessionStart;
   @override
   final DateTime? endAt;
+  @override
+  final String? prefillDescription;
+  @override
+  final String? prefillActivityType;
+  @override
+  final LogTrigger? logTrigger;
 
   @override
   String toString() {
-    return 'TimerState(status: $status, totalSeconds: $totalSeconds, secondsLeft: $secondsLeft, sessionStart: $sessionStart, endAt: $endAt)';
+    return 'TimerState(status: $status, totalSeconds: $totalSeconds, secondsLeft: $secondsLeft, sessionStart: $sessionStart, endAt: $endAt, prefillDescription: $prefillDescription, prefillActivityType: $prefillActivityType, logTrigger: $logTrigger)';
   }
 
   @override
@@ -199,7 +247,13 @@ class _$TimerStateImpl implements _TimerState {
                 other.secondsLeft == secondsLeft) &&
             (identical(other.sessionStart, sessionStart) ||
                 other.sessionStart == sessionStart) &&
-            (identical(other.endAt, endAt) || other.endAt == endAt));
+            (identical(other.endAt, endAt) || other.endAt == endAt) &&
+            (identical(other.prefillDescription, prefillDescription) ||
+                other.prefillDescription == prefillDescription) &&
+            (identical(other.prefillActivityType, prefillActivityType) ||
+                other.prefillActivityType == prefillActivityType) &&
+            (identical(other.logTrigger, logTrigger) ||
+                other.logTrigger == logTrigger));
   }
 
   @override
@@ -210,6 +264,9 @@ class _$TimerStateImpl implements _TimerState {
     secondsLeft,
     sessionStart,
     endAt,
+    prefillDescription,
+    prefillActivityType,
+    logTrigger,
   );
 
   /// Create a copy of TimerState
@@ -228,6 +285,9 @@ abstract class _TimerState implements TimerState {
     required final int secondsLeft,
     final DateTime? sessionStart,
     final DateTime? endAt,
+    final String? prefillDescription,
+    final String? prefillActivityType,
+    final LogTrigger? logTrigger,
   }) = _$TimerStateImpl;
 
   @override
@@ -240,6 +300,12 @@ abstract class _TimerState implements TimerState {
   DateTime? get sessionStart;
   @override
   DateTime? get endAt;
+  @override
+  String? get prefillDescription;
+  @override
+  String? get prefillActivityType;
+  @override
+  LogTrigger? get logTrigger;
 
   /// Create a copy of TimerState
   /// with the given fields replaced by the non-null parameter values.

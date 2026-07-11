@@ -14,6 +14,8 @@ part 'timer_service.freezed.dart';
 
 enum TimerStatus { idle, running, paused, ringing, logging }
 
+enum LogTrigger { stop, finish }
+
 @freezed
 class TimerState with _$TimerState {
   const factory TimerState({
@@ -22,6 +24,9 @@ class TimerState with _$TimerState {
     required int secondsLeft,
     DateTime? sessionStart,
     DateTime? endAt,
+    String? prefillDescription,
+    String? prefillActivityType,
+    LogTrigger? logTrigger,
   }) = _TimerState;
 }
 
@@ -30,12 +35,15 @@ const _kTimerEndAt = 'timer_endAt';
 const _kTimerSessionStart = 'timer_sessionStart';
 const _kTimerTotalSeconds = 'timer_totalSeconds';
 const _kTimerSecondsLeft = 'timer_secondsLeft';
+const _kPrefillDescription = 'timer_prefillDescription';
+const _kPrefillActivityType = 'timer_prefillActivityType';
 
 class TimerNotifier extends StateNotifier<TimerState> with WidgetsBindingObserver {
   Timer? _ticker;
   final AlarmService _alarm;
   final LiveActivityChannel _liveActivity;
   final NotificationService _notifications;
+  bool _isForeground = true;
 
   TimerNotifier(this._alarm, this._liveActivity, this._notifications)
       : super(TimerState(
@@ -57,6 +65,7 @@ class TimerNotifier extends StateNotifier<TimerState> with WidgetsBindingObserve
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    _isForeground = state == AppLifecycleState.resumed;
     if (state == AppLifecycleState.resumed) {
       _recalculate();
       if (this.state.status == TimerStatus.ringing) {
@@ -69,6 +78,9 @@ class TimerNotifier extends StateNotifier<TimerState> with WidgetsBindingObserve
     final prefs = await SharedPreferences.getInstance();
     final statusStr = prefs.getString(_kTimerStatus);
     if (statusStr == null) return;
+
+    final prefillDescription = prefs.getString(_kPrefillDescription);
+    final prefillActivityType = prefs.getString(_kPrefillActivityType);
 
     final totalSeconds =
         prefs.getInt(_kTimerTotalSeconds) ?? (TimerConfig.defaultDurationMinutes * 60);
@@ -119,6 +131,14 @@ class TimerNotifier extends StateNotifier<TimerState> with WidgetsBindingObserve
         secondsLeft: 0,
         sessionStart: sessionStart,
         endAt: null,
+        logTrigger: LogTrigger.finish,
+      );
+    }
+
+    if (prefillDescription != null || prefillActivityType != null) {
+      state = state.copyWith(
+        prefillDescription: prefillDescription,
+        prefillActivityType: prefillActivityType,
       );
     }
   }
@@ -223,6 +243,7 @@ class TimerNotifier extends StateNotifier<TimerState> with WidgetsBindingObserve
       status: TimerStatus.logging,
       secondsLeft: 0,
       endAt: finishTime,
+      logTrigger: LogTrigger.finish,
     );
     _saveState();
     _liveActivity.updateActivity(update: LiveActivityUpdate.completed);
@@ -239,15 +260,17 @@ class TimerNotifier extends StateNotifier<TimerState> with WidgetsBindingObserve
       status: TimerStatus.logging,
       secondsLeft: 0,
       endAt: finishTime,
+      logTrigger: LogTrigger.stop,
     );
     _saveState();
+    clearPrefill();
   }
 
   void dismissRinging() {
     if (state.status != TimerStatus.ringing) return;
     _alarm.stop();
     _liveActivity.endActivity();
-    state = state.copyWith(status: TimerStatus.logging);
+    state = state.copyWith(status: TimerStatus.logging, logTrigger: LogTrigger.finish);
     // Keep persisted state as 'ringing' so if app is killed during logging,
     // next launch shows ringing state again for the user to dismiss.
   }
@@ -267,6 +290,28 @@ class TimerNotifier extends StateNotifier<TimerState> with WidgetsBindingObserve
     _saveState();
     _liveActivity.startActivity(endAt: endAt, totalSeconds: totalSeconds);
     _notifications.scheduleTimerNotification(endAt: endAt);
+  }
+
+  void savePrefill(String description, String activityType) {
+    state = state.copyWith(
+      prefillDescription: description,
+      prefillActivityType: activityType,
+    );
+    SharedPreferences.getInstance().then((prefs) {
+      prefs.setString(_kPrefillDescription, description);
+      prefs.setString(_kPrefillActivityType, activityType);
+    });
+  }
+
+  void clearPrefill() {
+    state = state.copyWith(
+      prefillDescription: null,
+      prefillActivityType: null,
+    );
+    SharedPreferences.getInstance().then((prefs) {
+      prefs.remove(_kPrefillDescription);
+      prefs.remove(_kPrefillActivityType);
+    });
   }
 
   void _handleLockScreenAction(String action, {int? endAtMs}) {
@@ -313,14 +358,25 @@ class TimerNotifier extends StateNotifier<TimerState> with WidgetsBindingObserve
     if (secondsLeft <= 0) {
       _ticker?.cancel();
       _ticker = null;
-      state = state.copyWith(
-        status: TimerStatus.ringing,
-        secondsLeft: 0,
-        endAt: null,
-      );
-      _saveState();
-      _alarm.play();
-      _liveActivity.updateActivity(update: LiveActivityUpdate.completed);
+      if (_isForeground) {
+        state = state.copyWith(
+          status: TimerStatus.logging,
+          secondsLeft: 0,
+          endAt: null,
+          logTrigger: LogTrigger.finish,
+        );
+        _saveState();
+        _notifications.cancelTimerNotification();
+      } else {
+        state = state.copyWith(
+          status: TimerStatus.ringing,
+          secondsLeft: 0,
+          endAt: null,
+        );
+        _saveState();
+        _alarm.play();
+        _liveActivity.updateActivity(update: LiveActivityUpdate.completed);
+      }
     } else {
       state = state.copyWith(secondsLeft: secondsLeft);
     }

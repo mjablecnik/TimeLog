@@ -3,24 +3,32 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../core/activity_types.dart';
 import '../../core/theme.dart';
 import '../../data/database.dart';
 import '../../providers/database_provider.dart';
 import '../../providers/timer_provider.dart';
 
-const _activityTypes = ['Práce', 'Volný čas', 'Odpočinek', 'Spánek'];
 const _lastActivityTypeKey = 'last_activity_type';
 
 class DescriptionSheet extends ConsumerStatefulWidget {
   final AppThemeData theme;
   final DateTime sessionStart;
   final DateTime endedAt;
+  final String? initialDescription;
+  final String? initialActivityType;
+  final bool triggeredByStop;
+  final bool isPrefillMode;
 
   const DescriptionSheet({
     super.key,
     required this.theme,
     required this.sessionStart,
     required this.endedAt,
+    this.initialDescription,
+    this.initialActivityType,
+    this.triggeredByStop = false,
+    this.isPrefillMode = false,
   });
 
   @override
@@ -31,18 +39,22 @@ class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
   final _controller = TextEditingController();
   String? _error;
   bool _saving = false;
-  String _selectedType = _activityTypes.first;
+  late String _selectedType;
 
   @override
   void initState() {
     super.initState();
-    _loadLastActivityType();
+    _controller.text = widget.initialDescription ?? '';
+    _selectedType = widget.initialActivityType ?? activityTypes.first;
+    if (widget.initialActivityType == null) {
+      _loadLastActivityType();
+    }
   }
 
   Future<void> _loadLastActivityType() async {
     final prefs = await SharedPreferences.getInstance();
     final saved = prefs.getString(_lastActivityTypeKey);
-    if (saved != null && _activityTypes.contains(saved) && mounted) {
+    if (saved != null && activityTypes.contains(saved) && mounted) {
       setState(() => _selectedType = saved);
     }
   }
@@ -63,6 +75,27 @@ class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
 
   Future<void> _submit() async {
     if (!_canSubmit) return;
+    if (widget.isPrefillMode) {
+      await _savePrefillAndResume();
+    } else {
+      await _saveEntry(_controller.text.trim());
+    }
+  }
+
+  Future<void> _skip() async {
+    if (_saving) return;
+    await _saveEntry('');
+  }
+
+  Future<void> _savePrefillAndResume() async {
+    setState(() => _saving = true);
+    final notifier = ref.read(timerProvider.notifier);
+    notifier.savePrefill(_controller.text.trim(), _selectedType);
+    notifier.resume();
+    if (mounted) Navigator.of(context).pop();
+  }
+
+  Future<void> _saveEntry(String description) async {
     setState(() {
       _saving = true;
       _error = null;
@@ -82,12 +115,16 @@ class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
         TimeEntriesCompanion(
           startTime: Value(widget.sessionStart.toIso8601String()),
           endTime: Value(widget.endedAt.toIso8601String()),
-          description: Value(_controller.text.trim()),
+          description: Value(description),
           activityType: Value(_selectedType),
         ),
       );
 
-      ref.read(timerProvider.notifier).autoRestart();
+      if (widget.triggeredByStop) {
+        ref.read(timerProvider.notifier).stop();
+      } else {
+        ref.read(timerProvider.notifier).autoRestart();
+      }
       if (mounted) Navigator.of(context).pop();
     } catch (_) {
       setState(() {
@@ -142,8 +179,12 @@ class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
-                    children: _activityTypes.map((type) {
+                    children: activityTypes.map((type) {
                       final isSelected = type == _selectedType;
+                      final color = activityTypeColor(
+                        type,
+                        isDark: theme.themeKey != AppTheme.paper,
+                      );
                       return GestureDetector(
                         onTap: () => _selectType(type),
                         child: Container(
@@ -152,16 +193,18 @@ class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
                             vertical: 8,
                           ),
                           decoration: BoxDecoration(
-                            color: isSelected ? theme.accent : theme.panel,
+                            color: isSelected
+                                ? color.withValues(alpha: 0.2)
+                                : theme.panel,
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(
-                              color: isSelected ? theme.accent : theme.border,
+                              color: isSelected ? color : theme.border,
                             ),
                           ),
                           child: Text(
                             type,
                             style: TextStyle(
-                              color: isSelected ? theme.ink : theme.text,
+                              color: isSelected ? color : theme.text,
                               fontFamily: 'Sora',
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
@@ -230,7 +273,7 @@ class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
                               ),
                             )
                           : Text(
-                              'Submit',
+                              widget.isPrefillMode ? 'Save Draft' : 'Submit',
                               style: TextStyle(
                                 fontFamily: 'Sora',
                                 fontWeight: FontWeight.w600,
@@ -240,6 +283,22 @@ class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
                             ),
                     ),
                   ),
+                  if (!widget.isPrefillMode)
+                    TextButton(
+                      onPressed: _saving ? null : _skip,
+                      style: TextButton.styleFrom(
+                        foregroundColor: theme.dim,
+                      ),
+                      child: Text(
+                        'Skip',
+                        style: TextStyle(
+                          fontFamily: 'Sora',
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                          color: theme.dim,
+                        ),
+                      ),
+                    ),
                   const SizedBox(height: 24),
                 ],
               ),
