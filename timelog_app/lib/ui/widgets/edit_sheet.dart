@@ -90,6 +90,10 @@ class _EditSheetState extends ConsumerState<EditSheet> {
       setState(() => _error = 'Description cannot be empty.');
       return;
     }
+    if (!_endTime.isAfter(_startTime)) {
+      setState(() => _error = 'End time must be after start time.');
+      return;
+    }
     if (!_canSave) return;
 
     setState(() {
