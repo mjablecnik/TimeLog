@@ -20,9 +20,9 @@ Color activityTypeColor(String type, {bool isDark = true}) {
     case 'Odpočinek':
       return Colors.blue[400]!;
     case 'Spánek':
-      return isDark ? const Color(0xFF1A2340) : Colors.blueGrey[900]!;
+      return isDark ? Colors.purple[300]! : Colors.purple[700]!;
     case 'Cvičení':
-      return Colors.deepOrange[700]!;
+      return Colors.amber[600]!;
     default:
       return Colors.grey[400]!;
   }
