@@ -3,10 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/activity_types.dart';
 import '../../core/theme.dart';
+import '../../data/database.dart' show TimeEntry;
 import '../../data/stats_data.dart';
 import '../../providers/statistics_provider.dart';
 import '../../providers/theme_provider.dart';
 import '../painters/bar_painter.dart';
+import '../painters/timeline_painter.dart';
 
 String _formatDuration(Duration duration) {
   final totalMinutes = duration.inMinutes;
@@ -23,6 +25,8 @@ class StatisticsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = ref.watch(themeProvider);
     final statsAsync = ref.watch(statisticsProvider);
+    final period = ref.watch(statisticsPeriodProvider);
+    final date = ref.watch(statisticsDateProvider);
 
     return Scaffold(
       backgroundColor: theme.background,
@@ -48,7 +52,18 @@ class StatisticsScreen extends ConsumerWidget {
             const SizedBox(height: 4),
             Expanded(
               child: statsAsync.when(
-                data: (stats) => _StatsBody(stats: stats, theme: theme),
+                data: (stats) => Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (period == StatsPeriod.daily)
+                      _DailyTimeline(
+                        entries: stats.entries,
+                        day: date,
+                        theme: theme,
+                      ),
+                    Expanded(child: _StatsBody(stats: stats, theme: theme)),
+                  ],
+                ),
                 loading: () => Center(
                   child: CircularProgressIndicator(color: theme.accent),
                 ),
@@ -219,6 +234,44 @@ class _DateNav extends ConsumerWidget {
                 },
         ),
       ],
+    );
+  }
+}
+
+class _DailyTimeline extends StatelessWidget {
+  final List<TimeEntry> entries;
+  final DateTime day;
+  final AppThemeData theme;
+
+  const _DailyTimeline({
+    required this.entries,
+    required this.day,
+    required this.theme,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = theme.themeKey != AppTheme.paper;
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: theme.panel,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: theme.border),
+      ),
+      child: SizedBox(
+        height: 48,
+        child: CustomPaint(
+          painter: TimelinePainter(
+            entries: entries,
+            day: day,
+            theme: theme,
+            isDark: isDark,
+          ),
+          size: Size.infinite,
+        ),
+      ),
     );
   }
 }
