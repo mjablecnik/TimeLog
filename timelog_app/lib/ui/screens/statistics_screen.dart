@@ -10,6 +10,13 @@ import '../../providers/theme_provider.dart';
 import '../painters/bar_painter.dart';
 import '../painters/timeline_painter.dart';
 
+const _weekdayLabels = ['Po', 'Út', 'St', 'Čt', 'Pá', 'So', 'Ne'];
+
+DateTime _weekStart(DateTime date) {
+  final start = date.subtract(Duration(days: date.weekday - 1));
+  return DateTime(start.year, start.month, start.day);
+}
+
 String _formatDuration(Duration duration) {
   final totalMinutes = duration.inMinutes;
   if (totalMinutes < 60) return '${totalMinutes}m';
@@ -59,6 +66,12 @@ class StatisticsScreen extends ConsumerWidget {
                       _DailyTimeline(
                         entries: stats.entries,
                         day: date,
+                        theme: theme,
+                      )
+                    else
+                      _WeeklyTimeline(
+                        entries: stats.entries,
+                        weekStart: _weekStart(date),
                         theme: theme,
                       ),
                     Expanded(child: _StatsBody(stats: stats, theme: theme)),
@@ -164,11 +177,6 @@ class _DateNav extends ConsumerWidget {
 
   const _DateNav({required this.theme});
 
-  DateTime _weekStart(DateTime date) {
-    final start = date.subtract(Duration(days: date.weekday - 1));
-    return DateTime(start.year, start.month, start.day);
-  }
-
   String _label(StatsPeriod period, DateTime date) {
     final now = DateTime.now();
     if (period == StatsPeriod.daily) {
@@ -272,6 +280,104 @@ class _DailyTimeline extends StatelessWidget {
           size: Size.infinite,
         ),
       ),
+    );
+  }
+}
+
+class _WeeklyTimeline extends StatelessWidget {
+  final List<TimeEntry> entries;
+  final DateTime weekStart;
+  final AppThemeData theme;
+
+  const _WeeklyTimeline({
+    required this.entries,
+    required this.weekStart,
+    required this.theme,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = theme.themeKey != AppTheme.paper;
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: theme.panel,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: theme.border),
+      ),
+      child: Column(
+        children: [
+          for (var i = 0; i < 7; i++)
+            Padding(
+              padding: EdgeInsets.only(bottom: i < 6 ? 6 : 0),
+              child: _WeekdayRow(
+                label: _weekdayLabels[i],
+                day: weekStart.add(Duration(days: i)),
+                entries: entries,
+                theme: theme,
+                isDark: isDark,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _WeekdayRow extends StatelessWidget {
+  final String label;
+  final DateTime day;
+  final List<TimeEntry> entries;
+  final AppThemeData theme;
+  final bool isDark;
+
+  const _WeekdayRow({
+    required this.label,
+    required this.day,
+    required this.entries,
+    required this.theme,
+    required this.isDark,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final dayEntries = entries.where((entry) {
+      final start = DateTime.parse(entry.startTime);
+      return start.year == day.year &&
+          start.month == day.month &&
+          start.day == day.day;
+    }).toList();
+
+    return Row(
+      children: [
+        SizedBox(
+          width: 22,
+          child: Text(
+            label,
+            style: TextStyle(
+              color: theme.dim,
+              fontFamily: 'Sora',
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+        Expanded(
+          child: SizedBox(
+            height: 28,
+            child: CustomPaint(
+              painter: TimelinePainter(
+                entries: dayEntries,
+                day: day,
+                theme: theme,
+                isDark: isDark,
+              ),
+              size: Size.infinite,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
