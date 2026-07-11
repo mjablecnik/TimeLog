@@ -1,140 +1,110 @@
-# SPEC — TimeLog App: Round 4
+# SPEC: Daily Timer Reminder — Local Notification
 
 ## Overview
 
-Four improvements to the TimeLog Flutter app: (1) cancel button for prefill sheet, (2) time editing in history, (3) auto-prefill from last submission with reset button, (4) daily timeline graph on statistics screen.
+Add a daily local notification that reminds the user to start the timer at a configurable time (default 08:00). Tapping the notification opens the app and auto-starts the timer if idle. The feature is opt-in, configurable via a new Settings screen.
 
-## Architecture Context
+## Goals
 
-- Flutter app using Riverpod for state management, Drift for database, SharedPreferences for lightweight persistence
-- UI in `lib/ui/` (screens, widgets, painters), services in `lib/services/`, providers in `lib/providers/`, data/models in `lib/data/`, shared config/utils in `lib/core/`
-- Timer logic in `TimerNotifier` (StateNotifier + Freezed state)
-- Database: Drift with `TimeEntries` table (id, startTime, endTime, description, activityType, project, createdAt)
-- Theming via `AppThemeData` with named color properties
+1. Schedule a repeating daily local notification at a user-chosen time
+2. Auto-start the timer when the notification is tapped (if timer is idle)
+3. Provide a Settings screen with enable/disable toggle and time picker
+4. Persist reminder preferences locally
+5. Handle iOS notification permissions gracefully
+6. Re-schedule on app launch to survive reboots/updates
 
----
+## Technical Approach
 
-## Feature 1: Close Prefill Sheet Without Saving
+### Package Choice
 
-### Problem
-`DescriptionSheet` in prefill mode (`isPrefillMode: true`) has no cancel/close button. The only exit is saving a draft.
+Use `flutter_local_notifications` for cross-platform local notification scheduling with `zonedSchedule` and `matchDateTimeComponents: DateTimeComponents.time` for daily repeats. Use `timezone` (bundled with flutter_local_notifications) for TZDateTime conversion.
 
-### Solution
-- Add a "Cancel" text button (or X icon) to the prefill mode UI in `DescriptionSheet`
-- On tap: dismiss sheet without saving, discard typed text
-- Timer must resume after dismissal (it was paused when prefill sheet opened)
-- Implementation: in `_showPrefillSheet` on `TimerScreen`, the `whenComplete` callback should check if timer is still paused and resume it. Alternatively, the cancel action in `DescriptionSheet` calls `notifier.resume()` before `Navigator.pop()`.
+**Why not extend the existing native method channel approach?** The existing `NotificationService` uses a method channel for one-shot timer-completion notifications. Daily repeating scheduled notifications are better handled by `flutter_local_notifications` which provides `zonedSchedule` with repeating support, permission handling, and tap callbacks — all from Dart without additional Swift code.
 
-### Affected Files
-- `lib/ui/widgets/description_sheet.dart` — add cancel button in prefill mode
-- `lib/ui/screens/timer_screen.dart` — ensure timer resumes on sheet dismissal without save (safety net in `whenComplete`)
+### Architecture
 
----
+- New service: `ReminderService` (separate from existing `NotificationService` which handles timer-completion alerts via method channel)
+- New screen: `SettingsScreen` added as a 4th tab in bottom nav
+- State management: Riverpod provider for reminder settings
+- Persistence: SharedPreferences (already a dependency)
 
-## Feature 2: Edit Entry Times in History
+## Key Components
 
-### Problem
-`EditSheet` allows changing description, activity type, and project — but not start/end times.
+### 1. ReminderService (`lib/services/reminder_service.dart`)
 
-### Solution
-- Display current start time and end time in `EditSheet` (HH:mm format)
-- Each time is tappable → opens `showTimePicker`
-- Validation: end must be after start
-- Save persists updated times to database
+Responsibilities:
+- Initialize `flutter_local_notifications` plugin
+- Request iOS notification permission (returns bool)
+- Schedule daily notification at a specific `TimeOfDay` using `zonedSchedule`
+- Cancel scheduled notification
+- Handle notification tap via callback (sets a flag/stream that the app reads)
 
-### Database Change
-- Add `updateEntry` method to `DatabaseService` (or extend `updateDescription`) that accepts optional `startTime` and `endTime` values
+Notification details:
+- ID: `1001` (distinct from timer notification which uses native channel)
+- Channel: `daily_reminder`
+- Title: "TimeLog"
+- Body: "Time to start your timer!"
+- Payload: `"start_timer"`
 
-### Affected Files
-- `lib/ui/widgets/edit_sheet.dart` — add time display rows with tap-to-edit
-- `lib/services/database_service.dart` — support updating start/end time fields
+### 2. ReminderProvider (`lib/providers/reminder_provider.dart`)
 
----
+A `StateNotifier<ReminderSettings>` with Riverpod:
+- `ReminderSettings`: `{enabled: bool, hour: int, minute: int}`
+- Loads from SharedPreferences on init
+- Exposes `toggleEnabled()`, `setTime(TimeOfDay)`
+- Calls `ReminderService` to schedule/cancel as needed
 
-## Feature 3: Auto-Prefill From Last Submission
+SharedPreferences keys:
+- `reminder_enabled` (bool)
+- `reminder_hour` (int)
+- `reminder_minute` (int)
 
-### Problem
-When no draft exists during session, the description sheet opens empty even though the user often repeats the same entry.
+### 3. SettingsScreen (`lib/ui/screens/settings_screen.dart`)
 
-### Solution
-- After each successful entry save, persist the submitted values (description, activityType, project) to SharedPreferences under keys like `last_submitted_description`, `last_submitted_activity_type`, `last_submitted_project`
-- When `DescriptionSheet` opens in non-prefill mode with no draft values (`initialDescription == null`), load last-submitted values from SharedPreferences and use as initial form values
-- Add a clearly visible reset (X) button that clears all form fields in one tap:
-  - Description → empty
-  - Activity type → first item (`Práce`)
-  - Project → empty
-- Reset button always visible (not just when prefilled), placed in top-right corner or next to the title
+New screen accessible as the 4th tab (gear icon):
+- "Daily Reminder" section with:
+  - Toggle switch (enable/disable)
+  - Time picker row (tappable, shows current time, opens `showTimePicker`)
+- When toggling on: request permission → if granted, schedule; if denied, show snackbar and revert toggle
+- When changing time: cancel old → schedule new
 
-### Priority of Pre-fill
-1. Draft (prefill saved during session) — passed as `initialDescription`/`initialActivityType`/`initialProject`
-2. Last submitted entry — loaded from SharedPreferences when no draft
-3. Empty form — only if no history at all
+### 4. Auto-Start on Tap (`main.dart` / `app.dart`)
 
-### Affected Files
-- `lib/ui/widgets/description_sheet.dart` — load last-submitted on open, add reset button, save last-submitted on successful save
-- (SharedPreferences interaction stays within the widget — no service needed)
+When the app launches from a notification tap:
+1. `ReminderService` initialization captures the launch notification payload
+2. If payload == `"start_timer"` and timer is idle → call `timerNotifier.start()`
+3. If timer is already running/paused → do nothing
 
----
+### 5. Re-schedule on Launch (`main.dart`)
 
-## Feature 4: Timeline Graph on Statistics Screen
+On every app launch:
+- If `reminder_enabled == true` in SharedPreferences, re-schedule the notification
+- This handles the case where iOS cleared the scheduled notification after reboot/update
 
-### Problem
-Statistics screen only shows aggregated totals, no visibility into when activities happened during the day.
+## File Structure
 
-### Solution
-- Add a timeline widget below the date nav / above the stats body (or at the top of the stats list)
-- **Daily mode**: single horizontal bar representing the day. Each entry is a colored block (color from `activityTypeColor()`). Width proportional to duration. Gaps shown as empty/dark space.
-- **Weekly mode**: 7 horizontal bars stacked vertically (Monday–Sunday), each labeled with Czech day abbreviations (Po, Út, St, Čt, Pá, So, Ne)
-- Hour markers below each bar for reference
-- Dynamic time range based on earliest/latest entry (or 6:00–24:00 default)
-- Implemented using `CustomPainter` — no external charting libraries
-
-### Data Requirement
-- The `statisticsProvider` already fetches raw `TimeEntry` list via `getEntriesForRange`. Need to expose those raw entries alongside the aggregated `StatsData` so the timeline painter can use them.
-- Create a new provider or extend the existing one to provide raw entries grouped by day.
-
-### New Files
-- `lib/ui/painters/timeline_painter.dart` — CustomPainter for the timeline bar(s)
-
-### Affected Files
-- `lib/ui/screens/statistics_screen.dart` — add timeline widget
-- `lib/providers/statistics_provider.dart` — expose raw entries for timeline
-
----
-
-## File Structure (New/Modified)
-
+New files:
 ```
-lib/
-├── core/
-│   └── activity_types.dart            (no change)
-├── data/
-│   ├── database.dart                  (no change)
-│   ├── stats_data.dart                (extend with raw entries field)
-│   └── time_entry.dart                (no change)
-├── providers/
-│   └── statistics_provider.dart       (expose raw entries)
-├── services/
-│   ├── database_service.dart          (add time update support)
-│   └── timer_service.dart             (no change)
-├── ui/
-│   ├── painters/
-│   │   └── timeline_painter.dart      (NEW)
-│   ├── screens/
-│   │   ├── statistics_screen.dart     (add timeline widget)
-│   │   └── timer_screen.dart          (ensure resume on prefill cancel)
-│   └── widgets/
-│       ├── description_sheet.dart     (cancel button, auto-prefill, reset)
-│       └── edit_sheet.dart            (time editing)
+lib/services/reminder_service.dart    — notification scheduling logic
+lib/providers/reminder_provider.dart  — state management for settings
+lib/ui/screens/settings_screen.dart   — settings UI (4th tab)
 ```
 
----
+Modified files:
+```
+pubspec.yaml                          — add flutter_local_notifications, timezone
+lib/main.dart                         — initialize ReminderService, handle launch payload
+lib/app.dart                          — add SettingsScreen as 4th tab
+lib/ui/widgets/bottom_nav.dart        — add 4th nav item (Settings/gear icon)
+ios/Runner/Info.plist                  — (if needed) no additional keys required for flutter_local_notifications
+```
 
-## Constraints
+## Constraints & Edge Cases
 
-- Reset button: minimum 44×44px touch target
-- Time editing: must validate end > start before saving
-- Prefill cancel: timer must not remain paused after sheet dismissal
-- UI text: Czech for user-facing labels (consistent with existing app)
-- Timeline graph: additive — existing stats UI unchanged
-- No external charting libraries for timeline (use `CustomPainter`)
+1. **Permission denied**: Revert toggle to off, show explanation via SnackBar
+2. **App reboot/update**: Re-schedule on next launch if enabled
+3. **Time zone changes**: Use `timezone` package with `TZDateTime` for correct local scheduling
+4. **Notification while timer running**: Notification still fires (reminder only), tapping just opens app without restarting
+5. **Existing NotificationService conflict**: The existing service uses a different method channel (`com.jablecnik.timelog/notifications`) and native notification ID (`timelog_timer_alarm`). The new `ReminderService` uses `flutter_local_notifications` plugin with a different notification ID (`1001`). No conflict.
+6. **iOS-only target**: The brief states iOS only. Use iOS-specific initialization settings. Android config included minimally for compilation but not tested.
+7. **First launch after enabling**: If user enables reminder at 09:00 for 08:00, the first notification fires the next day at 08:00 (expected behavior of daily repeat).
