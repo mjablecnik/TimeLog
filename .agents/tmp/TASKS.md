@@ -15,4 +15,4 @@
 - [x] 13. [HIGH] Implement weekly timeline in statistics screen — in weekly mode, show 7 stacked timeline bars (one per day, Mon–Sun) with Czech day labels (Po, Út, St, Čt, Pá, So, Ne)
 - [x] 14. [MEDIUM] Handle edge cases in timeline painter — dynamic time range based on first/last entry (fallback 6:00–24:00), handle entries with zero duration, handle overlapping entries gracefully
 - [x] 15. [MEDIUM] Test prefill cancel flow — verify that canceling the prefill sheet discards text, resumes the timer, and doesn't leave stale prefill state
-- [ ] 16. [MEDIUM] Test time editing validation — verify end > start validation works, that the time picker respects the same-day constraint, and that the database is updated correctly
+- [x] 16. [MEDIUM] Test time editing validation — verify end > start validation works, that the time picker respects the same-day constraint, and that the database is updated correctly
