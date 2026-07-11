@@ -1,41 +1,40 @@
 # BRIEF – Planned Changes
 
-## 1. Confirmation dialog on Stop/Reset + description
+## 1. Activity type colors
 
-When the user taps the Stop or Reset button, show a confirmation dialog asking "Do you really want to reset the timer?" The user must confirm before the timer is actually reset.
+Each activity type has a distinct color used in the type badge (description dialog + history):
+- **Práce** — red
+- **Volný čas** — green
+- **Odpočinek** — blue
+- **Spánek** — black or dark blue
+- **Cvičení** — dark orange
 
-After confirming the stop, show the description input dialog (same as when the timer finishes) so the user can log what they were working on.
+Add "Cvičení" as a new activity type option.
 
-## 2. Ringing behavior when app is opened
+## 2. Pre-fill description while timer is running
 
-When the timer finishes and the app starts beeping, opening the app should:
-- Immediately stop the beeping
-- Skip the dismiss dialog entirely
-- Show the description input dialog right away
+While the timer is running, provide a button (or similar UI element) that allows the user to write a description in advance.
 
-## 3. Activity type on description input
+Behavior:
+- Tapping the button pauses the timer (but does NOT stop/finish it)
+- Opens the description input dialog (with the activity type selector)
+- The user fills in the description and type, then confirms
+- The timer resumes counting from where it was paused
+- When the timer eventually finishes (naturally or via flag/stop) and the description dialog appears, the previously entered description and activity type are pre-filled
+- The pre-filled description applies only to the current session — once the entry is saved, it is cleared
 
-Add a type selector to the description dialog with these options:
-- Práce
-- Volný čas
-- Odpočinek
-- Spánek
+## 3. Stop button should not auto-restart timer
 
-The selected type must be:
-- Visible in the history list next to each entry's description
-- Persisted so the last chosen type is pre-selected as the default next time
+After the user taps Stop, confirms the reset, and submits the description, the timer must NOT auto-restart. It should return to the idle state.
 
-## 4. Date format in history
+Auto-restart (starting a new session automatically) should only happen when the timer finishes via the flag (finish now) button or when it expires naturally.
 
-When scrolling further into history, display dates in the format: `9. 7. 2026` (day. month. year with spaces after dots).
+## 4. Skip description option
 
-## 5. Flag button behavior change
+The description dialog must have a "Skip" button that:
+- Saves the time entry with the selected activity type but with an empty description
+- Behaves the same as submit (auto-restart or idle depending on how the timer ended)
 
-When the user taps the flag (finish now) button:
-- Do NOT start beeping
-- Instead, immediately show the description input dialog (same as point 2)
-- Beeping should only happen when the timer expires naturally and the user is not present / the app is in background
+## 5. Skip ringing overlay when app is in foreground
 
-## 6. Theme switcher location
-
-Remove the theme switcher from the history page. It should only exist on the timer page.
+When the timer expires while the app is already in the foreground, do not show the ringing overlay at all. Transition directly from running → logging (show the description dialog). The ringing overlay and alarm sound should only activate when the app is in the background or the user is not present.
