@@ -96,6 +96,7 @@ class _TimerScreenState extends ConsumerState<TimerScreen> {
         endedAt: timerState.endAt ?? _ringStartedAt ?? DateTime.now(),
         initialDescription: timerState.prefillDescription,
         initialActivityType: timerState.prefillActivityType,
+        initialProject: timerState.prefillProject,
         triggeredByStop: timerState.logTrigger == LogTrigger.stop,
       ),
     ).whenComplete(() {
@@ -124,6 +125,7 @@ class _TimerScreenState extends ConsumerState<TimerScreen> {
         endedAt: DateTime.now(),
         initialDescription: timerState.prefillDescription,
         initialActivityType: timerState.prefillActivityType,
+        initialProject: timerState.prefillProject,
         isPrefillMode: true,
       ),
     ).whenComplete(() {

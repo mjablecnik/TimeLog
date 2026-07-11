@@ -325,6 +325,37 @@ class _StatsBody extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
+                'Celkem sledováno',
+                style: TextStyle(
+                  color: theme.dim,
+                  fontFamily: 'Sora',
+                  fontSize: 13,
+                ),
+              ),
+              Text(
+                _formatDuration(stats.totalTracked),
+                style: TextStyle(
+                  color: theme.text,
+                  fontFamily: 'Sora',
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: theme.panel,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: theme.border),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
                 'Nesledovaný čas',
                 style: TextStyle(
                   color: theme.dim,

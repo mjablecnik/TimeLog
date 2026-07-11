@@ -26,6 +26,7 @@ class TimerState with _$TimerState {
     DateTime? endAt,
     String? prefillDescription,
     String? prefillActivityType,
+    String? prefillProject,
     LogTrigger? logTrigger,
   }) = _TimerState;
 }
@@ -37,6 +38,7 @@ const _kTimerTotalSeconds = 'timer_totalSeconds';
 const _kTimerSecondsLeft = 'timer_secondsLeft';
 const _kPrefillDescription = 'timer_prefillDescription';
 const _kPrefillActivityType = 'timer_prefillActivityType';
+const _kPrefillProject = 'timer_prefillProject';
 
 class TimerNotifier extends StateNotifier<TimerState> with WidgetsBindingObserver {
   Timer? _ticker;
@@ -81,6 +83,7 @@ class TimerNotifier extends StateNotifier<TimerState> with WidgetsBindingObserve
 
     final prefillDescription = prefs.getString(_kPrefillDescription);
     final prefillActivityType = prefs.getString(_kPrefillActivityType);
+    final prefillProject = prefs.getString(_kPrefillProject);
 
     final totalSeconds =
         prefs.getInt(_kTimerTotalSeconds) ?? (TimerConfig.defaultDurationMinutes * 60);
@@ -135,10 +138,11 @@ class TimerNotifier extends StateNotifier<TimerState> with WidgetsBindingObserve
       );
     }
 
-    if (prefillDescription != null || prefillActivityType != null) {
+    if (prefillDescription != null || prefillActivityType != null || prefillProject != null) {
       state = state.copyWith(
         prefillDescription: prefillDescription,
         prefillActivityType: prefillActivityType,
+        prefillProject: prefillProject,
       );
     }
   }
@@ -292,14 +296,20 @@ class TimerNotifier extends StateNotifier<TimerState> with WidgetsBindingObserve
     _notifications.scheduleTimerNotification(endAt: endAt);
   }
 
-  void savePrefill(String description, String activityType) {
+  void savePrefill(String description, String activityType, {String? project}) {
     state = state.copyWith(
       prefillDescription: description,
       prefillActivityType: activityType,
+      prefillProject: project,
     );
     SharedPreferences.getInstance().then((prefs) {
       prefs.setString(_kPrefillDescription, description);
       prefs.setString(_kPrefillActivityType, activityType);
+      if (project != null && project.isNotEmpty) {
+        prefs.setString(_kPrefillProject, project);
+      } else {
+        prefs.remove(_kPrefillProject);
+      }
     });
   }
 
@@ -307,10 +317,12 @@ class TimerNotifier extends StateNotifier<TimerState> with WidgetsBindingObserve
     state = state.copyWith(
       prefillDescription: null,
       prefillActivityType: null,
+      prefillProject: null,
     );
     SharedPreferences.getInstance().then((prefs) {
       prefs.remove(_kPrefillDescription);
       prefs.remove(_kPrefillActivityType);
+      prefs.remove(_kPrefillProject);
     });
   }
 

@@ -17,6 +17,7 @@ class DescriptionSheet extends ConsumerStatefulWidget {
   final DateTime endedAt;
   final String? initialDescription;
   final String? initialActivityType;
+  final String? initialProject;
   final bool triggeredByStop;
   final bool isPrefillMode;
 
@@ -27,6 +28,7 @@ class DescriptionSheet extends ConsumerStatefulWidget {
     required this.endedAt,
     this.initialDescription,
     this.initialActivityType,
+    this.initialProject,
     this.triggeredByStop = false,
     this.isPrefillMode = false,
   });
@@ -47,6 +49,7 @@ class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
   void initState() {
     super.initState();
     _controller.text = widget.initialDescription ?? '';
+    _projectController.text = widget.initialProject ?? '';
     _selectedType = widget.initialActivityType ?? activityTypes.first;
     if (widget.initialActivityType == null) {
       _loadLastActivityType();
@@ -99,7 +102,10 @@ class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
   Future<void> _savePrefillAndResume() async {
     setState(() => _saving = true);
     final notifier = ref.read(timerProvider.notifier);
-    notifier.savePrefill(_controller.text.trim(), _selectedType);
+    final project = isWorkActivityType(_selectedType)
+        ? _projectController.text.trim()
+        : null;
+    notifier.savePrefill(_controller.text.trim(), _selectedType, project: project);
     notifier.resume();
     if (mounted) Navigator.of(context).pop();
   }

@@ -24,6 +24,7 @@ mixin _$TimerState {
   DateTime? get endAt => throw _privateConstructorUsedError;
   String? get prefillDescription => throw _privateConstructorUsedError;
   String? get prefillActivityType => throw _privateConstructorUsedError;
+  String? get prefillProject => throw _privateConstructorUsedError;
   LogTrigger? get logTrigger => throw _privateConstructorUsedError;
 
   /// Create a copy of TimerState
@@ -48,6 +49,7 @@ abstract class $TimerStateCopyWith<$Res> {
     DateTime? endAt,
     String? prefillDescription,
     String? prefillActivityType,
+    String? prefillProject,
     LogTrigger? logTrigger,
   });
 }
@@ -74,6 +76,7 @@ class _$TimerStateCopyWithImpl<$Res, $Val extends TimerState>
     Object? endAt = freezed,
     Object? prefillDescription = freezed,
     Object? prefillActivityType = freezed,
+    Object? prefillProject = freezed,
     Object? logTrigger = freezed,
   }) {
     return _then(
@@ -106,6 +109,10 @@ class _$TimerStateCopyWithImpl<$Res, $Val extends TimerState>
                 ? _value.prefillActivityType
                 : prefillActivityType // ignore: cast_nullable_to_non_nullable
                       as String?,
+            prefillProject: freezed == prefillProject
+                ? _value.prefillProject
+                : prefillProject // ignore: cast_nullable_to_non_nullable
+                      as String?,
             logTrigger: freezed == logTrigger
                 ? _value.logTrigger
                 : logTrigger // ignore: cast_nullable_to_non_nullable
@@ -133,6 +140,7 @@ abstract class _$$TimerStateImplCopyWith<$Res>
     DateTime? endAt,
     String? prefillDescription,
     String? prefillActivityType,
+    String? prefillProject,
     LogTrigger? logTrigger,
   });
 }
@@ -158,6 +166,7 @@ class __$$TimerStateImplCopyWithImpl<$Res>
     Object? endAt = freezed,
     Object? prefillDescription = freezed,
     Object? prefillActivityType = freezed,
+    Object? prefillProject = freezed,
     Object? logTrigger = freezed,
   }) {
     return _then(
@@ -190,6 +199,10 @@ class __$$TimerStateImplCopyWithImpl<$Res>
             ? _value.prefillActivityType
             : prefillActivityType // ignore: cast_nullable_to_non_nullable
                   as String?,
+        prefillProject: freezed == prefillProject
+            ? _value.prefillProject
+            : prefillProject // ignore: cast_nullable_to_non_nullable
+                  as String?,
         logTrigger: freezed == logTrigger
             ? _value.logTrigger
             : logTrigger // ignore: cast_nullable_to_non_nullable
@@ -210,6 +223,7 @@ class _$TimerStateImpl implements _TimerState {
     this.endAt,
     this.prefillDescription,
     this.prefillActivityType,
+    this.prefillProject,
     this.logTrigger,
   });
 
@@ -228,11 +242,13 @@ class _$TimerStateImpl implements _TimerState {
   @override
   final String? prefillActivityType;
   @override
+  final String? prefillProject;
+  @override
   final LogTrigger? logTrigger;
 
   @override
   String toString() {
-    return 'TimerState(status: $status, totalSeconds: $totalSeconds, secondsLeft: $secondsLeft, sessionStart: $sessionStart, endAt: $endAt, prefillDescription: $prefillDescription, prefillActivityType: $prefillActivityType, logTrigger: $logTrigger)';
+    return 'TimerState(status: $status, totalSeconds: $totalSeconds, secondsLeft: $secondsLeft, sessionStart: $sessionStart, endAt: $endAt, prefillDescription: $prefillDescription, prefillActivityType: $prefillActivityType, prefillProject: $prefillProject, logTrigger: $logTrigger)';
   }
 
   @override
@@ -252,6 +268,8 @@ class _$TimerStateImpl implements _TimerState {
                 other.prefillDescription == prefillDescription) &&
             (identical(other.prefillActivityType, prefillActivityType) ||
                 other.prefillActivityType == prefillActivityType) &&
+            (identical(other.prefillProject, prefillProject) ||
+                other.prefillProject == prefillProject) &&
             (identical(other.logTrigger, logTrigger) ||
                 other.logTrigger == logTrigger));
   }
@@ -266,6 +284,7 @@ class _$TimerStateImpl implements _TimerState {
     endAt,
     prefillDescription,
     prefillActivityType,
+    prefillProject,
     logTrigger,
   );
 
@@ -287,6 +306,7 @@ abstract class _TimerState implements TimerState {
     final DateTime? endAt,
     final String? prefillDescription,
     final String? prefillActivityType,
+    final String? prefillProject,
     final LogTrigger? logTrigger,
   }) = _$TimerStateImpl;
 
@@ -304,6 +324,8 @@ abstract class _TimerState implements TimerState {
   String? get prefillDescription;
   @override
   String? get prefillActivityType;
+  @override
+  String? get prefillProject;
   @override
   LogTrigger? get logTrigger;
 
