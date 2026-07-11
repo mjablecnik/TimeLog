@@ -27,9 +27,19 @@ class DatabaseService {
         .get();
   }
 
-  Future<void> updateDescription(int id, String description) async {
-    await (_db.update(_db.timeEntries)..where((t) => t.id.equals(id)))
-        .write(TimeEntriesCompanion(description: Value(description)));
+  Future<void> updateDescription(
+    int id,
+    String description, {
+    String? activityType,
+  }) async {
+    await (_db.update(_db.timeEntries)..where((t) => t.id.equals(id))).write(
+      TimeEntriesCompanion(
+        description: Value(description),
+        activityType: activityType == null
+            ? const Value.absent()
+            : Value(activityType),
+      ),
+    );
   }
 
   Future<void> deleteEntry(int id) async {

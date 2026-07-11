@@ -140,6 +140,25 @@ class _HistoryEntryCardState extends ConsumerState<HistoryEntryCard> {
                   ),
                 ),
               ),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: theme.background,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: theme.border),
+                ),
+                child: Text(
+                  entry.activityType,
+                  style: TextStyle(
+                    fontFamily: 'Sora',
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: theme.dim,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
               Text(
                 _formatDuration(entry.startTime, entry.endTime),
                 style: TextStyle(

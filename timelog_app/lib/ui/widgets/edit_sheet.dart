@@ -5,6 +5,8 @@ import '../../core/theme.dart';
 import '../../data/database.dart';
 import '../../providers/database_provider.dart';
 
+const _activityTypes = ['Práce', 'Volný čas', 'Odpočinek', 'Spánek'];
+
 class EditSheet extends ConsumerStatefulWidget {
   final AppThemeData theme;
   final TimeEntry entry;
@@ -21,6 +23,7 @@ class EditSheet extends ConsumerStatefulWidget {
 
 class _EditSheetState extends ConsumerState<EditSheet> {
   late final TextEditingController _controller;
+  late String _selectedType;
   String? _error;
   bool _saving = false;
 
@@ -28,6 +31,7 @@ class _EditSheetState extends ConsumerState<EditSheet> {
   void initState() {
     super.initState();
     _controller = TextEditingController(text: widget.entry.description);
+    _selectedType = widget.entry.activityType;
   }
 
   @override
@@ -61,7 +65,10 @@ class _EditSheetState extends ConsumerState<EditSheet> {
       }
 
       await dbService.updateDescription(
-          widget.entry.id, _controller.text.trim());
+        widget.entry.id,
+        _controller.text.trim(),
+        activityType: _selectedType,
+      );
       if (mounted) Navigator.of(context).pop();
     } catch (_) {
       setState(() {
@@ -109,6 +116,39 @@ class _EditSheetState extends ConsumerState<EditSheet> {
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
                   ),
+                ),
+                const SizedBox(height: 16),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: _activityTypes.map((type) {
+                    final isSelected = type == _selectedType;
+                    return GestureDetector(
+                      onTap: () => setState(() => _selectedType = type),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isSelected ? theme.accent : theme.panel,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: isSelected ? theme.accent : theme.border,
+                          ),
+                        ),
+                        child: Text(
+                          type,
+                          style: TextStyle(
+                            color: isSelected ? theme.ink : theme.text,
+                            fontFamily: 'Sora',
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
                 ),
                 const SizedBox(height: 16),
                 Container(

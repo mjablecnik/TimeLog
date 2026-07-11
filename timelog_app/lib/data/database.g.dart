@@ -59,6 +59,18 @@ class $TimeEntriesTable extends TimeEntries
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _activityTypeMeta = const VerificationMeta(
+    'activityType',
+  );
+  @override
+  late final GeneratedColumn<String> activityType = GeneratedColumn<String>(
+    'activity_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('Práce'),
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -77,6 +89,7 @@ class $TimeEntriesTable extends TimeEntries
     startTime,
     endTime,
     description,
+    activityType,
     createdAt,
   ];
   @override
@@ -121,6 +134,15 @@ class $TimeEntriesTable extends TimeEntries
     } else if (isInserting) {
       context.missing(_descriptionMeta);
     }
+    if (data.containsKey('activity_type')) {
+      context.handle(
+        _activityTypeMeta,
+        activityType.isAcceptableOrUnknown(
+          data['activity_type']!,
+          _activityTypeMeta,
+        ),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -152,6 +174,10 @@ class $TimeEntriesTable extends TimeEntries
         DriftSqlType.string,
         data['${effectivePrefix}description'],
       )!,
+      activityType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}activity_type'],
+      )!,
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -170,12 +196,14 @@ class TimeEntry extends DataClass implements Insertable<TimeEntry> {
   final String startTime;
   final String endTime;
   final String description;
+  final String activityType;
   final DateTime createdAt;
   const TimeEntry({
     required this.id,
     required this.startTime,
     required this.endTime,
     required this.description,
+    required this.activityType,
     required this.createdAt,
   });
   @override
@@ -185,6 +213,7 @@ class TimeEntry extends DataClass implements Insertable<TimeEntry> {
     map['start_time'] = Variable<String>(startTime);
     map['end_time'] = Variable<String>(endTime);
     map['description'] = Variable<String>(description);
+    map['activity_type'] = Variable<String>(activityType);
     map['created_at'] = Variable<DateTime>(createdAt);
     return map;
   }
@@ -195,6 +224,7 @@ class TimeEntry extends DataClass implements Insertable<TimeEntry> {
       startTime: Value(startTime),
       endTime: Value(endTime),
       description: Value(description),
+      activityType: Value(activityType),
       createdAt: Value(createdAt),
     );
   }
@@ -209,6 +239,7 @@ class TimeEntry extends DataClass implements Insertable<TimeEntry> {
       startTime: serializer.fromJson<String>(json['startTime']),
       endTime: serializer.fromJson<String>(json['endTime']),
       description: serializer.fromJson<String>(json['description']),
+      activityType: serializer.fromJson<String>(json['activityType']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
   }
@@ -220,6 +251,7 @@ class TimeEntry extends DataClass implements Insertable<TimeEntry> {
       'startTime': serializer.toJson<String>(startTime),
       'endTime': serializer.toJson<String>(endTime),
       'description': serializer.toJson<String>(description),
+      'activityType': serializer.toJson<String>(activityType),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
   }
@@ -229,12 +261,14 @@ class TimeEntry extends DataClass implements Insertable<TimeEntry> {
     String? startTime,
     String? endTime,
     String? description,
+    String? activityType,
     DateTime? createdAt,
   }) => TimeEntry(
     id: id ?? this.id,
     startTime: startTime ?? this.startTime,
     endTime: endTime ?? this.endTime,
     description: description ?? this.description,
+    activityType: activityType ?? this.activityType,
     createdAt: createdAt ?? this.createdAt,
   );
   TimeEntry copyWithCompanion(TimeEntriesCompanion data) {
@@ -245,6 +279,9 @@ class TimeEntry extends DataClass implements Insertable<TimeEntry> {
       description: data.description.present
           ? data.description.value
           : this.description,
+      activityType: data.activityType.present
+          ? data.activityType.value
+          : this.activityType,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
   }
@@ -256,6 +293,7 @@ class TimeEntry extends DataClass implements Insertable<TimeEntry> {
           ..write('startTime: $startTime, ')
           ..write('endTime: $endTime, ')
           ..write('description: $description, ')
+          ..write('activityType: $activityType, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
@@ -263,7 +301,7 @@ class TimeEntry extends DataClass implements Insertable<TimeEntry> {
 
   @override
   int get hashCode =>
-      Object.hash(id, startTime, endTime, description, createdAt);
+      Object.hash(id, startTime, endTime, description, activityType, createdAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -272,6 +310,7 @@ class TimeEntry extends DataClass implements Insertable<TimeEntry> {
           other.startTime == this.startTime &&
           other.endTime == this.endTime &&
           other.description == this.description &&
+          other.activityType == this.activityType &&
           other.createdAt == this.createdAt);
 }
 
@@ -280,12 +319,14 @@ class TimeEntriesCompanion extends UpdateCompanion<TimeEntry> {
   final Value<String> startTime;
   final Value<String> endTime;
   final Value<String> description;
+  final Value<String> activityType;
   final Value<DateTime> createdAt;
   const TimeEntriesCompanion({
     this.id = const Value.absent(),
     this.startTime = const Value.absent(),
     this.endTime = const Value.absent(),
     this.description = const Value.absent(),
+    this.activityType = const Value.absent(),
     this.createdAt = const Value.absent(),
   });
   TimeEntriesCompanion.insert({
@@ -293,6 +334,7 @@ class TimeEntriesCompanion extends UpdateCompanion<TimeEntry> {
     required String startTime,
     required String endTime,
     required String description,
+    this.activityType = const Value.absent(),
     this.createdAt = const Value.absent(),
   }) : startTime = Value(startTime),
        endTime = Value(endTime),
@@ -302,6 +344,7 @@ class TimeEntriesCompanion extends UpdateCompanion<TimeEntry> {
     Expression<String>? startTime,
     Expression<String>? endTime,
     Expression<String>? description,
+    Expression<String>? activityType,
     Expression<DateTime>? createdAt,
   }) {
     return RawValuesInsertable({
@@ -309,6 +352,7 @@ class TimeEntriesCompanion extends UpdateCompanion<TimeEntry> {
       if (startTime != null) 'start_time': startTime,
       if (endTime != null) 'end_time': endTime,
       if (description != null) 'description': description,
+      if (activityType != null) 'activity_type': activityType,
       if (createdAt != null) 'created_at': createdAt,
     });
   }
@@ -318,6 +362,7 @@ class TimeEntriesCompanion extends UpdateCompanion<TimeEntry> {
     Value<String>? startTime,
     Value<String>? endTime,
     Value<String>? description,
+    Value<String>? activityType,
     Value<DateTime>? createdAt,
   }) {
     return TimeEntriesCompanion(
@@ -325,6 +370,7 @@ class TimeEntriesCompanion extends UpdateCompanion<TimeEntry> {
       startTime: startTime ?? this.startTime,
       endTime: endTime ?? this.endTime,
       description: description ?? this.description,
+      activityType: activityType ?? this.activityType,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -344,6 +390,9 @@ class TimeEntriesCompanion extends UpdateCompanion<TimeEntry> {
     if (description.present) {
       map['description'] = Variable<String>(description.value);
     }
+    if (activityType.present) {
+      map['activity_type'] = Variable<String>(activityType.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -357,6 +406,7 @@ class TimeEntriesCompanion extends UpdateCompanion<TimeEntry> {
           ..write('startTime: $startTime, ')
           ..write('endTime: $endTime, ')
           ..write('description: $description, ')
+          ..write('activityType: $activityType, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
@@ -380,6 +430,7 @@ typedef $$TimeEntriesTableCreateCompanionBuilder =
       required String startTime,
       required String endTime,
       required String description,
+      Value<String> activityType,
       Value<DateTime> createdAt,
     });
 typedef $$TimeEntriesTableUpdateCompanionBuilder =
@@ -388,6 +439,7 @@ typedef $$TimeEntriesTableUpdateCompanionBuilder =
       Value<String> startTime,
       Value<String> endTime,
       Value<String> description,
+      Value<String> activityType,
       Value<DateTime> createdAt,
     });
 
@@ -417,6 +469,11 @@ class $$TimeEntriesTableFilterComposer
 
   ColumnFilters<String> get description => $composableBuilder(
     column: $table.description,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get activityType => $composableBuilder(
+    column: $table.activityType,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -455,6 +512,11 @@ class $$TimeEntriesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get activityType => $composableBuilder(
+    column: $table.activityType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -481,6 +543,11 @@ class $$TimeEntriesTableAnnotationComposer
 
   GeneratedColumn<String> get description => $composableBuilder(
     column: $table.description,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get activityType => $composableBuilder(
+    column: $table.activityType,
     builder: (column) => column,
   );
 
@@ -523,12 +590,14 @@ class $$TimeEntriesTableTableManager
                 Value<String> startTime = const Value.absent(),
                 Value<String> endTime = const Value.absent(),
                 Value<String> description = const Value.absent(),
+                Value<String> activityType = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
               }) => TimeEntriesCompanion(
                 id: id,
                 startTime: startTime,
                 endTime: endTime,
                 description: description,
+                activityType: activityType,
                 createdAt: createdAt,
               ),
           createCompanionCallback:
@@ -537,12 +606,14 @@ class $$TimeEntriesTableTableManager
                 required String startTime,
                 required String endTime,
                 required String description,
+                Value<String> activityType = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
               }) => TimeEntriesCompanion.insert(
                 id: id,
                 startTime: startTime,
                 endTime: endTime,
                 description: description,
+                activityType: activityType,
                 createdAt: createdAt,
               ),
           withReferenceMapper: (p0) => p0

@@ -1,11 +1,15 @@
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/theme.dart';
 import '../../data/database.dart';
 import '../../providers/database_provider.dart';
 import '../../providers/timer_provider.dart';
+
+const _activityTypes = ['Práce', 'Volný čas', 'Odpočinek', 'Spánek'];
+const _lastActivityTypeKey = 'last_activity_type';
 
 class DescriptionSheet extends ConsumerStatefulWidget {
   final AppThemeData theme;
@@ -27,6 +31,27 @@ class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
   final _controller = TextEditingController();
   String? _error;
   bool _saving = false;
+  String _selectedType = _activityTypes.first;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLastActivityType();
+  }
+
+  Future<void> _loadLastActivityType() async {
+    final prefs = await SharedPreferences.getInstance();
+    final saved = prefs.getString(_lastActivityTypeKey);
+    if (saved != null && _activityTypes.contains(saved) && mounted) {
+      setState(() => _selectedType = saved);
+    }
+  }
+
+  Future<void> _selectType(String type) async {
+    setState(() => _selectedType = type);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_lastActivityTypeKey, type);
+  }
 
   @override
   void dispose() {
@@ -58,6 +83,7 @@ class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
           startTime: Value(widget.sessionStart.toIso8601String()),
           endTime: Value(widget.endedAt.toIso8601String()),
           description: Value(_controller.text.trim()),
+          activityType: Value(_selectedType),
         ),
       );
 
@@ -111,6 +137,39 @@ class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
                     ),
+                  ),
+                  const SizedBox(height: 16),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: _activityTypes.map((type) {
+                      final isSelected = type == _selectedType;
+                      return GestureDetector(
+                        onTap: () => _selectType(type),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isSelected ? theme.accent : theme.panel,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: isSelected ? theme.accent : theme.border,
+                            ),
+                          ),
+                          child: Text(
+                            type,
+                            style: TextStyle(
+                              color: isSelected ? theme.ink : theme.text,
+                              fontFamily: 'Sora',
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      );
+                    }).toList(),
                   ),
                   const SizedBox(height: 16),
                   Container(
