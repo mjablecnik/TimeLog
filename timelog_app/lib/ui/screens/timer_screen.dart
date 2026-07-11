@@ -10,7 +10,6 @@ import '../painters/ring_painter.dart';
 import '../widgets/description_sheet.dart';
 import '../widgets/duration_adjuster.dart';
 import '../widgets/ringing_overlay.dart';
-import '../widgets/theme_dots.dart';
 import '../widgets/timer_controls.dart';
 
 const _minDurationMinutes = 5;
