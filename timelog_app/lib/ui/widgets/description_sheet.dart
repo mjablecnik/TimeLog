@@ -37,9 +37,11 @@ class DescriptionSheet extends ConsumerStatefulWidget {
 
 class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
   final _controller = TextEditingController();
+  final _projectController = TextEditingController();
   String? _error;
   bool _saving = false;
   late String _selectedType;
+  List<String> _knownProjects = [];
 
   @override
   void initState() {
@@ -49,6 +51,12 @@ class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
     if (widget.initialActivityType == null) {
       _loadLastActivityType();
     }
+    _loadKnownProjects();
+  }
+
+  Future<void> _loadKnownProjects() async {
+    final projects = await ref.read(projectServiceProvider).getKnownProjects();
+    if (mounted) setState(() => _knownProjects = projects);
   }
 
   Future<void> _loadLastActivityType() async {
@@ -68,6 +76,7 @@ class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
   @override
   void dispose() {
     _controller.dispose();
+    _projectController.dispose();
     super.dispose();
   }
 
@@ -111,14 +120,23 @@ class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
         return;
       }
 
+      final project = isWorkActivityType(_selectedType)
+          ? _projectController.text.trim()
+          : '';
+
       await dbService.insertTimeEntry(
         TimeEntriesCompanion(
           startTime: Value(widget.sessionStart.toIso8601String()),
           endTime: Value(widget.endedAt.toIso8601String()),
           description: Value(description),
           activityType: Value(_selectedType),
+          project: Value(project.isEmpty ? null : project),
         ),
       );
+
+      if (project.isNotEmpty) {
+        await ref.read(projectServiceProvider).saveProject(project);
+      }
 
       if (widget.triggeredByStop) {
         ref.read(timerProvider.notifier).stop();
@@ -214,6 +232,67 @@ class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
                       );
                     }).toList(),
                   ),
+                  if (isWorkActivityType(_selectedType)) ...[
+                    const SizedBox(height: 16),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: theme.panel,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: theme.border),
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      child: Autocomplete<String>(
+                        textEditingController: _projectController,
+                        optionsBuilder: (textEditingValue) {
+                          final query = textEditingValue.text.trim().toLowerCase();
+                          if (query.isEmpty) return _knownProjects;
+                          return _knownProjects.where(
+                            (p) => p.toLowerCase().contains(query),
+                          );
+                        },
+                        fieldViewBuilder: (context, controller, focusNode, onSubmitted) {
+                          return TextField(
+                            controller: controller,
+                            focusNode: focusNode,
+                            style: TextStyle(color: theme.text, fontFamily: 'Sora', fontSize: 15),
+                            decoration: InputDecoration(
+                              hintText: 'Project name...',
+                              hintStyle: TextStyle(color: theme.faint, fontFamily: 'Sora'),
+                              border: InputBorder.none,
+                            ),
+                          );
+                        },
+                        optionsViewBuilder: (context, onSelected, options) {
+                          return Align(
+                            alignment: Alignment.topLeft,
+                            child: Material(
+                              elevation: 4,
+                              borderRadius: BorderRadius.circular(12),
+                              color: theme.panel,
+                              child: ConstrainedBox(
+                                constraints: const BoxConstraints(maxHeight: 200),
+                                child: ListView.builder(
+                                  shrinkWrap: true,
+                                  padding: EdgeInsets.zero,
+                                  itemCount: options.length,
+                                  itemBuilder: (context, index) {
+                                    final option = options.elementAt(index);
+                                    return ListTile(
+                                      title: Text(
+                                        option,
+                                        style: TextStyle(color: theme.text, fontFamily: 'Sora'),
+                                      ),
+                                      onTap: () => onSelected(option),
+                                    );
+                                  },
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 16),
                   Container(
                     decoration: BoxDecoration(

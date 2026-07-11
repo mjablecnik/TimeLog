@@ -11,6 +11,11 @@ const List<String> activityTypes = [
   'Jídlo',
 ];
 
+/// Activity types that represent work and should show a project field.
+const List<String> workActivityTypes = ['Práce', 'Volná práce'];
+
+bool isWorkActivityType(String type) => workActivityTypes.contains(type);
+
 /// Returns the distinct badge color for [type]. [isDark] selects the
 /// variant for the "Spánek" and "Přesun" types, which need a different
 /// shade on light themes to stay legible.
