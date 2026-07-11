@@ -55,7 +55,9 @@ class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
     _controller.text = widget.initialDescription ?? '';
     _initialProject = widget.initialProject ?? '';
     _selectedType = widget.initialActivityType ?? activityTypes.first;
-    if (widget.initialActivityType == null) {
+    if (!widget.isPrefillMode && widget.initialDescription == null) {
+      _loadLastSubmitted();
+    } else if (widget.initialActivityType == null) {
       _loadLastActivityType();
     }
     _loadKnownProjects();
@@ -72,6 +74,24 @@ class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
     if (saved != null && activityTypes.contains(saved) && mounted) {
       setState(() => _selectedType = saved);
     }
+  }
+
+  Future<void> _loadLastSubmitted() async {
+    final prefs = await SharedPreferences.getInstance();
+    final description = prefs.getString(_lastSubmittedDescriptionKey);
+    final activityType = prefs.getString(_lastSubmittedActivityTypeKey);
+    final project = prefs.getString(_lastSubmittedProjectKey);
+    if (!mounted) return;
+    setState(() {
+      if (description != null) _controller.text = description;
+      if (activityType != null && activityTypes.contains(activityType)) {
+        _selectedType = activityType;
+      }
+      if (project != null) {
+        _initialProject = project;
+        _projectController?.text = project;
+      }
+    });
   }
 
   Future<void> _selectType(String type) async {
