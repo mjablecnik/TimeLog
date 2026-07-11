@@ -385,6 +385,22 @@ class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
                         ),
                       ),
                     ),
+                  if (widget.isPrefillMode)
+                    TextButton(
+                      onPressed: _saving ? null : () => Navigator.of(context).pop(),
+                      style: TextButton.styleFrom(
+                        foregroundColor: theme.dim,
+                      ),
+                      child: Text(
+                        'Zrušit',
+                        style: TextStyle(
+                          fontFamily: 'Sora',
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                          color: theme.dim,
+                        ),
+                      ),
+                    ),
                   const SizedBox(height: 24),
                 ],
               ),
