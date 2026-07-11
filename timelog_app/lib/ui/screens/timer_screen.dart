@@ -172,10 +172,10 @@ class _TimerScreenState extends ConsumerState<TimerScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const SizedBox(height: 12),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: const [ThemeDots()],
-                ),
+                // Row(
+                //   mainAxisAlignment: MainAxisAlignment.center,
+                //   children: const [ThemeDots()],
+                // ),
                 const Spacer(),
 
                 // Ring + countdown

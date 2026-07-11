@@ -6,7 +6,7 @@ import '../core/theme.dart';
 const _themeKey = 'selected_theme';
 
 class ThemeNotifier extends StateNotifier<AppThemeData> {
-  ThemeNotifier() : super(AppThemeData.ember) {
+  ThemeNotifier() : super(AppThemeData.midnight) {
     _load();
   }
 
