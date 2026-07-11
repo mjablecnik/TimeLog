@@ -2,7 +2,7 @@
 
 ## Feature 1: New Activity Types
 
-- [ ] 1. [HIGH] Add new activity types (Volná práce, Přesun, Jídlo) and colors to `lib/core/activity_types.dart`
+- [x] 1. [HIGH] Add new activity types (Volná práce, Přesun, Jídlo) and colors to `lib/core/activity_types.dart`
 
 ## Feature 2: Project Field
 

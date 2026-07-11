@@ -6,11 +6,14 @@ const List<String> activityTypes = [
   'Odpočinek',
   'Spánek',
   'Cvičení',
+  'Volná práce',
+  'Přesun',
+  'Jídlo',
 ];
 
 /// Returns the distinct badge color for [type]. [isDark] selects the
-/// variant for the "Spánek" type, which needs a different shade on light
-/// themes to stay legible.
+/// variant for the "Spánek" and "Přesun" types, which need a different
+/// shade on light themes to stay legible.
 Color activityTypeColor(String type, {bool isDark = true}) {
   switch (type) {
     case 'Práce':
@@ -23,6 +26,12 @@ Color activityTypeColor(String type, {bool isDark = true}) {
       return isDark ? Colors.purple[300]! : Colors.purple[700]!;
     case 'Cvičení':
       return Colors.amber[600]!;
+    case 'Volná práce':
+      return Colors.teal[400]!;
+    case 'Přesun':
+      return isDark ? Colors.indigo[300]! : Colors.indigo[400]!;
+    case 'Jídlo':
+      return Colors.orange[400]!;
     default:
       return Colors.grey[400]!;
   }
