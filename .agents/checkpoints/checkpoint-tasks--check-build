@@ -1,0 +1,10 @@
+{
+  "pipeline": "/home/martin/.trayline/pipelines/tasks/check-build.yaml",
+  "variables": {
+    "path": "timelog_app/"
+  },
+  "completed_steps": null,
+  "next_step": "check-build",
+  "timestamp": "2026-07-11T10:52:24+02:00",
+  "rate_limited": false
+}

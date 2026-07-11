@@ -1,5 +1,17 @@
 # Memory
 
+## audioplayers_linux crashes on startup (uncaught C++ exception) unless GStreamer plugin binaries are installed, not just -dev headers
+- Project: timelog_app
+- Problem: `flutter build linux` succeeds and `flutter analyze`/`flutter test` pass cleanly (all use only `libgstreamer1.0-dev`/`libgstreamer-plugins-base1.0-dev`), but the built binary aborts immediately on startup with `terminate called after throwing an instance of 'char const*'` / SIGABRT the first time it constructs an `AudioPlayer` (audioplayers_linux plugin, alarm sound). Root cause (confirmed via gdb backtrace, `AudioPlayer::AudioPlayer` in `audioplayers_linux-*/linux/audio_player.cc:17`): `gst_element_factory_make("playbin", NULL)` returns null because the `playbin` GStreamer element is shipped in the `gstreamer1.0-plugins-base` runtime package, which is NOT a dependency of the `-dev` packages used at build time. `audio_player.cc` throws a raw `throw "Not all elements could be created.";` (bare C-string, not a subclass of `std::exception`) from inside a GLib platform-message callback, which is never caught anywhere up the call stack (flutter engine → GTK → GLib main loop → `main()`), so it always terminates the whole process, not just the failing plugin call.
+- Solution: This is an environment/runtime-dependency gap, not an app code bug — don't try to fix it in Dart/C++. Install (or in a no-root sandbox, `apt-get download` + `dpkg-deb -x` into a local prefix and add to `LD_LIBRARY_PATH` + `GST_PLUGIN_SYSTEM_PATH`) the actual GStreamer plugin packages: `gstreamer1.0-plugins-base`, `gstreamer1.0-plugins-good`, and their transitive runtime lib `liborc-0.4-0t64` (the dev variant `liborc-0.4-dev` only ships the unversioned `.so` symlink, not `.so.0`). README now documents this under Requirements. To reproduce/verify in a headless container: run under `dbus-run-session -- xvfb-run -a ./timelog_app`, and to get a real backtrace when it aborts, run under gdb with `handle SIGPIPE nostop noprint pass` first (dart:io's Process/ExitCodeHandler thread trips an unrelated, harmless SIGPIPE early that otherwise stops gdb before reaching the real crash).
+- Source: check-build, 2026-07-11
+
+## dart pub get strips platform plugin registration — use flutter pub get or revert generated files
+- Project: timelog_app
+- Problem: Running `/opt/flutter/bin/cache/dart-sdk/bin/dart pub get` directly (instead of `flutter pub get`) to resolve dependencies before `flutter analyze`/`flutter test` also regenerates `linux/flutter/generated_plugin_registrant.cc`, `linux/flutter/generated_plugins.cmake`, `macos/Flutter/GeneratedPluginRegistrant.swift`, and `windows/flutter/generated_plugin_registrant.cc/.cmake`, but strips out the `audioplayers_linux` and `sqlite3_flutter_libs` plugin registrations (dart pub get's plugin resolution differs from flutter's). This silently breaks the Linux build (missing plugin registration) if the generated files are committed.
+- Solution: After running `dart pub get`, check `git status`/`git diff` for changes to `generated_plugin_registrant.*` / `generated_plugins.cmake` / `GeneratedPluginRegistrant.swift` and `git checkout --` them before committing, since they aren't part of the intended change. Prefer `flutter pub get` via the wrapper when possible; only fall back to raw `dart pub get` when needed and always revert the plugin registrant side-effects afterward.
+- Source: from-brief, 2026-07-11
+
 ## flutter command fails due to /opt/flutter read-only permissions
 - Project: timelog_app
 - Problem: `/opt/flutter/bin/cache/engine.stamp` and `/opt/flutter/bin/cache/lockfile` are owned by root and read-only. The `flutter` shell script tries to overwrite engine.stamp on every run, causing "Permission denied" and exiting before running any command. The flutter dart snapshot also needs to write to `/opt/flutter/packages/flutter_tools/.dart_tool/package_config.json` which is also read-only.
@@ -74,6 +86,12 @@
     /tmp/flutter-wrap/bin/flutter build linux
   ```
 - Source: check-build, 2026-07-10
+
+## pub-cache missing packages referenced in .dart_tool/package_config.json cause cascading false compile errors
+- Project: timelog_app
+- Problem: `flutter analyze`/`flutter test` on files unrelated to riverpod (e.g. `edit_sheet.dart`) failed with `Target of URI doesn't exist: 'package:flutter_riverpod/...'`, `Undefined class 'ConsumerState'`, `widget`/`setState`/`mounted`/`context` undefined, plus unrelated errors in `boolean_selector`/`string_scanner` (`FileSpan isn't a type`). `.dart_tool/package_config.json` and `pubspec.lock` both referenced `flutter_riverpod-2.6.1`, but the package was simply absent from `/home/agent/.pub-cache/hosted/pub.dev/` (likely pruned/reset between agent runs) — so the analyzer treated the import as missing and cascaded undefined-identifier errors through the whole class.
+- Solution: Before trusting confusing "undefined" errors that look like a real code bug, check whether the referenced package actually exists on disk: `ls /home/agent/.pub-cache/hosted/pub.dev/ | grep -i <pkg>`. If missing, run `/opt/flutter/bin/cache/dart-sdk/bin/dart pub get` to refetch (then check `git status` for the plugin-registrant side effects noted below and revert them before committing).
+- Source: from-brief, 2026-07-11
 
 ## dart_check package does not exist on pub.dev
 - Project: timelog_app

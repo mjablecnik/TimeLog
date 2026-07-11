@@ -5,7 +5,9 @@ A countdown timer app with time tracking capabilities built with Flutter.
 ## Requirements
 
 - Flutter SDK (Dart ^3.10.4)
-- For Linux desktop: `clang`, `cmake`, `ninja-build`, `pkg-config`, `libgtk-3-dev`, `libgstreamer1.0-dev`, `libgstreamer-plugins-base1.0-dev`
+- For Linux desktop:
+  - Build: `clang`, `cmake`, `ninja-build`, `pkg-config`, `libgtk-3-dev`, `libgstreamer1.0-dev`, `libgstreamer-plugins-base1.0-dev`
+  - Runtime (audio playback): `gstreamer1.0-plugins-base` and `gstreamer1.0-plugins-good` must also be installed — the `-dev` packages above only provide headers, not the GStreamer plugin binaries (e.g. `playbin`) that `audioplayers` needs at runtime. Without them, the app crashes on startup when it tries to play the alarm sound.
 
 ## Setup
 

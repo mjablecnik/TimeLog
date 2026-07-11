@@ -1,12 +1,19 @@
 # Tasks
 
-- [x] 1. [HIGH] Update Midnight theme colors in `lib/core/theme.dart` — change `background` to `0xFF0F1319`, `accent` to `0xFF78B4C4`, `text` to `0xFFE6EAF2`, `ink` to `0xFF08131A`, and update derived colors (`dim`, `faint`, `glow`, `glowSoft`) to use the new base values
-- [x] 2. [HIGH] Update Paper theme colors in `lib/core/theme.dart` — change `background` to `0xFFF3EEE6`, `accent` to `0xFFC25E3C`, `text` to `0xFF2B2420`, `ink` to `0xFFFBF7F1`, and update derived colors (`dim`, `faint`, `glow`, `glowSoft`) to use the new base values
-- [x] 3. [HIGH] Fix `finishNow()` in `lib/services/timer_service.dart` — capture `DateTime.now()` as the end timestamp and store it in the state (use the existing `endAt` field) instead of setting `endAt: null`
-- [x] 4. [HIGH] Update `timer_screen.dart` to use `timerState.endAt` from the finish-now state transition instead of `_ringStartedAt` when passing the end time to `DescriptionSheet`
-- [x] 5. [HIGH] Persist `_adjustedMinutes` to SharedPreferences in `timer_screen.dart` — write the value whenever it changes (in `_incrementDuration` and `_decrementDuration`)
-- [x] 6. [HIGH] Restore `_adjustedMinutes` from SharedPreferences on `_TimerScreenState.initState()` — read the persisted value and fall back to deriving it from `timerState.totalSeconds / 60` if not set
-- [x] 7. [MEDIUM] Extract duration adjuster into `lib/ui/widgets/duration_adjuster.dart` — move the `_StepButton` class and the adjuster Row into a new public `DurationAdjuster` widget accepting `minutes`, `onIncrement`, `onDecrement`, `min`, `max`, and `theme` parameters
-- [x] 8. [MEDIUM] Update `timer_screen.dart` to import and use the extracted `DurationAdjuster` widget, removing the inlined `_StepButton` class and adjuster Row code
-- [x] 9. [LOW] Run `dart run build_runner build` to regenerate `timer_service.freezed.dart` if any `TimerState` field changes were needed (verify the existing `endAt` field suffices)
-- [x] 10. [LOW] Verify the app builds cleanly after all changes (`flutter build linux --release` or `flutter analyze`)
+- [x] 1. [HIGH] Add `activityType` column to `TimeEntries` table in `lib/data/time_entry.dart` — `TextColumn get activityType => text().withDefault(const Constant('Práce'))();`
+- [x] 2. [HIGH] Bump `schemaVersion` to 2 in `lib/data/database.dart` and add migration strategy to add the `activity_type` column to existing databases
+- [x] 3. [HIGH] Run `dart run build_runner build --delete-conflicting-outputs` to regenerate `database.g.dart` with the new column
+- [x] 4. [HIGH] Modify `finishNow()` in `lib/services/timer_service.dart` — transition to `TimerStatus.logging` instead of `ringing`, do NOT call `_alarm.play()`, set `endAt` to `DateTime.now()`, keep `sessionStart`
+- [x] 5. [HIGH] Add `stopAndLog()` method to `TimerNotifier` in `lib/services/timer_service.dart` — stop ticker, cancel notifications/live activity, capture `endAt = DateTime.now()`, transition to `logging` state (preserving `sessionStart` and `endAt`)
+- [x] 6. [HIGH] Modify `_restoreState()` in `lib/services/timer_service.dart` — when restoring `ringing` status, transition directly to `logging` instead of playing alarm (auto-dismiss on app open)
+- [x] 7. [HIGH] Modify `didChangeAppLifecycleState` in `lib/services/timer_service.dart` — when app resumes and state is `ringing`, call `dismissRinging()` immediately
+- [x] 8. [HIGH] Add confirmation dialog to Stop button in `lib/ui/widgets/timer_controls.dart` — show AlertDialog "Do you really want to reset the timer?", on confirm call `notifier.stopAndLog()`, on cancel do nothing
+- [x] 9. [HIGH] Add activity type selector to `lib/ui/widgets/description_sheet.dart` — row of 4 selectable chips (`Práce`, `Volný čas`, `Odpočinek`, `Spánek`), load last selection from SharedPreferences, save on change, include in `TimeEntriesCompanion` on submit
+- [x] 10. [MEDIUM] Add activity type selector to `lib/ui/widgets/edit_sheet.dart` — same chip row, pre-select the entry's current type, update on save
+- [x] 11. [MEDIUM] Display activity type in `lib/ui/widgets/history_entry_card.dart` — show a small styled label/badge with `entry.activityType` next to the time range
+- [x] 12. [MEDIUM] Change date format in `lib/ui/widgets/day_navigator.dart` — update `_dayLabel()` fallback format from `YYYY-MM-DD` to `d. M. yyyy` (e.g., `9. 7. 2026`)
+- [x] 13. [MEDIUM] Update `toDateLabel()` in `lib/core/extensions.dart` — match the new `d. M. yyyy` format for consistency
+- [x] 14. [MEDIUM] Remove `ThemeDots` widget from `lib/ui/screens/history_screen.dart` — delete the widget and its surrounding spacing, keep it only on `TimerScreen`
+- [x] 15. [LOW] Verify `timer_screen.dart` listener handles the new `stopAndLog()` → `logging` transition correctly (the existing `prev?.status != TimerStatus.logging && next.status == TimerStatus.logging` check should trigger `_showDescriptionSheet` with correct `sessionStart` and `endAt`)
+- [x] 16. [LOW] Run `flutter analyze` and fix any lint issues introduced by the changes
+- [x] 17. [LOW] Build the app (`flutter build linux --release`) to verify no compile errors

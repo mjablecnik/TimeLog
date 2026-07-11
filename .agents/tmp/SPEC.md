@@ -1,90 +1,153 @@
-# Timelog App — Bug Fix Specification
+# Specification — TimeLog App Changes (Batch 2)
 
 ## Overview
 
-This specification addresses 5 implementation issues found during code review of the `timelog_app` Flutter project. The app is a Pomodoro-style timer with theming, history tracking, and persistence. All issues are deviations from the design prototype and requirements.
+Six UI/UX improvements to the TimeLog Flutter app: confirmation dialogs on stop/reset, smarter ringing behavior when app is opened, activity type selection on the description input, date format fix in history, flag button behavior change (no beep), and theme switcher relocation.
 
-## Technical Context
+## Architecture Context
 
-- **Framework:** Flutter with Riverpod (StateNotifier pattern)
-- **State persistence:** SharedPreferences
-- **Code generation:** Freezed for immutable state classes
-- **Design reference:** `timelog_app/.design/Pomodoro.dc.html`
+- **State management**: Riverpod + Freezed (`TimerNotifier` extends `StateNotifier<TimerState>`)
+- **Persistence**: SharedPreferences for timer state; Drift (SQLite) for time entries
+- **Timer states**: `idle → running → paused → ringing → logging → idle` (cycle)
+- **Key files**:
+  - `lib/services/timer_service.dart` — core state machine
+  - `lib/ui/screens/timer_screen.dart` — main screen, listens to state transitions
+  - `lib/ui/widgets/timer_controls.dart` — start/stop/pause/flag buttons
+  - `lib/ui/widgets/description_sheet.dart` — post-session input dialog
+  - `lib/ui/widgets/ringing_overlay.dart` — pulsating alarm overlay
+  - `lib/ui/screens/history_screen.dart` — history list
+  - `lib/ui/widgets/day_navigator.dart` — date navigation + label formatting
+  - `lib/ui/widgets/history_entry_card.dart` — single entry card
+  - `lib/data/time_entry.dart` — Drift table definition
+  - `lib/core/extensions.dart` — DateTime/Duration helpers
 
-## Issues & Technical Approach
+---
 
-### Issue 1: Duration Adjuster Not Persisted
+## 1. Confirmation Dialog on Stop/Reset
 
-**Problem:** `_adjustedMinutes` in `_TimerScreenState` resets to 20 on every app launch. The timer service persists `totalSeconds` via SharedPreferences, but the UI ignores this.
+**Current**: Tapping Stop immediately calls `notifier.stop()` which resets to idle without saving.
 
-**Approach:** On init, derive `_adjustedMinutes` from the persisted `totalSeconds` in the timer state. Additionally, persist `_adjustedMinutes` directly to SharedPreferences when it changes, so the idle-screen value survives restarts even when the timer hasn't been started.
+**Required**:
+1. When user taps Stop (while running/paused), show a confirmation dialog: "Do you really want to reset the timer?"
+2. If confirmed → transition to `logging` state and show `DescriptionSheet` so the user can log what they worked on (same as natural timer finish). The entry should record `sessionStart` → `DateTime.now()` as the time range.
+3. If cancelled → do nothing, timer continues.
 
-**Files affected:**
-- `lib/ui/screens/timer_screen.dart` — read persisted value on init, write on change
+**Implementation**:
+- Add a `stopWithConfirmation(BuildContext context)` flow in `timer_controls.dart` that shows an `AlertDialog`.
+- On confirm: capture the current `sessionStart` and `endAt = DateTime.now()`, call `notifier.stop()` BUT before resetting, transition through `logging` state. Alternatively, add a new method `stopAndLog()` on `TimerNotifier` that goes to `logging` state (stopping the ticker and alarm) without resetting `sessionStart`/`endAt`.
+- Then show `DescriptionSheet` with the captured times.
+- After description submission, `autoRestart()` is called as usual.
 
-### Issue 2: Midnight Theme Colors Incorrect
+**New method on `TimerNotifier`**: `stopAndLog()` — stops ticker, cancels notifications, captures end time, transitions to `logging` state (keeps `sessionStart`).
 
-**Problem:** Current implementation uses wrong hex values for the Midnight theme.
+---
 
-**Correct values from prototype:**
-- `bg: #0F1319` (currently `#0D1117`)
-- `accent: #78B4C4` (currently `#58A6FF`)
-- `text: #E6EAF2` (currently `#E6EDF3`)
+## 2. Ringing Behavior When App is Opened
 
-**Files affected:**
-- `lib/core/theme.dart` — update `AppThemeData.midnight` static const
+**Current**: When timer is ringing, the `RingingOverlay` is shown and user must tap "Dismiss" to stop beeping and proceed to description input.
 
-### Issue 3: Paper Theme Colors Incorrect
+**Required**: Opening the app while ringing should immediately:
+1. Stop the beeping
+2. Skip the ringing overlay entirely
+3. Show the description input right away
 
-**Problem:** Current implementation uses wrong hex values for the Paper theme.
+**Implementation**:
+- In `timer_service.dart` `_restoreState()`: when restoring a `ringing` state, instead of playing the alarm and staying in `ringing`, immediately transition to `logging`.
+- Also in `didChangeAppLifecycleState(resumed)`: if current state is `ringing`, call `dismissRinging()` immediately.
+- This ensures that whenever the app comes to foreground while ringing, it auto-dismisses.
 
-**Correct values from prototype:**
-- `bg: #F3EEE6` (currently `#F5F0EB`)
-- `accent: #C25E3C` (currently `#9B4523`)
-- `text: #2B2420` (currently `#2C2420`)
+---
 
-**Files affected:**
-- `lib/core/theme.dart` — update `AppThemeData.paper` static const
+## 3. Activity Type on Description Input
 
-### Issue 4: finishNow() End Time Inaccuracy
+**Current**: `DescriptionSheet` only has a text field + submit button.
 
-**Problem:** When the user presses "Finish Now", the end timestamp is captured in the UI listener (`_ringStartedAt = DateTime.now()` on state transition to `ringing`), which fires one frame after `finishNow()` is called. This introduces a small delay.
+**Required**:
+- Add a type selector with options: `Práce`, `Volný čas`, `Odpočinek`, `Spánek`
+- Selected type is persisted (SharedPreferences) so it's pre-selected next time
+- Type is stored with the time entry in the database
+- Type is displayed in history cards next to the description
 
-**Approach:** Capture `DateTime.now()` inside `TimerNotifier.finishNow()` and store it in the `TimerState.endAt` field (or a new dedicated field). The UI then uses this precise timestamp instead of approximating it.
+**Implementation**:
 
-**Files affected:**
-- `lib/services/timer_service.dart` — capture end time in `finishNow()` and expose via state
-- `lib/ui/screens/timer_screen.dart` — use `timerState.endAt` (or equivalent) instead of `_ringStartedAt`
+### Data layer
+- Add `TextColumn get activityType => text().withDefault(const Constant('Práce'))();` to `TimeEntries` table in `time_entry.dart`.
+- Bump `schemaVersion` to 2 in `database.dart` and add migration to add the column.
+- Re-run `build_runner` to regenerate `database.g.dart`.
 
-### Issue 5: Duration Adjuster Not Extracted to Separate Widget
+### UI — DescriptionSheet
+- Add a row of selectable chips/buttons for the 4 activity types above the text field.
+- Load last selected type from SharedPreferences on init, default to `Práce`.
+- On submit, include the selected type in the `TimeEntriesCompanion`.
+- Save the selected type to SharedPreferences on each selection change.
 
-**Problem:** The `_StepButton` class and duration adjuster UI is inlined in `timer_screen.dart`. The design spec requires a separate `lib/ui/widgets/duration_adjuster.dart`.
+### UI — HistoryEntryCard
+- Display `entry.activityType` as a small badge/label next to the time range or description.
 
-**Approach:** Extract the duration adjuster Row (with decrement button, label, increment button) and the `_StepButton` into `lib/ui/widgets/duration_adjuster.dart` as a public widget. The timer screen imports and uses this widget.
+### UI — EditSheet
+- Add the same activity type selector so existing entries can be edited.
 
-**Files affected:**
-- `lib/ui/widgets/duration_adjuster.dart` — new file
-- `lib/ui/screens/timer_screen.dart` — remove inlined code, import new widget
+---
 
-## File Structure (Changes Only)
+## 4. Date Format in History
 
-```
-lib/
-├── ui/
-│   ├── screens/
-│   │   └── timer_screen.dart        # modified (issues 1, 4, 5)
-│   └── widgets/
-│       └── duration_adjuster.dart   # new (issue 5)
-├── services/
-│   └── timer_service.dart           # modified (issue 4)
-└── core/
-    └── theme.dart                   # modified (issues 2, 3)
-```
+**Current**: `_dayLabel` in `DayNavigator` returns `YYYY-MM-DD` for dates beyond yesterday.
 
-## Constraints & Considerations
+**Required**: Display dates as `9. 7. 2026` (day. month. year with spaces after dots, no leading zeros on day/month).
 
-- **Freezed regeneration:** Changes to `TimerState` fields in `timer_service.dart` require running `dart run build_runner build` to regenerate `timer_service.freezed.dart`.
-- **SharedPreferences key naming:** Use `timer_adjustedMinutes` as the persistence key for the duration adjuster, consistent with existing `timer_*` key convention.
-- **Derived colors:** When updating `bg`, `text`, and `accent`, the derived colors (`ink`, `dim`, `faint`, `glow`, `glowSoft`) that depend on them should also be reviewed. The `ink` value for Midnight changes to `#08131a` and for Paper changes to `#FBF7F1` per the prototype.
-- **No behavior change to `start()`:** The `setDuration()` call before `start()` already handles syncing `_adjustedMinutes` to `totalSeconds`. Persistence of `_adjustedMinutes` is purely for UI restoration.
-- **The `endAt` field already exists in `TimerState`:** We can repurpose it in `finishNow()` to store the precise finish timestamp rather than adding a new field. After `finishNow()`, `endAt` is set to `null` — instead, set it to `DateTime.now()` at the moment of finish.
+**Implementation**:
+- Change the fallback format in `DayNavigator._dayLabel()` from `'$y-$m-$d'` to `'${day.day}. ${day.month}. ${day.year}'`.
+- Also update `DateTimeExtensions.toDateLabel()` in `extensions.dart` to match (if used elsewhere).
+
+---
+
+## 5. Flag Button Behavior Change
+
+**Current**: `finishNow()` transitions to `ringing` state + plays alarm.
+
+**Required**: Flag button should NOT start beeping. It should immediately show the description input dialog. Beeping only happens when timer expires naturally (the user is away).
+
+**Implementation**:
+- Modify `finishNow()` in `TimerNotifier`: instead of transitioning to `ringing` and playing the alarm, transition directly to `logging` state. Keep `sessionStart` and set `endAt` to now.
+- Remove the `_alarm.play()` call from `finishNow()`.
+- The existing listener in `timer_screen.dart` already reacts to `logging` state by showing `DescriptionSheet`.
+
+---
+
+## 6. Theme Switcher Location
+
+**Current**: `ThemeDots` widget is shown on both `TimerScreen` and `HistoryScreen`.
+
+**Required**: Remove it from `HistoryScreen`. Keep it only on `TimerScreen`.
+
+**Implementation**:
+- Remove the `ThemeDots()` widget and its spacing from `history_screen.dart`.
+
+---
+
+## File Changes Summary
+
+| File | Change |
+|------|--------|
+| `lib/services/timer_service.dart` | Add `stopAndLog()`, modify `finishNow()` (no alarm), modify `_restoreState()` and `didChangeAppLifecycleState` for auto-dismiss |
+| `lib/ui/widgets/timer_controls.dart` | Add confirmation dialog to Stop button, call `stopAndLog()` on confirm |
+| `lib/ui/screens/timer_screen.dart` | Adjust listener if needed for new `stopAndLog` flow |
+| `lib/ui/widgets/description_sheet.dart` | Add activity type selector, persist selection, include type in DB insert |
+| `lib/ui/widgets/edit_sheet.dart` | Add activity type selector for editing |
+| `lib/data/time_entry.dart` | Add `activityType` column |
+| `lib/data/database.dart` | Bump schema version, add migration |
+| `lib/ui/widgets/history_entry_card.dart` | Display activity type badge |
+| `lib/ui/widgets/day_navigator.dart` | Change date format to `d. M. yyyy` |
+| `lib/core/extensions.dart` | Update `toDateLabel()` format |
+| `lib/ui/screens/history_screen.dart` | Remove `ThemeDots` |
+| `lib/ui/widgets/ringing_overlay.dart` | No changes (still used for natural timer expiry when app is already open) |
+
+---
+
+## Constraints & Edge Cases
+
+- **Migration**: Existing entries won't have `activityType`. Default to `'Práce'` for backward compatibility.
+- **Stop + Log flow**: If user has only been running for a few seconds, still allow logging (no minimum duration).
+- **Ringing auto-dismiss on resume**: The `_restoreState` path handles cold start; `didChangeAppLifecycleState` handles warm resume. Both should transition to `logging`.
+- **Flag during paused state**: `finishNow()` already accepts `paused` state — now it goes to `logging` instead of `ringing`.
+- **DescriptionSheet endedAt**: When called from `stopAndLog()`, use the captured end time (now stored in `state.endAt`).

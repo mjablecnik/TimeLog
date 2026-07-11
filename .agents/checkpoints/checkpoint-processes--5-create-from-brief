@@ -1,0 +1,14 @@
+{
+  "pipeline": "/home/martin/.trayline/pipelines/processes/5-create-from-brief.yaml",
+  "variables": {
+    "brief": "timelog_app/BRIEF.md",
+    "number": "1",
+    "path": "timelog_app/"
+  },
+  "completed_steps": [
+    "create-spec-from-brief"
+  ],
+  "next_step": "verify-builds",
+  "timestamp": "2026-07-11T10:52:24+02:00",
+  "rate_limited": false
+}
