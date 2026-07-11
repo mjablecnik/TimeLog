@@ -20,7 +20,7 @@ extension DateTimeExtensions on DateTime {
   String toDateLabel() {
     if (isToday()) return 'Today';
     if (isYesterday()) return 'Yesterday';
-    return '${year.toString().padLeft(4, '0')}-${month.toString().padLeft(2, '0')}-${day.toString().padLeft(2, '0')}';
+    return '$day. $month. $year';
   }
 }
 

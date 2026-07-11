@@ -25,10 +25,7 @@ class DayNavigator extends ConsumerWidget {
       return 'Yesterday';
     }
 
-    final y = day.year.toString().padLeft(4, '0');
-    final m = day.month.toString().padLeft(2, '0');
-    final d = day.day.toString().padLeft(2, '0');
-    return '$y-$m-$d';
+    return '${day.day}. ${day.month}. ${day.year}';
   }
 
   bool _isToday(DateTime day) {

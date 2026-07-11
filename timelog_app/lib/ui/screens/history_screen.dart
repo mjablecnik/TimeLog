@@ -7,7 +7,6 @@ import '../widgets/day_navigator.dart';
 import '../widgets/day_summary.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/history_entry_card.dart';
-import '../widgets/theme_dots.dart';
 
 class HistoryScreen extends ConsumerWidget {
   const HistoryScreen({super.key});
@@ -24,8 +23,6 @@ class HistoryScreen extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const SizedBox(height: 12),
-            const ThemeDots(),
-            const SizedBox(height: 8),
             Text(
               'History',
               textAlign: TextAlign.center,
