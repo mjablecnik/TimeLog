@@ -35,6 +35,8 @@ void main() async {
     autoStartIfIdle();
   }
 
+  await rescheduleReminderIfEnabled(reminderService);
+
   runApp(
     UncontrolledProviderScope(
       container: container,

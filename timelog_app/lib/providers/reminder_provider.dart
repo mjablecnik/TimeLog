@@ -87,3 +87,14 @@ final reminderProvider =
   final service = ref.watch(reminderServiceProvider);
   return ReminderNotifier(service);
 });
+
+/// Re-registers the daily reminder notification with [service] if it was
+/// left enabled in SharedPreferences. Called on app launch since iOS can
+/// clear scheduled notifications across reboots/updates.
+Future<void> rescheduleReminderIfEnabled(ReminderService service) async {
+  final prefs = await SharedPreferences.getInstance();
+  if (!(prefs.getBool(_kReminderEnabled) ?? false)) return;
+  final hour = prefs.getInt(_kReminderHour) ?? _kDefaultHour;
+  final minute = prefs.getInt(_kReminderMinute) ?? _kDefaultMinute;
+  await service.scheduleDailyReminder(TimeOfDay(hour: hour, minute: minute));
+}
