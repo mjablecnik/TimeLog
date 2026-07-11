@@ -74,5 +74,6 @@ StatsData _computeStats(List<TimeEntry> entries, StatsPeriod period) {
     untrackedTime: untracked.isNegative ? Duration.zero : untracked,
     byActivityType: byActivityType,
     byProject: byProject,
+    entries: entries,
   );
 }
