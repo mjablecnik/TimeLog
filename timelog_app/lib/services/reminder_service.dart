@@ -33,9 +33,25 @@ class ReminderService {
       requestBadgePermission: false,
       requestSoundPermission: false,
     );
+    const macosSettings = DarwinInitializationSettings(
+      requestAlertPermission: false,
+      requestBadgePermission: false,
+      requestSoundPermission: false,
+    );
+    const linuxSettings = LinuxInitializationSettings(
+      defaultActionName: 'Open',
+    );
+    const windowsSettings = WindowsInitializationSettings(
+      appName: 'TimeLog',
+      appUserModelId: 'com.jablecnik.TimeLog',
+      guid: '74e61031-08fe-4096-b98c-24679542e64a',
+    );
     const settings = InitializationSettings(
       android: androidSettings,
       iOS: iosSettings,
+      macOS: macosSettings,
+      linux: linuxSettings,
+      windows: windowsSettings,
     );
 
     await _plugin.initialize(
@@ -87,10 +103,18 @@ class ReminderService {
 
   /// If the app was cold-launched by tapping the reminder notification,
   /// returns its payload; otherwise returns null.
+  ///
+  /// `flutter_local_notifications_linux` doesn't implement this call and
+  /// throws [UnimplementedError] instead of returning null, so Linux is
+  /// treated the same as "no launch payload".
   Future<String?> getLaunchPayload() async {
-    final details = await _plugin.getNotificationAppLaunchDetails();
-    if (details?.didNotificationLaunchApp ?? false) {
-      return details?.notificationResponse?.payload;
+    try {
+      final details = await _plugin.getNotificationAppLaunchDetails();
+      if (details?.didNotificationLaunchApp ?? false) {
+        return details?.notificationResponse?.payload;
+      }
+    } on UnimplementedError {
+      // Not supported on this platform.
     }
     return null;
   }
