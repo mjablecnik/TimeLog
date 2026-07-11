@@ -1,5 +1,11 @@
 # Memory
 
+## Widget tests that leave TimerNotifier running fail with "A Timer is still pending" unless explicitly stopped before the test body ends
+- Project: timelog_app
+- Problem: A widget test that calls `TimerNotifier.start()`/`resume()` (e.g. to drive `TimerScreen` through pause/resume for the prefill-cancel flow) leaves the notifier's internal periodic `_ticker` running when the test body finishes. `ProviderContainer.dispose()` registered via `addTearDown` would cancel it (via `TimerNotifier.dispose()`), but `flutter_test`'s `AutomatedTestWidgetsFlutterBinding._verifyInvariants` checks for pending timers *before* `addTearDown` callbacks run, so the test fails with `A Timer is still pending even after the widget tree was disposed` even though the assertions themselves all passed.
+- Solution: Explicitly call `container.read(timerProvider.notifier).stop()` (or `.pause()`) as the last line of the test body, before relying on `addTearDown(container.dispose)` for cleanup. `stop()`/`pause()` cancel `_ticker` synchronously.
+- Source: from-brief, 2026-07-11
+
 ## database.dart migration referencing a new column fails `flutter analyze` until build_runner regenerates database.g.dart — this is expected, not a bug
 - Project: timelog_app
 - Problem: TASKS.md deliberately splits "add column to table class" / "add schemaVersion bump + migration" / "run build_runner" into separate numbered tasks. After adding `m.addColumn(timeEntries, timeEntries.project)` in the `onUpgrade` migration (task 3) but before running `dart run build_runner build` (task 4), `flutter analyze lib/data/database.dart` fails with `error • The argument type 'TextColumn' can't be assigned to the parameter type 'GeneratedColumn<Object>' • argument_type_not_assignable`. This is because `timeEntries` inside `AppDatabase` resolves to the generated `$TimeEntriesTable` class in `database.g.dart`, and until that file is regenerated it has no `project` getter of the correct `GeneratedColumn<String>` type — `timeEntries.project` falls back to the abstract declarative-API `TextColumn` from `time_entry.dart`, which doesn't match the `GeneratedColumn<Object>` parameter type `Migrator.addColumn` expects.
