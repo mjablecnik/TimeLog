@@ -59,6 +59,9 @@ class TimerNotifier extends StateNotifier<TimerState> with WidgetsBindingObserve
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       _recalculate();
+      if (this.state.status == TimerStatus.ringing) {
+        dismissRinging();
+      }
     }
   }
 
@@ -111,13 +114,12 @@ class TimerNotifier extends StateNotifier<TimerState> with WidgetsBindingObserve
       );
     } else if (statusStr == TimerStatus.ringing.name) {
       state = TimerState(
-        status: TimerStatus.ringing,
+        status: TimerStatus.logging,
         totalSeconds: totalSeconds,
         secondsLeft: 0,
         sessionStart: sessionStart,
         endAt: null,
       );
-      _alarm.play();
     }
   }
 
@@ -218,13 +220,27 @@ class TimerNotifier extends StateNotifier<TimerState> with WidgetsBindingObserve
     _notifications.cancelTimerNotification();
     final finishTime = DateTime.now();
     state = state.copyWith(
-      status: TimerStatus.ringing,
+      status: TimerStatus.logging,
       secondsLeft: 0,
       endAt: finishTime,
     );
     _saveState();
-    _alarm.play();
     _liveActivity.updateActivity(update: LiveActivityUpdate.completed);
+  }
+
+  void stopAndLog() {
+    if (state.status != TimerStatus.running && state.status != TimerStatus.paused) return;
+    _ticker?.cancel();
+    _ticker = null;
+    _notifications.cancelTimerNotification();
+    _liveActivity.endActivity();
+    final finishTime = DateTime.now();
+    state = state.copyWith(
+      status: TimerStatus.logging,
+      secondsLeft: 0,
+      endAt: finishTime,
+    );
+    _saveState();
   }
 
   void dismissRinging() {

@@ -33,7 +33,7 @@ class TimerControls extends ConsumerWidget {
           icon: Icons.stop_rounded,
           enabled: isRunning || isPaused,
           theme: theme,
-          onPressed: notifier.stop,
+          onPressed: () => _stopWithConfirmation(context, notifier),
           isAccent: false,
         ),
         const SizedBox(width: 20),
@@ -65,6 +65,48 @@ class TimerControls extends ConsumerWidget {
         ),
       ],
     );
+  }
+
+  Future<void> _stopWithConfirmation(BuildContext context, TimerNotifier notifier) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: theme.background,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          'Reset timer?',
+          style: TextStyle(
+              color: theme.text, fontFamily: 'Sora', fontWeight: FontWeight.w600),
+        ),
+        content: Text(
+          'Do you really want to reset the timer?',
+          style: TextStyle(color: theme.dim, fontFamily: 'Sora', fontSize: 14),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(
+              'Cancel',
+              style: TextStyle(color: theme.dim, fontFamily: 'Sora'),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(
+              'Reset',
+              style: TextStyle(
+                  color: Colors.red[400],
+                  fontFamily: 'Sora',
+                  fontWeight: FontWeight.w600),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      notifier.stopAndLog();
+    }
   }
 }
 
