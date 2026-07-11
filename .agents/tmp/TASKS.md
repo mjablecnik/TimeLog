@@ -8,7 +8,7 @@
 
 - [x] 2. [HIGH] Add nullable `project` column to `TimeEntries` table in `lib/data/time_entry.dart`
 - [x] 3. [HIGH] Add schema v4 migration in `lib/data/database.dart` to add the project column
-- [ ] 4. [HIGH] Run `dart run build_runner build` to regenerate `database.g.dart`
+- [x] 4. [HIGH] Run `dart run build_runner build` to regenerate `database.g.dart`
 - [ ] 5. [HIGH] Create `lib/services/project_service.dart` — load/save project names via SharedPreferences
 - [ ] 6. [HIGH] Add project service provider to `lib/providers/database_provider.dart`
 - [ ] 7. [HIGH] Update `DatabaseService.updateDescription()` to accept and persist optional project field
