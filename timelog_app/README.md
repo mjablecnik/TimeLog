@@ -12,9 +12,13 @@ Key features:
 
 - Countdown timer with adjustable duration (5–60 minutes, 5-minute steps)
 - Automatic time-entry logging on timer completion or manual stop
-- Five built-in activity types (Práce, Volný čas, Odpočinek, Spánek, Cvičení), each with a
-  distinct color badge
+- Eight built-in activity types (Práce, Volný čas, Odpočinek, Spánek, Cvičení, Volná práce,
+  Přesun, Jídlo), each with a distinct color badge
+- Optional project name for work-related entries (Práce, Volná práce), with autocomplete
+  suggestions from previously used project names
 - History screen with day navigation, daily summary, and per-entry edit/delete
+- Statistics screen with daily/weekly toggle, time breakdown by activity type and by project,
+  and an untracked-time summary
 - Fully offline — entries are persisted locally in SQLite (no server, no account)
 - Alarm sound + native notification when the timer finishes, even while backgrounded
 - iOS Live Activity / Dynamic Island support with pause/resume/stop actions from the lock screen

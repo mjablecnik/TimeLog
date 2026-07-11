@@ -11,7 +11,8 @@ offline Flutter app. Runtime configuration lives in code and in on-device storag
   `lib/ui/screens/timer_screen.dart`) — the two ranges are independent.
 - `shared_preferences` keys (device-local, no cloud sync): selected theme, in-progress timer
   state (for restoring a running/paused timer after app restart), last-used activity type,
-  and pre-filled description/activity type for the next log entry.
+  pre-filled description/activity type for the next log entry, and known project names
+  (autocomplete suggestions for the project field on work entries).
 
 ## Project Structure
 
@@ -27,13 +28,14 @@ timelog_app/
       platform_channel.dart        # MethodChannel name constants
       theme.dart                   # AppThemeData + Ember/Midnight/Paper theme definitions
     data/
-      time_entry.dart              # Drift TimeEntries table definition
-      database.dart                # AppDatabase (Drift), schema migrations
+      time_entry.dart              # Drift TimeEntries table definition (incl. nullable project column)
+      database.dart                # AppDatabase (Drift), schema migrations (schemaVersion 4)
       database.g.dart              # Generated (build_runner) — do not hand-edit
-      stats_data.dart              # StatsPeriod enum + StatsData aggregation model
+      stats_data.dart              # StatsPeriod enum + StatsData aggregation model (by activity type, by project)
     providers/
       database_provider.dart       # AppDatabase / DatabaseService providers
       history_provider.dart        # Selected day + day's entries stream
+      statistics_provider.dart     # Selected period/date state + computed StatsData for the range
       theme_provider.dart          # Persisted theme selection
       timer_provider.dart          # Wires TimerNotifier with its service dependencies
     services/
@@ -43,16 +45,19 @@ timelog_app/
       alarm_service.dart           # Alarm sound playback (audioplayers)
       notification_service.dart   # Native local notification channel
       live_activity_channel.dart  # iOS Live Activity channel
+      project_service.dart         # Stores/retrieves known project names (shared_preferences) for autocomplete
     ui/
       screens/
         timer_screen.dart          # Countdown timer, duration adjuster, ringing overlay
         history_screen.dart        # Day navigator + list of logged entries
+        statistics_screen.dart     # Daily/weekly period toggle + activity-type and project breakdowns
       widgets/                     # bottom_nav, day_navigator, day_summary, description_sheet,
                                     # duration_adjuster, edit_sheet, empty_state,
                                     # history_entry_card, ringing_overlay, theme_dots,
                                     # timer_controls
       painters/
         ring_painter.dart          # CustomPainter for the countdown progress ring
+        bar_painter.dart           # CustomPainter for the statistics horizontal percentage bars
   test/
     timer_service_test.dart        # TimerNotifier state-machine unit tests
     widget_test.dart               # App smoke test
@@ -68,7 +73,12 @@ timelog_app/
   `themeProvider`) hold mutable app state; plain `Provider`/`FutureProvider`s wire up
   services (database, alarm, notifications, live activity).
 - **Persistence**: `drift` (SQLite) for time entries (`lib/data/database.dart`), and
-  `shared_preferences` for lightweight key-value state (theme, in-flight timer state).
+  `shared_preferences` for lightweight key-value state (theme, in-flight timer state, known
+  project names).
+- **Projects & statistics**: work-type entries (`Práce`, `Volná práce`) carry an optional
+  `project` column. `StatisticsScreen` aggregates entries over a daily/weekly range
+  (`statisticsProvider`) into totals by activity type and by project, plus an untracked-time
+  figure derived from an assumed 16 waking hours/day.
 - **Timer state machine**: `TimerNotifier` (`lib/services/timer_service.dart`) drives
   `TimerStatus` (`idle → running ⇄ paused → ringing/logging → idle`) and persists enough
   state to `SharedPreferences` to restore a running/paused timer after the app is killed

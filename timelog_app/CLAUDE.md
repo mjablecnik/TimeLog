@@ -2,9 +2,10 @@
 
 ## Project overview
 
-TimeLog — a Flutter countdown timer + time-tracking app. State management: `flutter_riverpod`.
-Local persistence: `drift` (SQLite) for time entries, `shared_preferences` for lightweight
-state. Dart SDK `^3.10.4`. Fully offline, no backend, no environment variables.
+TimeLog — a Flutter countdown timer + time-tracking app with per-entry project tracking and a
+statistics tab. State management: `flutter_riverpod`. Local persistence: `drift` (SQLite) for
+time entries, `shared_preferences` for lightweight state. Dart SDK `^3.10.4`. Fully offline, no
+backend, no environment variables.
 
 ## Key commands
 
@@ -23,7 +24,7 @@ flutter build linux --release                                  # release build (
 See [DOCS.md](DOCS.md#project-structure) for the full annotated tree. Summary:
 - `lib/core/` — constants, theme, small helpers (no Flutter widgets)
 - `lib/data/` — Drift table (`time_entry.dart`) + database (`database.dart`); `.g.dart` is generated
-- `lib/services/` — business logic (timer state machine, alarm, notifications, live activity, DB access)
+- `lib/services/` — business logic (timer state machine, alarm, notifications, live activity, DB access, known-project storage)
 - `lib/providers/` — Riverpod wiring between services and UI
 - `lib/ui/screens/`, `lib/ui/widgets/`, `lib/ui/painters/` — presentation layer
 - `ios/Runner/LiveActivityManager.swift` + `ios/TimeLogWidgetExtension/` — native iOS Live Activity
@@ -34,6 +35,10 @@ See [DOCS.md](DOCS.md#project-structure) for the full annotated tree. Summary:
   `activityTypes` list and the `activityTypeColor()` switch must be updated together; all UI
   (description sheet, edit sheet, history cards) iterates `activityTypes` so it picks up
   changes automatically.
+- Work-type activities (`workActivityTypes`, checked via `isWorkActivityType()`) get an optional
+  project field (autocomplete via `ProjectService`) in the description/edit sheets and are the
+  only types included in the Statistics screen's per-project breakdown — update
+  `workActivityTypes` alongside `activityTypes` if a new work-like type is added.
 - Riverpod: `StateNotifierProvider` for mutable app state (`timerProvider`, `themeProvider`),
   plain `Provider`/`FutureProvider` for service singletons. Read theme via
   `ref.watch(themeProvider)` and use `AppThemeData` fields — never hardcode colors.
@@ -57,11 +62,9 @@ See [DOCS.md](DOCS.md#project-structure) for the full annotated tree. Summary:
 - iOS Live Activity code requires iOS 16.2+ and is guarded by
   `ActivityAuthorizationInfo().areActivitiesEnabled`; it no-ops (returns `false`) rather than
   throwing when unsupported/disabled — don't add error handling around it, that's by design.
-- A prior commit ("feat: add new activity types and project field with statistics screen")
-  only added planning docs (BRIEF.md/SPEC.md/TASKS.md, stored under `../.agents/tmp/` at the
-  repo root, outside `timelog_app/`) — no corresponding code was ever written. The codebase
-  still has just the original 5 activity types, no `project` field on time entries, and only
-  two tabs (Timer, History). Don't assume that feature exists without checking the code.
+- The Statistics screen's "untracked time" figure assumes 16 waking hours/day (hardcoded in
+  `_computeStats` in `lib/providers/statistics_provider.dart`) — it's `16 * days_in_period`
+  minus tracked time, not derived from any user setting.
 
 ## Reference
 
