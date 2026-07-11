@@ -6,7 +6,7 @@
 - [x] 4. [HIGH] Add time display and editing to EditSheet — show current start/end times as tappable HH:mm fields, open `showTimePicker` on tap, store selected times in local state
 - [x] 5. [HIGH] Add time validation in EditSheet — validate that end time is after start time before saving, show error message if invalid
 - [x] 6. [HIGH] Save updated times in EditSheet._save() — pass the (possibly modified) start/end times to the database service update method
-- [ ] 7. [HIGH] Save last-submitted values after successful entry save — in DescriptionSheet._saveEntry(), after successful insert, persist description, activityType, and project to SharedPreferences (keys: `last_submitted_description`, `last_submitted_activity_type`, `last_submitted_project`)
+- [x] 7. [HIGH] Save last-submitted values after successful entry save — in DescriptionSheet._saveEntry(), after successful insert, persist description, activityType, and project to SharedPreferences (keys: `last_submitted_description`, `last_submitted_activity_type`, `last_submitted_project`)
 - [ ] 8. [HIGH] Load last-submitted values as fallback in DescriptionSheet — in `initState`, when no draft is provided (`initialDescription == null` and `!isPrefillMode`), load last-submitted values from SharedPreferences and use them as initial form values
 - [ ] 9. [HIGH] Add reset (X) button to DescriptionSheet — always-visible IconButton (close/clear icon) in the header row that clears description text, resets activity type to `activityTypes.first`, and clears the project field; minimum 44×44px touch target
 - [ ] 10. [HIGH] Extend StatsData to include raw entries — add a `List<TimeEntry> entries` field to `StatsData` and pass the raw entries through from the statistics provider

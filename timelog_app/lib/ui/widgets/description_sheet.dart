@@ -10,6 +10,9 @@ import '../../providers/database_provider.dart';
 import '../../providers/timer_provider.dart';
 
 const _lastActivityTypeKey = 'last_activity_type';
+const _lastSubmittedDescriptionKey = 'last_submitted_description';
+const _lastSubmittedActivityTypeKey = 'last_submitted_activity_type';
+const _lastSubmittedProjectKey = 'last_submitted_project';
 
 class DescriptionSheet extends ConsumerStatefulWidget {
   final AppThemeData theme;
@@ -75,6 +78,17 @@ class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
     setState(() => _selectedType = type);
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_lastActivityTypeKey, type);
+  }
+
+  Future<void> _saveLastSubmitted(
+    String description,
+    String activityType,
+    String project,
+  ) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_lastSubmittedDescriptionKey, description);
+    await prefs.setString(_lastSubmittedActivityTypeKey, activityType);
+    await prefs.setString(_lastSubmittedProjectKey, project);
   }
 
   @override
@@ -143,6 +157,8 @@ class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
       if (project.isNotEmpty) {
         await ref.read(projectServiceProvider).saveProject(project);
       }
+
+      await _saveLastSubmitted(description, _selectedType, project);
 
       if (widget.triggeredByStop) {
         ref.read(timerProvider.notifier).stop();
