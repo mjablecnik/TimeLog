@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'providers/theme_provider.dart';
 import 'ui/screens/timer_screen.dart';
 import 'ui/screens/history_screen.dart';
+import 'ui/screens/statistics_screen.dart';
 import 'ui/widgets/bottom_nav.dart';
 
 class TimeLogApp extends ConsumerWidget {
@@ -33,6 +34,7 @@ class _MainShellState extends ConsumerState<_MainShell> {
   static const List<Widget> _screens = [
     TimerScreen(),
     HistoryScreen(),
+    StatisticsScreen(),
   ];
 
   @override
