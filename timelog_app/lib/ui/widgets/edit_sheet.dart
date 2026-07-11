@@ -120,6 +120,8 @@ class _EditSheetState extends ConsumerState<EditSheet> {
         _controller.text.trim(),
         activityType: _selectedType,
         project: Value(project.isEmpty ? null : project),
+        startTime: _startTime,
+        endTime: _endTime,
       );
 
       if (project.isNotEmpty) {
