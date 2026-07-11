@@ -1,0 +1,28 @@
+{
+  "segments": [
+    {
+      "pipeline_path": "/home/martin/.trayline/pipelines/processes/5-create-from-brief.yaml",
+      "vars": {
+        "brief": ".agents/tmp/BRIEF.md",
+        "number": "1",
+        "path": "timelog_app/"
+      }
+    },
+    {
+      "pipeline_path": "/home/martin/.trayline/pipelines/processes/5-create-from-brief.yaml",
+      "vars": {
+        "brief": ".agents/tmp/BRIEF-tmp.md",
+        "number": "1",
+        "path": "timelog_app/"
+      }
+    },
+    {
+      "pipeline_path": "/home/martin/.trayline/pipelines/tasks/sync-docs.yaml",
+      "vars": {
+        "path": "timelog_app/"
+      }
+    }
+  ],
+  "completed_segments": 1,
+  "timestamp": "2026-07-11T18:26:54+02:00"
+}
