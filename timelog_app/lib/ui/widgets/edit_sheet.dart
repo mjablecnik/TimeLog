@@ -1,3 +1,4 @@
+import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -22,20 +23,30 @@ class EditSheet extends ConsumerStatefulWidget {
 
 class _EditSheetState extends ConsumerState<EditSheet> {
   late final TextEditingController _controller;
+  late final TextEditingController _projectController;
   late String _selectedType;
   String? _error;
   bool _saving = false;
+  List<String> _knownProjects = [];
 
   @override
   void initState() {
     super.initState();
     _controller = TextEditingController(text: widget.entry.description);
+    _projectController = TextEditingController(text: widget.entry.project ?? '');
     _selectedType = widget.entry.activityType;
+    _loadKnownProjects();
+  }
+
+  Future<void> _loadKnownProjects() async {
+    final projects = await ref.read(projectServiceProvider).getKnownProjects();
+    if (mounted) setState(() => _knownProjects = projects);
   }
 
   @override
   void dispose() {
     _controller.dispose();
+    _projectController.dispose();
     super.dispose();
   }
 
@@ -63,11 +74,21 @@ class _EditSheetState extends ConsumerState<EditSheet> {
         return;
       }
 
+      final project = isWorkActivityType(_selectedType)
+          ? _projectController.text.trim()
+          : '';
+
       await dbService.updateDescription(
         widget.entry.id,
         _controller.text.trim(),
         activityType: _selectedType,
+        project: Value(project.isEmpty ? null : project),
       );
+
+      if (project.isNotEmpty) {
+        await ref.read(projectServiceProvider).saveProject(project);
+      }
+
       if (mounted) Navigator.of(context).pop();
     } catch (_) {
       setState(() {
@@ -155,6 +176,67 @@ class _EditSheetState extends ConsumerState<EditSheet> {
                     );
                   }).toList(),
                 ),
+                if (isWorkActivityType(_selectedType)) ...[
+                  const SizedBox(height: 16),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: theme.panel,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: theme.border),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    child: Autocomplete<String>(
+                      textEditingController: _projectController,
+                      optionsBuilder: (textEditingValue) {
+                        final query = textEditingValue.text.trim().toLowerCase();
+                        if (query.isEmpty) return _knownProjects;
+                        return _knownProjects.where(
+                          (p) => p.toLowerCase().contains(query),
+                        );
+                      },
+                      fieldViewBuilder: (context, controller, focusNode, onSubmitted) {
+                        return TextField(
+                          controller: controller,
+                          focusNode: focusNode,
+                          style: TextStyle(color: theme.text, fontFamily: 'Sora', fontSize: 15),
+                          decoration: InputDecoration(
+                            hintText: 'Project name...',
+                            hintStyle: TextStyle(color: theme.faint, fontFamily: 'Sora'),
+                            border: InputBorder.none,
+                          ),
+                        );
+                      },
+                      optionsViewBuilder: (context, onSelected, options) {
+                        return Align(
+                          alignment: Alignment.topLeft,
+                          child: Material(
+                            elevation: 4,
+                            borderRadius: BorderRadius.circular(12),
+                            color: theme.panel,
+                            child: ConstrainedBox(
+                              constraints: const BoxConstraints(maxHeight: 200),
+                              child: ListView.builder(
+                                shrinkWrap: true,
+                                padding: EdgeInsets.zero,
+                                itemCount: options.length,
+                                itemBuilder: (context, index) {
+                                  final option = options.elementAt(index);
+                                  return ListTile(
+                                    title: Text(
+                                      option,
+                                      style: TextStyle(color: theme.text, fontFamily: 'Sora'),
+                                    ),
+                                    onTap: () => onSelected(option),
+                                  );
+                                },
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 16),
                 Container(
                   decoration: BoxDecoration(
