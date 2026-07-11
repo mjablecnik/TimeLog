@@ -17,8 +17,10 @@ Key features:
 - Optional project name for work-related entries (Práce, Volná práce), with autocomplete
   suggestions from previously used project names
 - History screen with day navigation, daily summary, and per-entry edit/delete
-- Statistics screen with daily/weekly toggle, time breakdown by activity type and by project,
-  and an untracked-time summary
+- Statistics screen with daily/weekly toggle, a visual timeline of the day/week's entries,
+  time breakdown by activity type and by project, and an untracked-time summary
+- Settings screen with a daily reminder notification (toggle + time picker) that nudges you
+  to start a timer, and can auto-start one when tapped
 - Fully offline — entries are persisted locally in SQLite (no server, no account)
 - Alarm sound + native notification when the timer finishes, even while backgrounded
 - iOS Live Activity / Dynamic Island support with pause/resume/stop actions from the lock screen

@@ -2,10 +2,10 @@
 
 ## Project overview
 
-TimeLog — a Flutter countdown timer + time-tracking app with per-entry project tracking and a
-statistics tab. State management: `flutter_riverpod`. Local persistence: `drift` (SQLite) for
-time entries, `shared_preferences` for lightweight state. Dart SDK `^3.10.4`. Fully offline, no
-backend, no environment variables.
+TimeLog — a Flutter countdown timer + time-tracking app with per-entry project tracking, a
+statistics tab, and a daily reminder notification. State management: `flutter_riverpod`. Local
+persistence: `drift` (SQLite) for time entries, `shared_preferences` for lightweight state. Dart
+SDK `^3.10.4`. Fully offline, no backend, no environment variables.
 
 ## Key commands
 
@@ -24,9 +24,10 @@ flutter build linux --release                                  # release build (
 See [DOCS.md](DOCS.md#project-structure) for the full annotated tree. Summary:
 - `lib/core/` — constants, theme, small helpers (no Flutter widgets)
 - `lib/data/` — Drift table (`time_entry.dart`) + database (`database.dart`); `.g.dart` is generated
-- `lib/services/` — business logic (timer state machine, alarm, notifications, live activity, DB access, known-project storage)
+- `lib/services/` — business logic (timer state machine, alarm, notifications, daily reminder, live activity, DB access, known-project storage)
 - `lib/providers/` — Riverpod wiring between services and UI
-- `lib/ui/screens/`, `lib/ui/widgets/`, `lib/ui/painters/` — presentation layer
+- `lib/ui/screens/`, `lib/ui/widgets/`, `lib/ui/painters/` — presentation layer (Timer, History,
+  Statistics, Settings tabs)
 - `ios/Runner/LiveActivityManager.swift` + `ios/TimeLogWidgetExtension/` — native iOS Live Activity
 
 ## Conventions
@@ -59,6 +60,12 @@ See [DOCS.md](DOCS.md#project-structure) for the full annotated tree. Summary:
   default in `theme_provider.dart`. Re-enabling theme switching means uncommenting that row.
 - Linux desktop needs GStreamer *runtime* plugins installed (not just `-dev` headers) or the
   app crashes when `audioplayers` tries to play the alarm sound — see DOCS.md Troubleshooting.
+- `ReminderService` (daily reminder notification, `lib/services/reminder_service.dart`) is a
+  separate mechanism from `NotificationService` (timer-completion alert, native MethodChannel):
+  it uses `flutter_local_notifications` directly and needs `InitializationSettings` for every
+  desktop platform (Linux/Windows/macOS), not just Android/iOS, or it crashes on startup.
+  `getNotificationAppLaunchDetails()` throws `UnimplementedError` on Linux — always call it
+  through `getLaunchPayload()`, which already catches that.
 - iOS Live Activity code requires iOS 16.2+ and is guarded by
   `ActivityAuthorizationInfo().areActivitiesEnabled`; it no-ops (returns `false`) rather than
   throwing when unsupported/disabled — don't add error handling around it, that's by design.
