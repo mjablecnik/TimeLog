@@ -23,7 +23,7 @@
 - [x] 13. [HIGH] Create `lib/providers/statistics_provider.dart` with period/date state and computed stats
 - [x] 14. [HIGH] Create `lib/ui/painters/bar_painter.dart` — CustomPainter for horizontal percentage bars
 - [x] 15. [HIGH] Create `lib/ui/screens/statistics_screen.dart` — main statistics page with period toggle, breakdowns, and untracked time
-- [ ] 16. [HIGH] Add Statistics tab to `lib/ui/widgets/bottom_nav.dart`
+- [x] 16. [HIGH] Add Statistics tab to `lib/ui/widgets/bottom_nav.dart`
 - [ ] 17. [HIGH] Add StatisticsScreen to `lib/app.dart` navigation shell
 
 ## Verification
