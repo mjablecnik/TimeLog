@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/data/latest.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
 
@@ -22,6 +23,8 @@ class ReminderService {
     required void Function(String? payload) onNotificationTap,
   }) async {
     tz_data.initializeTimeZones();
+    final localTimezone = await FlutterTimezone.getLocalTimezone();
+    tz.setLocalLocation(tz.getLocation(localTimezone.identifier));
 
     const androidSettings =
         AndroidInitializationSettings('@mipmap/ic_launcher');
