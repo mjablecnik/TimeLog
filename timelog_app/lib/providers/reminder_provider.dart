@@ -37,6 +37,11 @@ final reminderServiceProvider = Provider<ReminderService>((ref) {
   return ReminderService();
 });
 
+/// Whether the app was cold-launched by tapping the daily reminder
+/// notification. Overridden in `main.dart` with the real launch payload
+/// check.
+final launchedWithStartTimerProvider = Provider<bool>((ref) => false);
+
 class ReminderNotifier extends StateNotifier<ReminderSettings> {
   final ReminderService _service;
 
