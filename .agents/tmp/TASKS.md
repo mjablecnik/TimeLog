@@ -10,4 +10,4 @@
 - [x] 8. [HIGH] Re-schedule reminder on app launch — in `main.dart`, after initialization, if `reminder_enabled == true` in SharedPreferences, call `scheduleDailyReminder` to re-register the notification (survives reboot/update)
 - [x] 9. [MEDIUM] Handle permission denied gracefully — in SettingsScreen, if `requestPermission()` returns false, revert toggle to off and show explanatory SnackBar; prevent scheduling without permission
 - [x] 10. [MEDIUM] Configure timezone for correct local scheduling — initialize `timezone` package with device local timezone in `ReminderService.initialize()`, use `TZDateTime` for `zonedSchedule` calls
-- [ ] 11. [MEDIUM] Write unit test for ReminderProvider — test that toggling enabled/disabled updates SharedPreferences, that setTime persists correctly, and that provider state reflects stored values on init
+- [x] 11. [MEDIUM] Write unit test for ReminderProvider — test that toggling enabled/disabled updates SharedPreferences, that setTime persists correctly, and that provider state reflects stored values on init
