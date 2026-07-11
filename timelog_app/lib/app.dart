@@ -4,6 +4,7 @@ import 'providers/theme_provider.dart';
 import 'ui/screens/timer_screen.dart';
 import 'ui/screens/history_screen.dart';
 import 'ui/screens/statistics_screen.dart';
+import 'ui/screens/settings_screen.dart';
 import 'ui/widgets/bottom_nav.dart';
 
 class TimeLogApp extends ConsumerWidget {
@@ -35,6 +36,7 @@ class _MainShellState extends ConsumerState<_MainShell> {
     TimerScreen(),
     HistoryScreen(),
     StatisticsScreen(),
+    SettingsScreen(),
   ];
 
   @override
