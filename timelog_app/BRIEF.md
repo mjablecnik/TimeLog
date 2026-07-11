@@ -1,8 +1,10 @@
 # BRIEF – Planned Changes
 
-## 1. Confirmation dialog on Stop/Reset
+## 1. Confirmation dialog on Stop/Reset + description
 
 When the user taps the Stop or Reset button, show a confirmation dialog asking "Do you really want to reset the timer?" The user must confirm before the timer is actually reset.
+
+After confirming the stop, show the description input dialog (same as when the timer finishes) so the user can log what they were working on.
 
 ## 2. Ringing behavior when app is opened
 
