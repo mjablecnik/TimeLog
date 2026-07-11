@@ -347,6 +347,7 @@ class TimerNotifier extends StateNotifier<TimerState> with WidgetsBindingObserve
 
   void _startTicker() {
     _ticker?.cancel();
+    _recalculate();
     _ticker = Timer.periodic(const Duration(seconds: 1), (_) => _recalculate());
   }
 
@@ -354,7 +355,10 @@ class TimerNotifier extends StateNotifier<TimerState> with WidgetsBindingObserve
     if (state.status != TimerStatus.running) return;
     final endAt = state.endAt;
     if (endAt == null) return;
-    final secondsLeft = endAt.difference(DateTime.now()).inSeconds;
+    final remaining = endAt.difference(DateTime.now());
+    final secondsLeft = remaining.inMilliseconds > 0
+        ? (remaining.inMilliseconds / 1000).ceil()
+        : 0;
     if (secondsLeft <= 0) {
       _ticker?.cancel();
       _ticker = null;
