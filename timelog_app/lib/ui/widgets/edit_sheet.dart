@@ -23,17 +23,18 @@ class EditSheet extends ConsumerStatefulWidget {
 
 class _EditSheetState extends ConsumerState<EditSheet> {
   late final TextEditingController _controller;
-  late final TextEditingController _projectController;
+  TextEditingController? _projectController;
   late String _selectedType;
   String? _error;
   bool _saving = false;
   List<String> _knownProjects = [];
+  String _initialProject = '';
 
   @override
   void initState() {
     super.initState();
     _controller = TextEditingController(text: widget.entry.description);
-    _projectController = TextEditingController(text: widget.entry.project ?? '');
+    _initialProject = widget.entry.project ?? '';
     _selectedType = widget.entry.activityType;
     _loadKnownProjects();
   }
@@ -46,7 +47,6 @@ class _EditSheetState extends ConsumerState<EditSheet> {
   @override
   void dispose() {
     _controller.dispose();
-    _projectController.dispose();
     super.dispose();
   }
 
@@ -75,7 +75,7 @@ class _EditSheetState extends ConsumerState<EditSheet> {
       }
 
       final project = isWorkActivityType(_selectedType)
-          ? _projectController.text.trim()
+          ? (_projectController?.text.trim() ?? '')
           : '';
 
       await dbService.updateDescription(
@@ -186,7 +186,7 @@ class _EditSheetState extends ConsumerState<EditSheet> {
                     ),
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                     child: Autocomplete<String>(
-                      textEditingController: _projectController,
+                      initialValue: TextEditingValue(text: _initialProject),
                       optionsBuilder: (textEditingValue) {
                         final query = textEditingValue.text.trim().toLowerCase();
                         if (query.isEmpty) return _knownProjects;
@@ -195,6 +195,7 @@ class _EditSheetState extends ConsumerState<EditSheet> {
                         );
                       },
                       fieldViewBuilder: (context, controller, focusNode, onSubmitted) {
+                        _projectController = controller;
                         return TextField(
                           controller: controller,
                           focusNode: focusNode,

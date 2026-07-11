@@ -39,17 +39,18 @@ class DescriptionSheet extends ConsumerStatefulWidget {
 
 class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
   final _controller = TextEditingController();
-  final _projectController = TextEditingController();
+  TextEditingController? _projectController;
   String? _error;
   bool _saving = false;
   late String _selectedType;
   List<String> _knownProjects = [];
+  String _initialProject = '';
 
   @override
   void initState() {
     super.initState();
     _controller.text = widget.initialDescription ?? '';
-    _projectController.text = widget.initialProject ?? '';
+    _initialProject = widget.initialProject ?? '';
     _selectedType = widget.initialActivityType ?? activityTypes.first;
     if (widget.initialActivityType == null) {
       _loadLastActivityType();
@@ -79,7 +80,6 @@ class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
   @override
   void dispose() {
     _controller.dispose();
-    _projectController.dispose();
     super.dispose();
   }
 
@@ -103,7 +103,7 @@ class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
     setState(() => _saving = true);
     final notifier = ref.read(timerProvider.notifier);
     final project = isWorkActivityType(_selectedType)
-        ? _projectController.text.trim()
+        ? _projectController?.text.trim()
         : null;
     notifier.savePrefill(_controller.text.trim(), _selectedType, project: project);
     notifier.resume();
@@ -127,7 +127,7 @@ class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
       }
 
       final project = isWorkActivityType(_selectedType)
-          ? _projectController.text.trim()
+          ? (_projectController?.text.trim() ?? '')
           : '';
 
       await dbService.insertTimeEntry(
@@ -248,7 +248,7 @@ class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
                       ),
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                       child: Autocomplete<String>(
-                        textEditingController: _projectController,
+                        initialValue: TextEditingValue(text: _initialProject),
                         optionsBuilder: (textEditingValue) {
                           final query = textEditingValue.text.trim().toLowerCase();
                           if (query.isEmpty) return _knownProjects;
@@ -257,6 +257,7 @@ class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
                           );
                         },
                         fieldViewBuilder: (context, controller, focusNode, onSubmitted) {
+                          _projectController = controller;
                           return TextField(
                             controller: controller,
                             focusNode: focusNode,
