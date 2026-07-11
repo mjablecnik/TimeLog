@@ -94,6 +94,15 @@ class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
     });
   }
 
+  void _resetForm() {
+    setState(() {
+      _controller.clear();
+      _selectedType = activityTypes.first;
+      _initialProject = '';
+    });
+    _projectController?.clear();
+  }
+
   Future<void> _selectType(String type) async {
     setState(() => _selectedType = type);
     final prefs = await SharedPreferences.getInstance();
@@ -226,14 +235,30 @@ class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text(
-                    'What did you accomplish?',
-                    style: TextStyle(
-                      color: theme.text,
-                      fontFamily: 'Sora',
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                    ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'What did you accomplish?',
+                          style: TextStyle(
+                            color: theme.text,
+                            fontFamily: 'Sora',
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      SizedBox(
+                        width: 44,
+                        height: 44,
+                        child: IconButton(
+                          padding: EdgeInsets.zero,
+                          onPressed: _saving ? null : _resetForm,
+                          icon: Icon(Icons.close, color: theme.dim),
+                          tooltip: 'Vymazat',
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 16),
                   Wrap(
