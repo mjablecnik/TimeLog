@@ -21,7 +21,7 @@
 - [x] 11. [HIGH] Add `getEntriesForRange(DateTime start, DateTime end)` method to `DatabaseService`
 - [x] 12. [HIGH] Create statistics data model (StatsData with breakdowns by type and project)
 - [x] 13. [HIGH] Create `lib/providers/statistics_provider.dart` with period/date state and computed stats
-- [ ] 14. [HIGH] Create `lib/ui/painters/bar_painter.dart` — CustomPainter for horizontal percentage bars
+- [x] 14. [HIGH] Create `lib/ui/painters/bar_painter.dart` — CustomPainter for horizontal percentage bars
 - [ ] 15. [HIGH] Create `lib/ui/screens/statistics_screen.dart` — main statistics page with period toggle, breakdowns, and untracked time
 - [ ] 16. [HIGH] Add Statistics tab to `lib/ui/widgets/bottom_nav.dart`
 - [ ] 17. [HIGH] Add StatisticsScreen to `lib/app.dart` navigation shell
