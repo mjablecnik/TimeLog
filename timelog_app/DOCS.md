@@ -155,6 +155,14 @@ flutter test test/timer_service_test.dart
   (start/pause/resume/stop/finish transitions), with platform channels mocked.
 - `test/widget_test.dart` — smoke test that boots `TimeLogApp` against an in-memory Drift
   database and asserts the bottom navigation renders.
+- `test/edit_sheet_time_validation_test.dart` — validates end-time-after-start-time on the
+  edit sheet and that a valid edit persists.
+- `test/description_sheet_prefill_cancel_test.dart` — canceling the description-prefill sheet
+  discards text and resumes the timer without leaving stale state.
+- `test/settings_screen_permission_test.dart` — denying the notification permission keeps the
+  reminder toggle off and never schedules a reminder.
+- `test/reminder_provider_test.dart` — unit tests for `ReminderProvider` state, persistence to
+  `SharedPreferences`, and scheduling/canceling via `ReminderService`.
 
 ## Troubleshooting
 
