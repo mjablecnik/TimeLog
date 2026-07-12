@@ -224,6 +224,9 @@ class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
     return PopScope(
       canPop: false,
       child: Container(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.85,
+        ),
         decoration: BoxDecoration(
           color: theme.background,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
@@ -243,11 +246,12 @@ class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
               ),
             ),
             const SizedBox(height: 20),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
+            Flexible(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
                   Row(
                     children: [
                       Expanded(
@@ -409,6 +413,17 @@ class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
                     ),
                   ],
                   const SizedBox(height: 16),
+                ],
+              ),
+            ),
+          ),
+            // Fixed buttons at the bottom
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisSize: MainAxisSize.min,
+                children: [
                   SizedBox(
                     height: 48,
                     child: ElevatedButton(
