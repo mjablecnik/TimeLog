@@ -139,6 +139,19 @@ class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
 
   Future<void> _skip() async {
     if (_saving) return;
+
+    final elapsed = widget.endedAt.difference(widget.sessionStart);
+    if (elapsed.inSeconds < 120) {
+      // Less than 2 minutes — discard without saving.
+      if (widget.triggeredByStop) {
+        ref.read(timerProvider.notifier).stop();
+      } else {
+        ref.read(timerProvider.notifier).autoRestart();
+      }
+      if (mounted) Navigator.of(context).pop();
+      return;
+    }
+
     await _saveEntry('');
   }
 
