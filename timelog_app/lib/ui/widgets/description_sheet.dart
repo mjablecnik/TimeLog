@@ -247,11 +247,14 @@ class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
             ),
             const SizedBox(height: 20),
             Flexible(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
+              child: GestureDetector(
+                onTap: () => FocusScope.of(context).unfocus(),
+                behavior: HitTestBehavior.translucent,
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
                   Row(
                     children: [
                       Expanded(
@@ -417,6 +420,7 @@ class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
               ),
             ),
           ),
+        ),
             // Fixed buttons at the bottom
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
