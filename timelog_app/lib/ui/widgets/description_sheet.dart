@@ -223,37 +223,37 @@ class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
 
     return PopScope(
       canPop: false,
-      child: Container(
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.85,
-        ),
-        decoration: BoxDecoration(
-          color: theme.background,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-          border: Border(top: BorderSide(color: theme.border)),
-        ),
-        padding: EdgeInsets.only(bottom: bottomInset),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const SizedBox(height: 12),
-            Container(
-              width: 36,
-              height: 4,
-              decoration: BoxDecoration(
-                color: theme.dim,
-                borderRadius: BorderRadius.circular(2),
-              ),
+      child: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        behavior: HitTestBehavior.translucent,
+        child: Padding(
+          padding: EdgeInsets.only(bottom: bottomInset),
+          child: Container(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height * 0.85,
             ),
-            const SizedBox(height: 20),
-            Flexible(
-              child: GestureDetector(
-                onTap: () => FocusScope.of(context).unfocus(),
-                behavior: HitTestBehavior.translucent,
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
+            decoration: BoxDecoration(
+              color: theme.background,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+              border: Border(top: BorderSide(color: theme.border)),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: 12),
+                Container(
+                  width: 36,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: theme.dim,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Flexible(
+                  child: ListView(
+                    shrinkWrap: true,
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
                     children: [
                   Row(
                     children: [
@@ -419,8 +419,6 @@ class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
                 ],
               ),
             ),
-          ),
-        ),
             // Fixed buttons at the bottom
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -500,6 +498,8 @@ class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
             ),
           ],
         ),
+      ),
+      ),
       ),
     );
   }
