@@ -254,8 +254,8 @@ class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
                         child: IconButton(
                           padding: EdgeInsets.zero,
                           onPressed: _saving ? null : _resetForm,
-                          icon: Icon(Icons.close, color: theme.dim),
-                          tooltip: 'Vymazat',
+                          icon: Icon(Icons.restart_alt, color: theme.dim),
+                          tooltip: 'Vymazat formulář',
                         ),
                       ),
                     ],
