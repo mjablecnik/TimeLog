@@ -5,6 +5,7 @@ import 'providers/reminder_provider.dart';
 import 'providers/timer_provider.dart';
 import 'services/notification_service.dart';
 import 'services/reminder_service.dart';
+import 'services/timer_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,7 +19,10 @@ void main() async {
   );
 
   void autoStartIfIdle() {
-    container.read(timerProvider.notifier).start();
+    final state = container.read(timerProvider);
+    if (state.status == TimerStatus.idle) {
+      container.read(timerProvider.notifier).start();
+    }
   }
 
   await reminderService.initialize(
