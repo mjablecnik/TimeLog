@@ -416,16 +416,6 @@ class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
                     ),
                   ],
                   const SizedBox(height: 16),
-                ],
-              ),
-            ),
-            // Fixed buttons at the bottom
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                mainAxisSize: MainAxisSize.min,
-                children: [
                   SizedBox(
                     height: 48,
                     child: ElevatedButton(
