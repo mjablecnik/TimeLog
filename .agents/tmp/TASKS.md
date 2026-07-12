@@ -1,13 +1,8 @@
-# TASKS — Daily Timer Reminder
+# TASKS — Manual History Entry
 
-- [x] 1. [HIGH] Add dependencies to pubspec.yaml — add `flutter_local_notifications` and `timezone` packages with pinned versions
-- [x] 2. [HIGH] Create ReminderService (`lib/services/reminder_service.dart`) — initialize flutter_local_notifications plugin with iOS settings, implement `initialize()`, `requestPermission()`, `scheduleDailyReminder(TimeOfDay)`, `cancelReminder()`, and notification tap callback that exposes the payload
-- [x] 3. [HIGH] Create ReminderSettings data class and ReminderProvider (`lib/providers/reminder_provider.dart`) — StateNotifier holding `{enabled, hour, minute}`, loads from SharedPreferences, exposes `toggleEnabled()` and `setTime(TimeOfDay)`, calls ReminderService to schedule/cancel
-- [x] 4. [HIGH] Create SettingsScreen (`lib/ui/screens/settings_screen.dart`) — 4th tab screen with "Daily Reminder" toggle and time picker row; request permission on enable, show snackbar if denied, cancel/reschedule on time change
-- [x] 5. [HIGH] Add Settings tab to bottom navigation — add 4th nav item (gear/settings icon) to `bottom_nav.dart` and wire `SettingsScreen` into `_MainShell` in `app.dart`
-- [x] 6. [HIGH] Initialize ReminderService on app start (`main.dart`) — call `ReminderService.initialize()` before `runApp`, handle launch notification payload to detect "start_timer" action
-- [x] 7. [HIGH] Auto-start timer on notification tap — when app opens via reminder notification (payload == "start_timer"), check if timer is idle and call `timerNotifier.start()`; handle both cold-launch and foreground-tap scenarios
-- [x] 8. [HIGH] Re-schedule reminder on app launch — in `main.dart`, after initialization, if `reminder_enabled == true` in SharedPreferences, call `scheduleDailyReminder` to re-register the notification (survives reboot/update)
-- [x] 9. [MEDIUM] Handle permission denied gracefully — in SettingsScreen, if `requestPermission()` returns false, revert toggle to off and show explanatory SnackBar; prevent scheduling without permission
-- [x] 10. [MEDIUM] Configure timezone for correct local scheduling — initialize `timezone` package with device local timezone in `ReminderService.initialize()`, use `TZDateTime` for `zonedSchedule` calls
-- [x] 11. [MEDIUM] Write unit test for ReminderProvider — test that toggling enabled/disabled updates SharedPreferences, that setTime persists correctly, and that provider state reflects stored values on init
+- [x] 1. [HIGH] Create `ManualEntrySheet` widget (`lib/ui/widgets/manual_entry_sheet.dart`) — bottom sheet with start/end time pickers (defaulting based on selected day), activity type chip selector, conditional project autocomplete field, description text field, and Submit/Cancel buttons
+- [x] 2. [HIGH] Implement save logic in `ManualEntrySheet` — validate description non-empty and end > start, insert `TimeEntriesCompanion` via `DatabaseService.insertTimeEntry()`, save project to known projects if provided, pop sheet on success, show error on failure
+- [x] 3. [HIGH] Add "+" button to `HistoryScreen` header — place an IconButton (Icons.add) in the top-right corner of the History screen title area, on tap open `ManualEntrySheet` as a modal bottom sheet passing the current `selectedDayProvider` value and theme
+- [x] 4. [MEDIUM] Implement smart default times — if selected day is today, default start to `now - 30 min` and end to `now`; if selected day is in the past, default to 12:00–12:30; clamp times to stay within the selected day boundaries (00:00–23:59)
+- [x] 5. [MEDIUM] Add time validation constraints — ensure picked start/end times stay within the selected day, show error message if end time is not after start time, prevent submission with invalid times
+- [x] 6. [LOW] Write widget test for `ManualEntrySheet` — verify form starts blank, submit is disabled when description is empty, time validation error appears when end ≤ start, successful submission calls database insert with correct values

@@ -176,6 +176,8 @@ flutter test test/timer_service_test.dart
   reminder toggle off and never schedules a reminder.
 - `test/reminder_provider_test.dart` — unit tests for `ReminderProvider` state, persistence to
   `SharedPreferences`, and scheduling/canceling via `ReminderService`.
+- `test/manual_entry_sheet_test.dart` — validates the manual history entry sheet's default
+  times, time-order validation, and that a successful submission inserts a `TimeEntries` row.
 
 ## Troubleshooting
 
