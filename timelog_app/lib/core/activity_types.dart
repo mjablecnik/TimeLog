@@ -9,6 +9,7 @@ const List<String> activityTypes = [
   'Volný čas',
   'Odpočinek',
   'Jídlo',
+  'Hygiena',
 ];
 
 /// Activity types that represent work and should show a project field.
@@ -36,7 +37,9 @@ Color activityTypeColor(String type, {bool isDark = true}) {
     case 'Přesun':
       return isDark ? Colors.indigo[300]! : Colors.indigo[400]!;
     case 'Jídlo':
-      return Colors.orange[400]!;
+      return isDark ? Colors.purple[200]! : Colors.purple[900]!;
+    case 'Hygiena':
+      return isDark ? Colors.blue[300]! : Colors.blue[900]!;
     default:
       return Colors.grey[400]!;
   }
