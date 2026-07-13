@@ -10,6 +10,13 @@ import '../widgets/empty_state.dart';
 import '../widgets/history_entry_card.dart';
 import '../widgets/manual_entry_sheet.dart';
 
+const _swipeVelocityThreshold = 300.0;
+
+bool _isToday(DateTime day) {
+  final now = DateTime.now();
+  return day.year == now.year && day.month == now.month && day.day == now.day;
+}
+
 class HistoryScreen extends ConsumerWidget {
   const HistoryScreen({super.key});
 
@@ -64,35 +71,52 @@ class HistoryScreen extends ConsumerWidget {
             DayNavigator(theme: theme),
             const SizedBox(height: 4),
             Expanded(
-              child: entriesAsync.when(
-                data: (entries) {
-                  if (entries.isEmpty) {
-                    return EmptyState(theme: theme);
+              child: GestureDetector(
+                behavior: HitTestBehavior.translucent,
+                onHorizontalDragEnd: (details) {
+                  final velocity = details.primaryVelocity ?? 0;
+                  if (velocity.abs() < _swipeVelocityThreshold) return;
+                  if (velocity < 0) {
+                    // Swipe left → next day
+                    if (_isToday(selectedDay)) return;
+                    ref.read(selectedDayProvider.notifier).state =
+                        selectedDay.add(const Duration(days: 1));
+                  } else {
+                    // Swipe right → previous day
+                    ref.read(selectedDayProvider.notifier).state =
+                        selectedDay.subtract(const Duration(days: 1));
                   }
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      DaySummary(entries: entries, theme: theme),
-                      Expanded(
-                        child: ListView.builder(
-                          padding: const EdgeInsets.only(bottom: 16),
-                          itemCount: entries.length,
-                          itemBuilder: (context, index) => HistoryEntryCard(
-                            entry: entries[index],
-                            theme: theme,
+                },
+                child: entriesAsync.when(
+                  data: (entries) {
+                    if (entries.isEmpty) {
+                      return EmptyState(theme: theme);
+                    }
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        DaySummary(entries: entries, theme: theme),
+                        Expanded(
+                          child: ListView.builder(
+                            padding: const EdgeInsets.only(bottom: 16),
+                            itemCount: entries.length,
+                            itemBuilder: (context, index) => HistoryEntryCard(
+                              entry: entries[index],
+                              theme: theme,
+                            ),
                           ),
                         ),
-                      ),
-                    ],
-                  );
-                },
-                loading: () => Center(
-                  child: CircularProgressIndicator(color: theme.accent),
-                ),
-                error: (error, _) => Center(
-                  child: Text(
-                    'Failed to load entries.',
-                    style: TextStyle(color: theme.dim, fontFamily: 'Sora'),
+                      ],
+                    );
+                  },
+                  loading: () => Center(
+                    child: CircularProgressIndicator(color: theme.accent),
+                  ),
+                  error: (error, _) => Center(
+                    child: Text(
+                      'Failed to load entries.',
+                      style: TextStyle(color: theme.dim, fontFamily: 'Sora'),
+                    ),
                   ),
                 ),
               ),
