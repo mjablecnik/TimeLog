@@ -8,8 +8,8 @@ const List<String> activityTypes = [
   'Cvičení',
   'Volný čas',
   'Odpočinek',
-  'Jídlo',
   'Hygiena',
+  'Jídlo',
 ];
 
 /// Activity types that represent work and should show a project field.
