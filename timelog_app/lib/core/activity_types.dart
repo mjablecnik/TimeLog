@@ -2,18 +2,18 @@ import 'package:flutter/material.dart';
 
 const List<String> activityTypes = [
   'Práce',
-  'Volná práce',
+  'Domácí práce',
   'Přesun',
   'Zábava',
   'Cvičení',
-  'Volný čas',
+  'Seberozvoj',
   'Odpočinek',
   'Hygiena',
   'Jídlo',
 ];
 
 /// Activity types that represent work and should show a project field.
-const List<String> workActivityTypes = ['Práce', 'Volná práce'];
+const List<String> workActivityTypes = ['Práce'];
 
 bool isWorkActivityType(String type) => workActivityTypes.contains(type);
 
@@ -24,7 +24,7 @@ Color activityTypeColor(String type, {bool isDark = true}) {
   switch (type) {
     case 'Práce':
       return Colors.red[400]!;
-    case 'Volný čas':
+    case 'Seberozvoj':
       return Colors.green[400]!;
     case 'Odpočinek':
       return Colors.blue[400]!;
@@ -32,7 +32,7 @@ Color activityTypeColor(String type, {bool isDark = true}) {
       return isDark ? Colors.orange[300]! : Colors.orange[700]!;
     case 'Cvičení':
       return Colors.amber[600]!;
-    case 'Volná práce':
+    case 'Domácí práce':
       return Colors.teal[400]!;
     case 'Přesun':
       return isDark ? Colors.indigo[300]! : Colors.indigo[400]!;
