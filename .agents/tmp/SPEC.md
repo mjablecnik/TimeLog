@@ -1,66 +1,86 @@
-# Manual History Entry — Specification
+# Spec: TimeLog App Improvements (Batch 2)
 
 ## Overview
 
-Add the ability to manually create a time entry from the History screen by tapping a "+" (plus) button in the top-right corner. This opens a form similar to the existing `DescriptionSheet` but with all fields blank — the user must fill in the description, activity type, project (if applicable), start time, and end time manually. The entry is saved to the currently viewed day.
+Four improvements to the TimeLog Flutter app:
+1. Replace "Spánek" (Sleep) activity type with "Zábava" (Entertainment)
+2. Fix statistics screen not refreshing when navigating to it
+3. Smart start time default in manual entry: use end time of the last entry on the selected day
+4. Add swipe gesture navigation in statistics screen (left/right to change day/week)
 
-## Goals
+---
 
-- Allow users to log activities that were not tracked by the timer (e.g., forgot to start it).
-- The entry is always associated with the currently selected day on the History screen.
-- Reuse as much existing UI and logic as possible (activity type chips, project autocomplete, description field, time pickers).
+## 1. Replace "Spánek" with "Zábava"
 
-## Technical Approach
+**File:** `lib/core/activity_types.dart`
 
-### New Widget: `ManualEntrySheet`
+Replace the `'Spánek'` entry in the `activityTypes` list with `'Zábava'`. Update the `activityTypeColor` function to map `'Zábava'` to the color previously assigned to `'Spánek'` (purple shade). Remove the old `'Spánek'` case.
 
-A new bottom sheet widget at `lib/ui/widgets/manual_entry_sheet.dart`. It combines elements from both `DescriptionSheet` (activity type selection, project field, description field) and `EditSheet` (start/end time pickers).
+**Impact:** Existing database entries with `activityType = 'Spánek'` will no longer match a known type and will render with the default grey color. This is acceptable — no migration needed, they'll still display with their stored label.
 
-**Why a new widget instead of reusing `DescriptionSheet` or `EditSheet`:**
-- `DescriptionSheet` is tightly coupled to the timer lifecycle (it receives `sessionStart`/`endedAt` from the timer, triggers `stop()`/`autoRestart()`, has prefill/skip modes).
-- `EditSheet` is designed for editing an existing entry (requires a `TimeEntry` object).
-- A dedicated `ManualEntrySheet` is simpler and avoids flag/mode complexity in existing widgets.
+---
 
-### Form Fields
+## 2. Fix Statistics Screen Refresh
 
-1. **Start time** — TimePicker, defaults to current time minus 30 minutes (clamped to day start).
-2. **End time** — TimePicker, defaults to current time (clamped to day end).
-3. **Activity type** — Chip selector (same as `DescriptionSheet`), defaults to first type.
-4. **Project** — Autocomplete field, shown only for work activity types (same logic as existing sheets).
-5. **Description** — Multi-line text field, max 500 chars.
+**Problem:** When navigating to the statistics tab, the displayed data is stale. The user must manually change the day or toggle period to force a refresh.
 
-### Validation
+**Root cause:** `statisticsProvider` is a `FutureProvider` that watches `statisticsPeriodProvider` and `statisticsDateProvider`. When neither changes (user just switches tabs), the provider's cached value is shown without re-fetching from the database.
 
-- Description cannot be empty.
-- End time must be after start time.
-- Both times must fall within the selected day (00:00–23:59).
+**Solution:** Invalidate `statisticsProvider` when the statistics screen becomes visible. Add an `invalidate(statisticsProvider)` call when `StatisticsScreen` builds (or use a lifecycle hook). The simplest approach is to convert `StatisticsScreen` to a `ConsumerStatefulWidget` and call `ref.invalidate(statisticsProvider)` in `didChangeDependencies` or use a `VisibilityDetector`-style approach. However, the cleanest approach given the bottom-nav architecture: invalidate the provider whenever the statistics tab is selected, or use `ref.invalidate` directly in the `StatisticsScreen` build method on first build.
 
-### Save Behavior
+**Chosen approach:** Make `StatisticsScreen` a `ConsumerStatefulWidget`, override `initState` to invalidate `statisticsProvider` so it re-fetches fresh data every time the screen widget is (re)created. Since the bottom nav likely keeps the screen alive, an alternative is to use `AutomaticKeepAlive` pattern or, better, invalidate in the `_DateNav` build. The most robust fix: the `StatisticsScreen` should invalidate `statisticsProvider` each time it appears. Since it's a `ConsumerWidget` that stays alive in the nav, we need to trigger invalidation when the tab is selected. We'll hook into the bottom navigation's tab change to invalidate.
 
-- Inserts a new `TimeEntriesCompanion` into the database via `DatabaseService.insertTimeEntry()`.
-- Saves the project to known projects (if provided).
-- Does NOT interact with the timer provider at all.
-- On success, pops the sheet. The `dayEntriesProvider` stream auto-updates the History list.
+**Final approach:** Add `ref.invalidate(statisticsProvider)` triggered from the bottom nav's `onTabChanged` callback (in `app.dart` or wherever the nav index lives), specifically when switching to the statistics tab index.
 
-### History Screen Changes
+---
 
-- Add a `+` IconButton (or FloatingActionButton) in the top-right area of the History screen header.
-- Tapping it opens `ManualEntrySheet` as a modal bottom sheet.
-- The selected day from `selectedDayProvider` is passed to the sheet for date context.
+## 3. Smart Start Time for Manual Entry
 
-## File Structure
+**Problem:** When adding a new manual entry from scratch, start time should equal the end time of the last entry on the selected day.
 
-```
-lib/ui/widgets/manual_entry_sheet.dart   (NEW)
-lib/ui/screens/history_screen.dart       (MODIFIED — add + button)
-```
+**File:** `lib/ui/widgets/manual_entry_sheet.dart` — `_initDefaultTimes()`
 
-No database schema changes. No new providers needed — uses existing `databaseServiceProvider`, `projectServiceProvider`, and `selectedDayProvider`.
+**Current behavior:** Defaults to `now - 30min` (today) or `12:00` (past day).
 
-## Constraints & Edge Cases
+**New behavior:**
+1. Query the database for entries on `widget.selectedDay`, sorted by end time descending.
+2. If entries exist, set `_startTime` = end time of the most recent entry (the one with the latest `endTime`).
+3. If the selected day is today, set `_endTime` = now (clamped to day boundary).
+4. If past day, set `_endTime` = `_startTime + 30 minutes` (clamped to 23:59 of that day).
+5. If no entries exist, fall back to current behavior.
 
-- If the selected day is today, default times should be "now minus 30 min" → "now". If the selected day is in the past, default to 12:00–12:30 (reasonable midday default).
-- Time pickers should constrain to the selected day (not allow cross-day entries).
-- The sheet should be dismissible via swipe-down or Cancel button (non-blocking, unlike `DescriptionSheet` which uses `PopScope(canPop: false)`).
-- The form does NOT load/save "last submitted" preferences — it always starts blank.
-- No interaction with `timerProvider` — this is purely a database insert.
+Since this requires an async DB query, `_initDefaultTimes` must become async and be called from `initState` with a `.then()` pattern or use a loading state.
+
+---
+
+## 4. Swipe Navigation in Statistics Screen
+
+**Problem:** User wants to swipe left/right in the statistics screen to navigate between days (daily mode) or weeks (weekly mode).
+
+**Solution:** Wrap the statistics content (below the period toggle) in a `GestureDetector` that detects horizontal swipes, or use a `PageView`-style approach. The simplest and most natural solution: wrap the main content area in a `GestureDetector` with `onHorizontalDragEnd` that:
+- Swipe left (positive velocity) → go to next day/week (unless already at current)
+- Swipe right (negative velocity) → go to previous day/week
+
+This mirrors the existing chevron button behavior but triggered by swipe. The threshold should be reasonable (e.g., velocity > 300 or drag distance > 50px).
+
+**File:** `lib/ui/screens/statistics_screen.dart`
+
+---
+
+## File Changes Summary
+
+| File | Change |
+|------|--------|
+| `lib/core/activity_types.dart` | Replace `'Spánek'` with `'Zábava'` in list and color map |
+| `lib/ui/screens/statistics_screen.dart` | Add swipe gesture + fix refresh on tab switch |
+| `lib/ui/widgets/manual_entry_sheet.dart` | Async load last entry's end time as default start |
+| `lib/app.dart` | Invalidate `statisticsProvider` on tab switch to statistics |
+
+---
+
+## Constraints
+
+- No new packages needed — `GestureDetector` is built into Flutter.
+- The statistics refresh fix must not cause infinite rebuilds (invalidate once per tab switch, not on every build).
+- Swipe should not conflict with horizontal scrolling if any exists in the stats body (currently only vertical ListView, so no conflict).
+- The `_initDefaultTimes` async pattern must handle the case where the widget is disposed before the query completes.

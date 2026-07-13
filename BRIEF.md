@@ -1,3 +1,4 @@
-Chci přidat možnost abych mohl na history page kliknout na tlačítko Plus v pravém horním rohu, 
-zobrazil se mi zase formulář pro uložení description, ale tentokrát by byl prázdný a musel bych tam všechno vyplnit ručně včetně času.
-Toto by sloužilo pro ruční samostatný zápis vlastniho description na strance pro daný den v jakém zrovna momentalně jako uživatel jsem.
+1) Místo typu spánku tam dej zábava
+2) Když přejdu do statistik, tak není aktualizovaný graf. Musím změnit den nebo přepnout na týden a zpět aby se to aktualizovalo.
+3) Při přidávání nové vlastní entry od nuly, chci aby start time se rovnalo end timu posledního přidaného záznamu.
+4) Chci aby ve statistikach jsem se mezi dny anebo týdny swipovat doleva anebo doprava a toto swipnutí to změnilo den nebo týden na následující anebo předchozí pokud je k dispozici
