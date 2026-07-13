@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 const List<String> activityTypes = [
   'Práce',
   'Volná práce',
-  'Cvičení',
-  'Zábava',
   'Přesun',
+  'Zábava',
+  'Cvičení',
   'Volný čas',
   'Odpočinek',
   'Jídlo',
