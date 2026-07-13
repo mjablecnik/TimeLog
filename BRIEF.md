@@ -1,5 +1,9 @@
-Místo defaultní flutter ikony sem chci přidat nějakou která se bude k aplikaci lépe hodit.
-Dej tam třeba ikonu budíku anebo hodin. Abych tu aplikaci dokázal na mobilu snadno najít.
-Ikonu změn pouze pro android a ios a at je tam ta ikona stejná (at se prilis moc neliší)
+1) Pro zábavu tam chci přidat ještě typ zábavy. Něco podobného jako je u práce jméno projektu, tak tady budu moct zase 
+zadat typ zábavy, ale budu si moct vybrat pouze jedno z těchto dvou:
+- Aktivní zábava
+- Pasivní zábava
+
+2) Místo volného času tam dej seberozvoj 
+3) Volnou práci přejmenuj na domácí práci
 
 

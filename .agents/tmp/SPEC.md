@@ -1,83 +1,76 @@
-# App Icon Replacement — Specification
+# Specification: Activity Type Changes + Entertainment Sub-type
 
 ## Overview
 
-Replace the default Flutter app icon with a custom clock/alarm icon on Android and iOS. The icon should be visually consistent across both platforms and make the app easy to identify on the home screen.
+Three changes to the TimeLog app's activity type system:
 
-## Goals
-
-1. Replace the default Flutter icon with a clock-themed icon (alarm clock or clock face)
-2. Apply the same icon design to both Android and iOS
-3. Generate all required sizes for each platform
-4. Keep the icon simple and recognizable at small sizes
+1. **Add entertainment sub-type selector to "Zábava"** — when "Zábava" is selected, show a mandatory single-choice selector with two options: "Aktivní zábava" and "Pasivní zábava". This is analogous to how work activities show a project name field, but instead of free-text it's a fixed two-option picker.
+2. **Rename "Volný čas" → "Seberozvoj"** across the entire codebase.
+3. **Rename "Volná práce" → "Domácí práce"** across the entire codebase, including updating `workActivityTypes` (since "Domácí práce" is housework, not work — it should likely be removed from `workActivityTypes` and no longer show the project field).
 
 ## Technical Approach
 
-Use the `flutter_launcher_icons` package to generate platform-specific icon assets from a single source image. This is the standard Flutter approach and handles all size variants automatically.
+### 1. Rename Activity Types (Pure String Replacement)
 
-### Source Icon
+**"Volný čas" → "Seberozvoj":**
+- `lib/core/activity_types.dart`: update `activityTypes` list and `activityTypeColor()` switch case
+- No database migration needed — existing entries keep the old string unless migrated
 
-Generate a 1024×1024 PNG icon programmatically using ImageMagick (available in the environment). The design will be:
-- A solid rounded-square background in the app's primary color (dark blue/indigo from the app theme)
-- A white clock face with hour/minute hands, representing a time-tracking app
-- Clean, flat design that reads well at small sizes
+**"Volná práce" → "Domácí práce":**
+- `lib/core/activity_types.dart`: update `activityTypes` list, `workActivityTypes` list, and `activityTypeColor()` switch case
+- Decision: "Domácí práce" (housework) is NOT work — remove it from `workActivityTypes`. It should no longer show the project field.
+- Update `stats_data.dart` doc comment referencing "Volná práce"
 
-### Platform Targets
+**Database migration:** Add a schema version 5 migration that updates existing `TimeEntries` rows:
+- `UPDATE time_entries SET activity_type = 'Seberozvoj' WHERE activity_type = 'Volný čas'`
+- `UPDATE time_entries SET activity_type = 'Domácí práce' WHERE activity_type = 'Volná práce'`
 
-**Android:**
-- Adaptive icon with foreground/background layers (modern Android)
-- Legacy square icon fallback (older Android)
-- Sizes: mipmap-mdpi (48×48) through mipmap-xxxhdpi (192×192)
+### 2. Entertainment Sub-type ("Zábava")
 
-**iOS:**
-- Single 1024×1024 source, sized down by Xcode asset catalog
-- All required sizes defined in `Contents.json` (20×20 through 1024×1024 at various scales)
+**Database:** Add a nullable `entertainment_type` column to `TimeEntries` table (schema version 5, same migration). Values: `'Aktivní zábava'` or `'Pasivní zábava'` or `null` (for non-entertainment entries).
 
-### Tool: `flutter_launcher_icons`
+**Core logic:**
+- Add `entertainmentTypes` constant list: `['Aktivní zábava', 'Pasivní zábava']`
+- Add `isEntertainmentActivityType(String type)` helper (checks `type == 'Zábava'`)
 
-Add as a dev dependency and configure in `pubspec.yaml` (or a separate `flutter_launcher_icons.yaml`). The package generates all platform-specific assets from one source image.
+**UI — Description sheet, Edit sheet, Manual entry sheet:**
+- When "Zábava" is selected, show a two-option toggle/chip selector (similar style to the activity type chips but smaller/inline) for choosing "Aktivní zábava" or "Pasivní zábava"
+- The selection is mandatory before submission when "Zábava" is selected
+- Persist the choice in the `entertainment_type` column
 
-Configuration:
-```yaml
-flutter_launcher_icons:
-  android: true
-  ios: true
-  image_path: "assets/icon/app_icon.png"
-  adaptive_icon_background: "#1a1a2e"
-  adaptive_icon_foreground: "assets/icon/app_icon_foreground.png"
+**UI — History entry card:**
+- Display the entertainment type below the activity type badge (similar to how project is shown for work entries)
+
+**Statistics:**
+- Optionally break down "Zábava" time by entertainment type (analogous to byProject for work) — this is a nice-to-have enhancement
+
+**SharedPreferences:**
+- Persist last-selected entertainment type (similar to `_lastActivityTypeKey` pattern)
+
+### 3. File Structure
+
+No new files needed. Changes are in existing files:
+
+```
+lib/core/activity_types.dart          — add entertainmentTypes, isEntertainmentActivityType(), rename entries
+lib/data/time_entry.dart              — add entertainment_type column
+lib/data/database.dart                — bump schemaVersion to 5, add migration
+lib/data/database.g.dart              — regenerate
+lib/data/stats_data.dart              — update doc comment, optionally add byEntertainmentType
+lib/ui/widgets/description_sheet.dart — add entertainment type selector when Zábava selected
+lib/ui/widgets/edit_sheet.dart        — add entertainment type selector when Zábava selected
+lib/ui/widgets/manual_entry_sheet.dart— add entertainment type selector when Zábava selected
+lib/ui/widgets/history_entry_card.dart— display entertainment type
+lib/providers/statistics_provider.dart— update doc references
+lib/services/timer_service.dart       — ensure prefill supports entertainment_type
+lib/services/timer_service.freezed.dart — regenerate
 ```
 
-## File Structure
+### 4. Constraints and Edge Cases
 
-New/modified files:
-```
-timelog_app/
-├── assets/icon/
-│   ├── app_icon.png              (1024×1024 full icon for iOS + legacy Android)
-│   └── app_icon_foreground.png   (1024×1024 foreground for Android adaptive)
-├── pubspec.yaml                  (add flutter_launcher_icons dev dep + config)
-├── android/app/src/main/res/
-│   ├── mipmap-mdpi/ic_launcher.png       (regenerated)
-│   ├── mipmap-hdpi/ic_launcher.png       (regenerated)
-│   ├── mipmap-xhdpi/ic_launcher.png      (regenerated)
-│   ├── mipmap-xxhdpi/ic_launcher.png     (regenerated)
-│   └── mipmap-xxxhdpi/ic_launcher.png    (regenerated)
-├── ios/Runner/Assets.xcassets/AppIcon.appiconset/
-│   ├── Icon-App-*.png            (all sizes regenerated)
-│   └── Contents.json             (unchanged structure)
-```
-
-## Constraints
-
-- The icon must look good at all sizes (20×20 through 1024×1024)
-- iOS does not support transparent backgrounds — use a solid fill
-- Android adaptive icons use separate foreground/background — foreground should have padding (safe zone is 66% of canvas)
-- No text in the icon — it won't be legible at small sizes
-- Icon should match the app's visual identity (dark theme, clean design)
-
-## Implementation Notes
-
-- ImageMagick (`convert` / `magick`) will be used to generate the source PNG since we're in a headless environment
-- The clock design uses SVG-like drawing primitives available in ImageMagick
-- After generating the source icon, `flutter_launcher_icons` handles all resizing and platform placement
-- The icon does NOT need rounded corners baked in — both Android and iOS apply their own masking
+- Existing "Zábava" entries in DB will have `entertainment_type = null` — the UI should handle this gracefully (display without sub-type)
+- The entertainment type selector must be **mandatory** for new entries when "Zábava" is selected (cannot submit without choosing one)
+- Switching away from "Zábava" to another activity type clears the entertainment type selection
+- The prefill (draft) flow must also persist the entertainment type choice
+- `workActivityTypes` after rename: only `['Práce']` (single item) since "Domácí práce" is not work
+- All renames must be reflected in the database migration so historical data stays consistent
