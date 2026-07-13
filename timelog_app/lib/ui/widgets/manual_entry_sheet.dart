@@ -38,11 +38,14 @@ class _ManualEntrySheetState extends ConsumerState<ManualEntrySheet> {
     _loadKnownProjects();
   }
 
-  void _initDefaultTimes() {
+  Future<void> _initDefaultTimes() async {
     final day = widget.selectedDay;
     final now = DateTime.now();
     final isToday =
         day.year == now.year && day.month == now.month && day.day == now.day;
+
+    // Synchronous fallback so the `late` fields are set before the first
+    // build; overwritten below if a prior entry is found for this day.
     if (isToday) {
       final dayStart = DateTime(day.year, day.month, day.day);
       _endTime = now;
@@ -52,6 +55,30 @@ class _ManualEntrySheetState extends ConsumerState<ManualEntrySheet> {
       _startTime = DateTime(day.year, day.month, day.day, 12, 0);
       _endTime = DateTime(day.year, day.month, day.day, 12, 30);
     }
+
+    List<TimeEntry> entries;
+    try {
+      final dbService = await ref.read(databaseServiceProvider.future);
+      entries = await dbService.getEntriesForDay(day);
+    } catch (_) {
+      return;
+    }
+    if (!mounted || entries.isEmpty) return;
+
+    final lastEndTime = entries
+        .map((e) => DateTime.parse(e.endTime))
+        .reduce((a, b) => a.isAfter(b) ? a : b);
+
+    setState(() {
+      _startTime = lastEndTime;
+      if (isToday) {
+        _endTime = now.isBefore(lastEndTime) ? lastEndTime : now;
+      } else {
+        final dayEnd = DateTime(day.year, day.month, day.day, 23, 59);
+        final defaultEnd = lastEndTime.add(const Duration(minutes: 30));
+        _endTime = defaultEnd.isAfter(dayEnd) ? dayEnd : defaultEnd;
+      }
+    });
   }
 
   Future<void> _loadKnownProjects() async {
