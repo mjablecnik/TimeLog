@@ -55,7 +55,10 @@ void main() {
       await tester.pump();
 
       // Cancel instead of saving.
-      await tester.tap(find.text('Zrušit'));
+      final cancelButton = find.text('Zrušit', skipOffstage: false);
+      await tester.ensureVisible(cancelButton);
+      await tester.pumpAndSettle();
+      await tester.tap(cancelButton);
       await tester.pumpAndSettle();
 
       // Sheet is gone.

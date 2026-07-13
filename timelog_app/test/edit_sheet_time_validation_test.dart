@@ -15,7 +15,10 @@ Future<void> _setTimeViaPicker(
   required int hour,
   required int minute,
 }) async {
-  await tester.tap(find.text(currentTimeText));
+  final timeField = find.text(currentTimeText, skipOffstage: false);
+  await tester.ensureVisible(timeField);
+  await tester.pumpAndSettle();
+  await tester.tap(timeField);
   await tester.pumpAndSettle();
 
   // Switch from the dial to manual hour/minute entry.
@@ -99,12 +102,17 @@ void main() {
       expect(find.text('10:00'), findsOneWidget);
 
       // Saving with end before start must be rejected.
-      await tester.tap(find.widgetWithText(ElevatedButton, 'Save'));
+      final saveButton =
+          find.widgetWithText(ElevatedButton, 'Save', skipOffstage: false);
+      await tester.ensureVisible(saveButton);
+      await tester.pumpAndSettle();
+      await tester.tap(saveButton);
       await tester.pump();
-      expect(find.text('End time must be after start time.'), findsOneWidget);
+      expect(find.text('End time must be after start time.', skipOffstage: false),
+          findsOneWidget);
 
       // Sheet stays open and nothing was written to the database.
-      expect(find.text('Edit description'), findsOneWidget);
+      expect(find.text('Edit description', skipOffstage: false), findsOneWidget);
       final afterRejectedSave = await (db.select(db.timeEntries)
             ..where((t) => t.id.equals(insertedId)))
           .getSingle();
@@ -120,7 +128,9 @@ void main() {
       );
       expect(find.text('12:00'), findsOneWidget);
 
-      await tester.tap(find.widgetWithText(ElevatedButton, 'Save'));
+      await tester.ensureVisible(saveButton);
+      await tester.pumpAndSettle();
+      await tester.tap(saveButton);
       await tester.pumpAndSettle();
 
       // Sheet closed, no validation error left behind.
