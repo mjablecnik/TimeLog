@@ -25,6 +25,18 @@ String _formatDuration(Duration duration) {
   return mins > 0 ? '${hours}h ${mins}m' : '${hours}h';
 }
 
+bool _isCurrentPeriod(StatsPeriod period, DateTime date) {
+  final now = DateTime.now();
+  if (period == StatsPeriod.daily) {
+    return date.year == now.year &&
+        date.month == now.month &&
+        date.day == now.day;
+  }
+  return _weekStart(date) == _weekStart(now);
+}
+
+const _swipeVelocityThreshold = 300.0;
+
 class StatisticsScreen extends ConsumerWidget {
   const StatisticsScreen({super.key});
 
@@ -58,32 +70,48 @@ class StatisticsScreen extends ConsumerWidget {
             _DateNav(theme: theme),
             const SizedBox(height: 4),
             Expanded(
-              child: statsAsync.when(
-                data: (stats) => Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    if (period == StatsPeriod.daily)
-                      _DailyTimeline(
-                        entries: stats.entries,
-                        day: date,
-                        theme: theme,
-                      )
-                    else
-                      _WeeklyTimeline(
-                        entries: stats.entries,
-                        weekStart: _weekStart(date),
-                        theme: theme,
-                      ),
-                    Expanded(child: _StatsBody(stats: stats, theme: theme)),
-                  ],
-                ),
-                loading: () => Center(
-                  child: CircularProgressIndicator(color: theme.accent),
-                ),
-                error: (error, _) => Center(
-                  child: Text(
-                    'Nepodařilo se načíst statistiky.',
-                    style: TextStyle(color: theme.dim, fontFamily: 'Sora'),
+              child: GestureDetector(
+                behavior: HitTestBehavior.translucent,
+                onHorizontalDragEnd: (details) {
+                  final velocity = details.primaryVelocity ?? 0;
+                  if (velocity.abs() < _swipeVelocityThreshold) return;
+                  final step = period == StatsPeriod.daily ? 1 : 7;
+                  if (velocity < 0) {
+                    if (_isCurrentPeriod(period, date)) return;
+                    ref.read(statisticsDateProvider.notifier).state =
+                        date.add(Duration(days: step));
+                  } else {
+                    ref.read(statisticsDateProvider.notifier).state =
+                        date.subtract(Duration(days: step));
+                  }
+                },
+                child: statsAsync.when(
+                  data: (stats) => Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      if (period == StatsPeriod.daily)
+                        _DailyTimeline(
+                          entries: stats.entries,
+                          day: date,
+                          theme: theme,
+                        )
+                      else
+                        _WeeklyTimeline(
+                          entries: stats.entries,
+                          weekStart: _weekStart(date),
+                          theme: theme,
+                        ),
+                      Expanded(child: _StatsBody(stats: stats, theme: theme)),
+                    ],
+                  ),
+                  loading: () => Center(
+                    child: CircularProgressIndicator(color: theme.accent),
+                  ),
+                  error: (error, _) => Center(
+                    child: Text(
+                      'Nepodařilo se načíst statistiky.',
+                      style: TextStyle(color: theme.dim, fontFamily: 'Sora'),
+                    ),
                   ),
                 ),
               ),
@@ -193,22 +221,12 @@ class _DateNav extends ConsumerWidget {
     return '${weekStart.day}. ${weekStart.month}. – ${weekEnd.day}. ${weekEnd.month}. ${weekEnd.year}';
   }
 
-  bool _isCurrent(StatsPeriod period, DateTime date) {
-    final now = DateTime.now();
-    if (period == StatsPeriod.daily) {
-      return date.year == now.year &&
-          date.month == now.month &&
-          date.day == now.day;
-    }
-    return _weekStart(date) == _weekStart(now);
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final period = ref.watch(statisticsPeriodProvider);
     final date = ref.watch(statisticsDateProvider);
     final step = period == StatsPeriod.daily ? 1 : 7;
-    final isCurrent = _isCurrent(period, date);
+    final isCurrent = _isCurrentPeriod(period, date);
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,

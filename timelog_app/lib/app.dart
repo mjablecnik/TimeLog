@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'providers/statistics_provider.dart';
 import 'providers/theme_provider.dart';
 import 'ui/screens/timer_screen.dart';
 import 'ui/screens/history_screen.dart';
@@ -50,7 +51,12 @@ class _MainShellState extends ConsumerState<_MainShell> {
       ),
       bottomNavigationBar: AppBottomNav(
         selectedIndex: _selectedIndex,
-        onTap: (index) => setState(() => _selectedIndex = index),
+        onTap: (index) {
+          if (index == 2) {
+            ref.invalidate(statisticsProvider);
+          }
+          setState(() => _selectedIndex = index);
+        },
         theme: theme,
       ),
     );
