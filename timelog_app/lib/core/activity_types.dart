@@ -17,6 +17,11 @@ const List<String> workActivityTypes = ['Práce'];
 
 bool isWorkActivityType(String type) => workActivityTypes.contains(type);
 
+/// Sub-type choices shown when the "Zábava" activity type is selected.
+const List<String> entertainmentTypes = ['Aktivní zábava', 'Pasivní zábava'];
+
+bool isEntertainmentActivityType(String type) => type == 'Zábava';
+
 /// Returns the distinct badge color for [type]. [isDark] selects the
 /// variant for the "Zábava" and "Přesun" types, which need a different
 /// shade on light themes to stay legible.

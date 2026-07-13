@@ -1,7 +1,7 @@
 # Tasks
 
 - [x] 1. [HIGH] Rename "Volný čas" to "Seberozvoj" and "Volná práce" to "Domácí práce" in `lib/core/activity_types.dart` (update `activityTypes` list, `activityTypeColor()` switch cases, remove "Domácí práce" from `workActivityTypes`)
-- [ ] 2. [HIGH] Add `entertainmentTypes` constant list and `isEntertainmentActivityType()` helper to `lib/core/activity_types.dart`
+- [x] 2. [HIGH] Add `entertainmentTypes` constant list and `isEntertainmentActivityType()` helper to `lib/core/activity_types.dart`
 - [ ] 3. [HIGH] Add nullable `entertainmentType` text column to `TimeEntries` table in `lib/data/time_entry.dart`
 - [ ] 4. [HIGH] Bump `schemaVersion` to 5 in `lib/data/database.dart` and add migration: rename activity types in existing rows + add `entertainment_type` column
 - [ ] 5. [HIGH] Regenerate Drift code with `dart run build_runner build --delete-conflicting-outputs`
