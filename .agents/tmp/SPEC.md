@@ -1,86 +1,83 @@
-# Spec: TimeLog App Improvements (Batch 2)
+# App Icon Replacement — Specification
 
 ## Overview
 
-Four improvements to the TimeLog Flutter app:
-1. Replace "Spánek" (Sleep) activity type with "Zábava" (Entertainment)
-2. Fix statistics screen not refreshing when navigating to it
-3. Smart start time default in manual entry: use end time of the last entry on the selected day
-4. Add swipe gesture navigation in statistics screen (left/right to change day/week)
+Replace the default Flutter app icon with a custom clock/alarm icon on Android and iOS. The icon should be visually consistent across both platforms and make the app easy to identify on the home screen.
 
----
+## Goals
 
-## 1. Replace "Spánek" with "Zábava"
+1. Replace the default Flutter icon with a clock-themed icon (alarm clock or clock face)
+2. Apply the same icon design to both Android and iOS
+3. Generate all required sizes for each platform
+4. Keep the icon simple and recognizable at small sizes
 
-**File:** `lib/core/activity_types.dart`
+## Technical Approach
 
-Replace the `'Spánek'` entry in the `activityTypes` list with `'Zábava'`. Update the `activityTypeColor` function to map `'Zábava'` to the color previously assigned to `'Spánek'` (purple shade). Remove the old `'Spánek'` case.
+Use the `flutter_launcher_icons` package to generate platform-specific icon assets from a single source image. This is the standard Flutter approach and handles all size variants automatically.
 
-**Impact:** Existing database entries with `activityType = 'Spánek'` will no longer match a known type and will render with the default grey color. This is acceptable — no migration needed, they'll still display with their stored label.
+### Source Icon
 
----
+Generate a 1024×1024 PNG icon programmatically using ImageMagick (available in the environment). The design will be:
+- A solid rounded-square background in the app's primary color (dark blue/indigo from the app theme)
+- A white clock face with hour/minute hands, representing a time-tracking app
+- Clean, flat design that reads well at small sizes
 
-## 2. Fix Statistics Screen Refresh
+### Platform Targets
 
-**Problem:** When navigating to the statistics tab, the displayed data is stale. The user must manually change the day or toggle period to force a refresh.
+**Android:**
+- Adaptive icon with foreground/background layers (modern Android)
+- Legacy square icon fallback (older Android)
+- Sizes: mipmap-mdpi (48×48) through mipmap-xxxhdpi (192×192)
 
-**Root cause:** `statisticsProvider` is a `FutureProvider` that watches `statisticsPeriodProvider` and `statisticsDateProvider`. When neither changes (user just switches tabs), the provider's cached value is shown without re-fetching from the database.
+**iOS:**
+- Single 1024×1024 source, sized down by Xcode asset catalog
+- All required sizes defined in `Contents.json` (20×20 through 1024×1024 at various scales)
 
-**Solution:** Invalidate `statisticsProvider` when the statistics screen becomes visible. Add an `invalidate(statisticsProvider)` call when `StatisticsScreen` builds (or use a lifecycle hook). The simplest approach is to convert `StatisticsScreen` to a `ConsumerStatefulWidget` and call `ref.invalidate(statisticsProvider)` in `didChangeDependencies` or use a `VisibilityDetector`-style approach. However, the cleanest approach given the bottom-nav architecture: invalidate the provider whenever the statistics tab is selected, or use `ref.invalidate` directly in the `StatisticsScreen` build method on first build.
+### Tool: `flutter_launcher_icons`
 
-**Chosen approach:** Make `StatisticsScreen` a `ConsumerStatefulWidget`, override `initState` to invalidate `statisticsProvider` so it re-fetches fresh data every time the screen widget is (re)created. Since the bottom nav likely keeps the screen alive, an alternative is to use `AutomaticKeepAlive` pattern or, better, invalidate in the `_DateNav` build. The most robust fix: the `StatisticsScreen` should invalidate `statisticsProvider` each time it appears. Since it's a `ConsumerWidget` that stays alive in the nav, we need to trigger invalidation when the tab is selected. We'll hook into the bottom navigation's tab change to invalidate.
+Add as a dev dependency and configure in `pubspec.yaml` (or a separate `flutter_launcher_icons.yaml`). The package generates all platform-specific assets from one source image.
 
-**Final approach:** Add `ref.invalidate(statisticsProvider)` triggered from the bottom nav's `onTabChanged` callback (in `app.dart` or wherever the nav index lives), specifically when switching to the statistics tab index.
+Configuration:
+```yaml
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon/app_icon.png"
+  adaptive_icon_background: "#1a1a2e"
+  adaptive_icon_foreground: "assets/icon/app_icon_foreground.png"
+```
 
----
+## File Structure
 
-## 3. Smart Start Time for Manual Entry
-
-**Problem:** When adding a new manual entry from scratch, start time should equal the end time of the last entry on the selected day.
-
-**File:** `lib/ui/widgets/manual_entry_sheet.dart` — `_initDefaultTimes()`
-
-**Current behavior:** Defaults to `now - 30min` (today) or `12:00` (past day).
-
-**New behavior:**
-1. Query the database for entries on `widget.selectedDay`, sorted by end time descending.
-2. If entries exist, set `_startTime` = end time of the most recent entry (the one with the latest `endTime`).
-3. If the selected day is today, set `_endTime` = now (clamped to day boundary).
-4. If past day, set `_endTime` = `_startTime + 30 minutes` (clamped to 23:59 of that day).
-5. If no entries exist, fall back to current behavior.
-
-Since this requires an async DB query, `_initDefaultTimes` must become async and be called from `initState` with a `.then()` pattern or use a loading state.
-
----
-
-## 4. Swipe Navigation in Statistics Screen
-
-**Problem:** User wants to swipe left/right in the statistics screen to navigate between days (daily mode) or weeks (weekly mode).
-
-**Solution:** Wrap the statistics content (below the period toggle) in a `GestureDetector` that detects horizontal swipes, or use a `PageView`-style approach. The simplest and most natural solution: wrap the main content area in a `GestureDetector` with `onHorizontalDragEnd` that:
-- Swipe left (positive velocity) → go to next day/week (unless already at current)
-- Swipe right (negative velocity) → go to previous day/week
-
-This mirrors the existing chevron button behavior but triggered by swipe. The threshold should be reasonable (e.g., velocity > 300 or drag distance > 50px).
-
-**File:** `lib/ui/screens/statistics_screen.dart`
-
----
-
-## File Changes Summary
-
-| File | Change |
-|------|--------|
-| `lib/core/activity_types.dart` | Replace `'Spánek'` with `'Zábava'` in list and color map |
-| `lib/ui/screens/statistics_screen.dart` | Add swipe gesture + fix refresh on tab switch |
-| `lib/ui/widgets/manual_entry_sheet.dart` | Async load last entry's end time as default start |
-| `lib/app.dart` | Invalidate `statisticsProvider` on tab switch to statistics |
-
----
+New/modified files:
+```
+timelog_app/
+├── assets/icon/
+│   ├── app_icon.png              (1024×1024 full icon for iOS + legacy Android)
+│   └── app_icon_foreground.png   (1024×1024 foreground for Android adaptive)
+├── pubspec.yaml                  (add flutter_launcher_icons dev dep + config)
+├── android/app/src/main/res/
+│   ├── mipmap-mdpi/ic_launcher.png       (regenerated)
+│   ├── mipmap-hdpi/ic_launcher.png       (regenerated)
+│   ├── mipmap-xhdpi/ic_launcher.png      (regenerated)
+│   ├── mipmap-xxhdpi/ic_launcher.png     (regenerated)
+│   └── mipmap-xxxhdpi/ic_launcher.png    (regenerated)
+├── ios/Runner/Assets.xcassets/AppIcon.appiconset/
+│   ├── Icon-App-*.png            (all sizes regenerated)
+│   └── Contents.json             (unchanged structure)
+```
 
 ## Constraints
 
-- No new packages needed — `GestureDetector` is built into Flutter.
-- The statistics refresh fix must not cause infinite rebuilds (invalidate once per tab switch, not on every build).
-- Swipe should not conflict with horizontal scrolling if any exists in the stats body (currently only vertical ListView, so no conflict).
-- The `_initDefaultTimes` async pattern must handle the case where the widget is disposed before the query completes.
+- The icon must look good at all sizes (20×20 through 1024×1024)
+- iOS does not support transparent backgrounds — use a solid fill
+- Android adaptive icons use separate foreground/background — foreground should have padding (safe zone is 66% of canvas)
+- No text in the icon — it won't be legible at small sizes
+- Icon should match the app's visual identity (dark theme, clean design)
+
+## Implementation Notes
+
+- ImageMagick (`convert` / `magick`) will be used to generate the source PNG since we're in a headless environment
+- The clock design uses SVG-like drawing primitives available in ImageMagick
+- After generating the source icon, `flutter_launcher_icons` handles all resizing and platform placement
+- The icon does NOT need rounded corners baked in — both Android and iOS apply their own masking
