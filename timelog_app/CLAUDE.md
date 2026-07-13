@@ -17,6 +17,7 @@ flutter test                                                  # run all tests
 flutter test test/timer_service_test.dart                     # run one test file
 flutter analyze                                                # lint
 flutter build linux --release                                  # release build (see DOCS.md for other platforms)
+dart run flutter_launcher_icons                                # regenerate app launcher icons from assets/icon/
 ```
 
 ## Project structure

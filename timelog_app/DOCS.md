@@ -57,8 +57,8 @@ timelog_app/
         settings_screen.dart       # Daily reminder toggle + time picker
       widgets/                     # bottom_nav, day_navigator, day_summary, description_sheet,
                                     # duration_adjuster, edit_sheet, empty_state,
-                                    # history_entry_card, ringing_overlay, theme_dots,
-                                    # timer_controls
+                                    # history_entry_card, manual_entry_sheet, ringing_overlay,
+                                    # theme_dots, timer_controls
       painters/
         ring_painter.dart          # CustomPainter for the countdown progress ring
         bar_painter.dart           # CustomPainter for the statistics horizontal percentage bars
@@ -69,7 +69,8 @@ timelog_app/
   android/, ios/, linux/, macos/, windows/, web/   # Platform embedding shells
   ios/Runner/LiveActivityManager.swift             # Live Activity lifecycle (iOS side)
   ios/TimeLogWidgetExtension/                      # Live Activity / Dynamic Island UI (WidgetKit)
-  assets/                          # Alarm sound (audio/alarm.mp3), Sora + JetBrainsMono fonts
+  assets/                          # Alarm sound (audio/alarm.mp3), Sora + JetBrainsMono fonts,
+                                    # app icon source images (icon/)
 ```
 
 ## Architecture
@@ -149,6 +150,14 @@ flutter build web --release          # Web bundle
 
 iOS builds that include the Live Activity widget extension (`TimeLogWidgetExtension`) must
 be archived/signed through Xcode (`ios/Runner.xcworkspace`) rather than the CLI alone.
+
+App launcher icons (Android + iOS) are generated from `assets/icon/app_icon.png` /
+`app_icon_foreground.png` via `flutter_launcher_icons` (config in `pubspec.yaml`). Re-run
+after changing the source images:
+
+```sh
+dart run flutter_launcher_icons
+```
 
 ## Testing
 

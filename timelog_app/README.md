@@ -12,11 +12,12 @@ Key features:
 
 - Countdown timer with adjustable duration (5–60 minutes, 5-minute steps)
 - Automatic time-entry logging on timer completion or manual stop
-- Eight built-in activity types (Práce, Volný čas, Odpočinek, Spánek, Cvičení, Volná práce,
-  Přesun, Jídlo), each with a distinct color badge
+- Nine built-in activity types (Práce, Volná práce, Přesun, Zábava, Cvičení, Volný čas,
+  Odpočinek, Hygiena, Jídlo), each with a distinct color badge
 - Optional project name for work-related entries (Práce, Volná práce), with autocomplete
   suggestions from previously used project names
-- History screen with day navigation, daily summary, and per-entry edit/delete
+- History screen with day navigation, daily summary, per-entry edit/delete, and manually
+  adding a past entry
 - Statistics screen with daily/weekly toggle, a visual timeline of the day/week's entries,
   time breakdown by activity type and by project, and an untracked-time summary
 - Settings screen with a daily reminder notification (toggle + time picker) that nudges you
