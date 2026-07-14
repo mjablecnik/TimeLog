@@ -8,5 +8,6 @@ class TimeEntries extends Table {
   TextColumn get description => text().withLength(min: 0, max: 500)();
   TextColumn get activityType => text().withDefault(const Constant('Práce'))();
   TextColumn get project => text().withLength(min: 0, max: 200).nullable()();
+  TextColumn get entertainmentType => text().nullable()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 }
