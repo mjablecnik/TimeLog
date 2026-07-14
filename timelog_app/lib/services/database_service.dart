@@ -34,6 +34,7 @@ class DatabaseService {
     String description, {
     String? activityType,
     Value<String?> project = const Value.absent(),
+    Value<String?> entertainmentType = const Value.absent(),
     DateTime? startTime,
     DateTime? endTime,
   }) async {
@@ -44,6 +45,7 @@ class DatabaseService {
             ? const Value.absent()
             : Value(activityType),
         project: project,
+        entertainmentType: entertainmentType,
         startTime: startTime == null
             ? const Value.absent()
             : Value(startTime.toIso8601String()),

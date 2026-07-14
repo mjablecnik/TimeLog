@@ -25,6 +25,7 @@ class _EditSheetState extends ConsumerState<EditSheet> {
   late final TextEditingController _controller;
   TextEditingController? _projectController;
   late String _selectedType;
+  String? _entertainmentType;
   late DateTime _startTime;
   late DateTime _endTime;
   String? _error;
@@ -38,6 +39,7 @@ class _EditSheetState extends ConsumerState<EditSheet> {
     _controller = TextEditingController(text: widget.entry.description);
     _initialProject = widget.entry.project ?? '';
     _selectedType = widget.entry.activityType;
+    _entertainmentType = widget.entry.entertainmentType;
     _startTime = DateTime.parse(widget.entry.startTime).toLocal();
     _endTime = DateTime.parse(widget.entry.endTime).toLocal();
     _loadKnownProjects();
@@ -83,7 +85,11 @@ class _EditSheetState extends ConsumerState<EditSheet> {
     super.dispose();
   }
 
-  bool get _canSave => _controller.text.trim().isNotEmpty && !_saving;
+  bool get _entertainmentSelectionMissing =>
+      isEntertainmentActivityType(_selectedType) && _entertainmentType == null;
+
+  bool get _canSave =>
+      _controller.text.trim().isNotEmpty && !_saving && !_entertainmentSelectionMissing;
 
   Future<void> _save() async {
     if (_controller.text.trim().isEmpty) {
@@ -114,12 +120,16 @@ class _EditSheetState extends ConsumerState<EditSheet> {
       final project = isWorkActivityType(_selectedType)
           ? (_projectController?.text.trim() ?? '')
           : '';
+      final entertainmentType = isEntertainmentActivityType(_selectedType)
+          ? _entertainmentType
+          : null;
 
       await dbService.updateDescription(
         widget.entry.id,
         _controller.text.trim(),
         activityType: _selectedType,
         project: Value(project.isEmpty ? null : project),
+        entertainmentType: Value(entertainmentType),
         startTime: _startTime,
         endTime: _endTime,
       );
@@ -216,7 +226,12 @@ class _EditSheetState extends ConsumerState<EditSheet> {
                       isDark: theme.themeKey != AppTheme.paper,
                     );
                     return GestureDetector(
-                      onTap: () => setState(() => _selectedType = type),
+                      onTap: () => setState(() {
+                        _selectedType = type;
+                        if (!isEntertainmentActivityType(type)) {
+                          _entertainmentType = null;
+                        }
+                      }),
                       child: Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 14,
@@ -304,6 +319,47 @@ class _EditSheetState extends ConsumerState<EditSheet> {
                         );
                       },
                     ),
+                  ),
+                ],
+                if (isEntertainmentActivityType(_selectedType)) ...[
+                  const SizedBox(height: 16),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: entertainmentTypes.map((type) {
+                      final isSelected = type == _entertainmentType;
+                      final color = activityTypeColor(
+                        _selectedType,
+                        isDark: theme.themeKey != AppTheme.paper,
+                      );
+                      return GestureDetector(
+                        onTap: () => setState(() => _entertainmentType = type),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? color.withValues(alpha: 0.2)
+                                : theme.panel,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: isSelected ? color : theme.border,
+                            ),
+                          ),
+                          child: Text(
+                            type,
+                            style: TextStyle(
+                              color: isSelected ? color : theme.text,
+                              fontFamily: 'Sora',
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      );
+                    }).toList(),
                   ),
                 ],
                 const SizedBox(height: 16),

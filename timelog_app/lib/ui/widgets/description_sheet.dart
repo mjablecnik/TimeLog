@@ -10,9 +10,11 @@ import '../../providers/database_provider.dart';
 import '../../providers/timer_provider.dart';
 
 const _lastActivityTypeKey = 'last_activity_type';
+const _lastEntertainmentTypeKey = 'last_entertainment_type';
 const _lastSubmittedDescriptionKey = 'last_submitted_description';
 const _lastSubmittedActivityTypeKey = 'last_submitted_activity_type';
 const _lastSubmittedProjectKey = 'last_submitted_project';
+const _lastSubmittedEntertainmentTypeKey = 'last_submitted_entertainment_type';
 
 class DescriptionSheet extends ConsumerStatefulWidget {
   final AppThemeData theme;
@@ -21,6 +23,7 @@ class DescriptionSheet extends ConsumerStatefulWidget {
   final String? initialDescription;
   final String? initialActivityType;
   final String? initialProject;
+  final String? initialEntertainmentType;
   final bool triggeredByStop;
   final bool isPrefillMode;
 
@@ -32,6 +35,7 @@ class DescriptionSheet extends ConsumerStatefulWidget {
     this.initialDescription,
     this.initialActivityType,
     this.initialProject,
+    this.initialEntertainmentType,
     this.triggeredByStop = false,
     this.isPrefillMode = false,
   });
@@ -46,6 +50,7 @@ class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
   String? _error;
   bool _saving = false;
   late String _selectedType;
+  String? _entertainmentType;
   List<String> _knownProjects = [];
   String _initialProject = '';
 
@@ -55,6 +60,7 @@ class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
     _controller.text = widget.initialDescription ?? '';
     _initialProject = widget.initialProject ?? '';
     _selectedType = widget.initialActivityType ?? activityTypes.first;
+    _entertainmentType = widget.initialEntertainmentType;
     if (!widget.isPrefillMode && widget.initialDescription == null) {
       _loadLastSubmitted();
     } else if (widget.initialActivityType == null) {
@@ -72,7 +78,15 @@ class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
     final prefs = await SharedPreferences.getInstance();
     final saved = prefs.getString(_lastActivityTypeKey);
     if (saved != null && activityTypes.contains(saved) && mounted) {
-      setState(() => _selectedType = saved);
+      final savedEntertainment = prefs.getString(_lastEntertainmentTypeKey);
+      setState(() {
+        _selectedType = saved;
+        if (isEntertainmentActivityType(saved) &&
+            savedEntertainment != null &&
+            entertainmentTypes.contains(savedEntertainment)) {
+          _entertainmentType = savedEntertainment;
+        }
+      });
     }
   }
 
@@ -81,6 +95,7 @@ class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
     final description = prefs.getString(_lastSubmittedDescriptionKey);
     final activityType = prefs.getString(_lastSubmittedActivityTypeKey);
     final project = prefs.getString(_lastSubmittedProjectKey);
+    final entertainmentType = prefs.getString(_lastSubmittedEntertainmentTypeKey);
     if (!mounted) return;
     setState(() {
       if (description != null) _controller.text = description;
@@ -91,6 +106,9 @@ class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
         _initialProject = project;
         _projectController?.text = project;
       }
+      if (entertainmentType != null && entertainmentTypes.contains(entertainmentType)) {
+        _entertainmentType = entertainmentType;
+      }
     });
   }
 
@@ -99,25 +117,37 @@ class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
       _controller.clear();
       _selectedType = activityTypes.first;
       _initialProject = '';
+      _entertainmentType = null;
     });
     _projectController?.clear();
   }
 
   Future<void> _selectType(String type) async {
-    setState(() => _selectedType = type);
+    setState(() {
+      _selectedType = type;
+      if (!isEntertainmentActivityType(type)) _entertainmentType = null;
+    });
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_lastActivityTypeKey, type);
+  }
+
+  Future<void> _selectEntertainmentType(String type) async {
+    setState(() => _entertainmentType = type);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_lastEntertainmentTypeKey, type);
   }
 
   Future<void> _saveLastSubmitted(
     String description,
     String activityType,
     String project,
+    String entertainmentType,
   ) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_lastSubmittedDescriptionKey, description);
     await prefs.setString(_lastSubmittedActivityTypeKey, activityType);
     await prefs.setString(_lastSubmittedProjectKey, project);
+    await prefs.setString(_lastSubmittedEntertainmentTypeKey, entertainmentType);
   }
 
   @override
@@ -126,7 +156,11 @@ class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
     super.dispose();
   }
 
-  bool get _canSubmit => _controller.text.trim().isNotEmpty && !_saving;
+  bool get _entertainmentSelectionMissing =>
+      isEntertainmentActivityType(_selectedType) && _entertainmentType == null;
+
+  bool get _canSubmit =>
+      _controller.text.trim().isNotEmpty && !_saving && !_entertainmentSelectionMissing;
 
   Future<void> _submit() async {
     if (!_canSubmit) return;
@@ -138,7 +172,7 @@ class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
   }
 
   Future<void> _skip() async {
-    if (_saving) return;
+    if (_saving || _entertainmentSelectionMissing) return;
 
     final elapsed = widget.endedAt.difference(widget.sessionStart);
     if (elapsed.inSeconds < 120) {
@@ -161,7 +195,15 @@ class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
     final project = isWorkActivityType(_selectedType)
         ? _projectController?.text.trim()
         : null;
-    notifier.savePrefill(_controller.text.trim(), _selectedType, project: project);
+    final entertainmentType = isEntertainmentActivityType(_selectedType)
+        ? _entertainmentType
+        : null;
+    notifier.savePrefill(
+      _controller.text.trim(),
+      _selectedType,
+      project: project,
+      entertainmentType: entertainmentType,
+    );
     notifier.resume();
     if (mounted) Navigator.of(context).pop();
   }
@@ -185,6 +227,9 @@ class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
       final project = isWorkActivityType(_selectedType)
           ? (_projectController?.text.trim() ?? '')
           : '';
+      final entertainmentType = isEntertainmentActivityType(_selectedType)
+          ? (_entertainmentType ?? '')
+          : '';
 
       await dbService.insertTimeEntry(
         TimeEntriesCompanion(
@@ -193,6 +238,7 @@ class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
           description: Value(description),
           activityType: Value(_selectedType),
           project: Value(project.isEmpty ? null : project),
+          entertainmentType: Value(entertainmentType.isEmpty ? null : entertainmentType),
         ),
       );
 
@@ -200,7 +246,7 @@ class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
         await ref.read(projectServiceProvider).saveProject(project);
       }
 
-      await _saveLastSubmitted(description, _selectedType, project);
+      await _saveLastSubmitted(description, _selectedType, project, entertainmentType);
 
       if (widget.triggeredByStop) {
         ref.read(timerProvider.notifier).stop();
@@ -381,6 +427,47 @@ class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
                       ),
                     ),
                   ],
+                  if (isEntertainmentActivityType(_selectedType)) ...[
+                    const SizedBox(height: 16),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: entertainmentTypes.map((type) {
+                        final isSelected = type == _entertainmentType;
+                        final color = activityTypeColor(
+                          _selectedType,
+                          isDark: theme.themeKey != AppTheme.paper,
+                        );
+                        return GestureDetector(
+                          onTap: () => _selectEntertainmentType(type),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? color.withValues(alpha: 0.2)
+                                  : theme.panel,
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: isSelected ? color : theme.border,
+                              ),
+                            ),
+                            child: Text(
+                              type,
+                              style: TextStyle(
+                                color: isSelected ? color : theme.text,
+                                fontFamily: 'Sora',
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ],
                   const SizedBox(height: 16),
                   Container(
                     decoration: BoxDecoration(
@@ -452,7 +539,7 @@ class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
                   ),
                   if (!widget.isPrefillMode)
                     TextButton(
-                      onPressed: _saving ? null : _skip,
+                      onPressed: (_saving || _entertainmentSelectionMissing) ? null : _skip,
                       style: TextButton.styleFrom(
                         foregroundColor: theme.dim,
                       ),

@@ -25,6 +25,7 @@ class _ManualEntrySheetState extends ConsumerState<ManualEntrySheet> {
   final _controller = TextEditingController();
   TextEditingController? _projectController;
   String _selectedType = activityTypes.first;
+  String? _entertainmentType;
   late DateTime _startTime;
   late DateTime _endTime;
   String? _error;
@@ -129,7 +130,11 @@ class _ManualEntrySheetState extends ConsumerState<ManualEntrySheet> {
     super.dispose();
   }
 
-  bool get _canSubmit => _controller.text.trim().isNotEmpty && !_saving;
+  bool get _entertainmentSelectionMissing =>
+      isEntertainmentActivityType(_selectedType) && _entertainmentType == null;
+
+  bool get _canSubmit =>
+      _controller.text.trim().isNotEmpty && !_saving && !_entertainmentSelectionMissing;
 
   Future<void> _submit() async {
     if (_controller.text.trim().isEmpty) {
@@ -160,6 +165,9 @@ class _ManualEntrySheetState extends ConsumerState<ManualEntrySheet> {
       final project = isWorkActivityType(_selectedType)
           ? (_projectController?.text.trim() ?? '')
           : '';
+      final entertainmentType = isEntertainmentActivityType(_selectedType)
+          ? _entertainmentType
+          : null;
 
       await dbService.insertTimeEntry(
         TimeEntriesCompanion(
@@ -168,6 +176,7 @@ class _ManualEntrySheetState extends ConsumerState<ManualEntrySheet> {
           description: Value(_controller.text.trim()),
           activityType: Value(_selectedType),
           project: Value(project.isEmpty ? null : project),
+          entertainmentType: Value(entertainmentType),
         ),
       );
 
@@ -263,7 +272,12 @@ class _ManualEntrySheetState extends ConsumerState<ManualEntrySheet> {
                           isDark: theme.themeKey != AppTheme.paper,
                         );
                         return GestureDetector(
-                          onTap: () => setState(() => _selectedType = type),
+                          onTap: () => setState(() {
+                            _selectedType = type;
+                            if (!isEntertainmentActivityType(type)) {
+                              _entertainmentType = null;
+                            }
+                          }),
                           child: Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 14,
@@ -291,6 +305,48 @@ class _ManualEntrySheetState extends ConsumerState<ManualEntrySheet> {
                         );
                       }).toList(),
                     ),
+                    if (isEntertainmentActivityType(_selectedType)) ...[
+                      const SizedBox(height: 16),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: entertainmentTypes.map((type) {
+                          final isSelected = type == _entertainmentType;
+                          final color = activityTypeColor(
+                            _selectedType,
+                            isDark: theme.themeKey != AppTheme.paper,
+                          );
+                          return GestureDetector(
+                            onTap: () =>
+                                setState(() => _entertainmentType = type),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: isSelected
+                                    ? color.withValues(alpha: 0.2)
+                                    : theme.panel,
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: isSelected ? color : theme.border,
+                                ),
+                              ),
+                              child: Text(
+                                type,
+                                style: TextStyle(
+                                  color: isSelected ? color : theme.text,
+                                  fontFamily: 'Sora',
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ],
                     if (isWorkActivityType(_selectedType)) ...[
                       const SizedBox(height: 16),
                       Container(

@@ -203,6 +203,21 @@ class _HistoryEntryCardState extends ConsumerState<HistoryEntryCard> {
               overflow: TextOverflow.ellipsis,
             ),
           ],
+          if (entry.entertainmentType != null &&
+              entry.entertainmentType!.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(
+              entry.entertainmentType!,
+              style: TextStyle(
+                fontFamily: 'Sora',
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: theme.dim,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
           if (_deleteError != null) ...[
             const SizedBox(height: 6),
             Text(

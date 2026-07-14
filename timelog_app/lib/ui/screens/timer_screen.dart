@@ -97,6 +97,7 @@ class _TimerScreenState extends ConsumerState<TimerScreen> {
         initialDescription: timerState.prefillDescription,
         initialActivityType: timerState.prefillActivityType,
         initialProject: timerState.prefillProject,
+        initialEntertainmentType: timerState.prefillEntertainmentType,
         triggeredByStop: timerState.logTrigger == LogTrigger.stop,
       ),
     ).whenComplete(() {
@@ -126,6 +127,7 @@ class _TimerScreenState extends ConsumerState<TimerScreen> {
         initialDescription: timerState.prefillDescription,
         initialActivityType: timerState.prefillActivityType,
         initialProject: timerState.prefillProject,
+        initialEntertainmentType: timerState.prefillEntertainmentType,
         isPrefillMode: true,
       ),
     ).whenComplete(() {
