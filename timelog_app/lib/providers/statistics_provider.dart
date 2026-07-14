@@ -42,6 +42,7 @@ DateTime _rangeEnd(StatsPeriod period, DateTime start) {
 StatsData _computeStats(List<TimeEntry> entries, StatsPeriod period) {
   final byActivityType = <String, Duration>{};
   final byProject = <String, Duration>{};
+  final byEntertainmentType = <String, Duration>{};
   var totalTracked = Duration.zero;
 
   for (final entry in entries) {
@@ -64,6 +65,17 @@ StatsData _computeStats(List<TimeEntry> entries, StatsPeriod period) {
         ifAbsent: () => duration,
       );
     }
+
+    final entertainmentType = entry.entertainmentType;
+    if (isEntertainmentActivityType(entry.activityType) &&
+        entertainmentType != null &&
+        entertainmentType.isNotEmpty) {
+      byEntertainmentType.update(
+        entertainmentType,
+        (value) => value + duration,
+        ifAbsent: () => duration,
+      );
+    }
   }
 
   final wakingHours = period == StatsPeriod.daily ? 16 : 16 * 7;
@@ -74,6 +86,7 @@ StatsData _computeStats(List<TimeEntry> entries, StatsPeriod period) {
     untrackedTime: untracked.isNegative ? Duration.zero : untracked,
     byActivityType: byActivityType,
     byProject: byProject,
+    byEntertainmentType: byEntertainmentType,
     entries: entries,
   );
 }

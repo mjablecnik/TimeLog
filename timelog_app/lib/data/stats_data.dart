@@ -13,8 +13,12 @@ class StatsData {
   final Map<String, Duration> byActivityType;
 
   /// Only includes entries whose activity type is a work type
-  /// (`Práce` / `Volná práce`).
+  /// (`Práce`).
   final Map<String, Duration> byProject;
+
+  /// Breakdown of `Zábava` (entertainment) time by sub-type
+  /// (`Aktivní zábava` / `Pasivní zábava`).
+  final Map<String, Duration> byEntertainmentType;
 
   /// Raw entries for the period, used by the timeline widget.
   final List<TimeEntry> entries;
@@ -24,6 +28,7 @@ class StatsData {
     required this.untrackedTime,
     required this.byActivityType,
     required this.byProject,
+    this.byEntertainmentType = const {},
     required this.entries,
   });
 }
