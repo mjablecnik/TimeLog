@@ -41,12 +41,13 @@ This plan implements a Recurring Reminders system for the TimeLog Flutter app. T
     - **Property 15: Date range query returns correct records in order**
     - **Validates: Requirements 8.4**
 
-- [ ] 2. Implement active days bitmask utilities and form validation
-  - [ ] 2.1 Create bitmask encode/decode helpers and form validation
+- [x] 2. Implement active days bitmask utilities and form validation
+  - [x] 2.1 Create bitmask encode/decode helpers and form validation
     - Add `dart_check` to `dev_dependencies` in `pubspec.yaml`
     - Create `lib/services/active_days_utils.dart` with `encodeDays()`, `decodeDays()`, and `isDayActive()` functions as defined in the design
     - Create `lib/ui/widgets/reminder_form_data.dart` with `ReminderFormData` class including `isValid` getter (name not blank, activeDays not empty) and `toCompanion()` method
     - _Requirements: 2.1, 2.2, 2.5, 2.7, 9.1, 13.1_
+    - Note: skipped adding `dart_check` to `pubspec.yaml` — it does not exist on pub.dev (see `.agents/MEMORY.md`), so 2.2's property test is also skipped (both are optional, marked `*`).
 
   - [ ]* 2.2 Write property test: Whitespace-only name invalidates form
     - **Property 4: Whitespace-only name invalidates form**
