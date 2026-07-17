@@ -197,9 +197,20 @@ class RecurringReminderService {
   }
 
   /// How many more recurring-reminder notifications can be scheduled before
-  /// hitting [maxScheduledNotifications].
-  Future<int> availableNotificationSlots() async {
-    final used = await countScheduledNotifications();
+  /// hitting [maxScheduledNotifications]. If [excludingReminderId] is given,
+  /// that reminder's own currently-pending slots are not counted as "used"
+  /// (they are about to be cancelled and rescheduled by the caller).
+  Future<int> availableNotificationSlots({int? excludingReminderId}) async {
+    final pending = await _plugin.pendingNotificationRequests();
+    final excludedMarker = excludingReminderId == null
+        ? null
+        : '$recurringReminderPayloadPrefix$excludingReminderId';
+    final used = pending.where((p) {
+      if (!(p.payload?.startsWith(recurringReminderPayloadPrefix) ?? false)) {
+        return false;
+      }
+      return p.payload != excludedMarker;
+    }).length;
     return (maxScheduledNotifications - used).clamp(0, maxScheduledNotifications);
   }
 

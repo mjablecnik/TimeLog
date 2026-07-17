@@ -141,8 +141,8 @@ This plan implements a Recurring Reminders system for the TimeLog Flutter app. T
   - Ensure all tests pass, ask the user if questions arise.
   - Verified: `flutter test` (33/33 pass) and `flutter analyze` (no issues) both clean as of this checkpoint.
 
-- [ ] 5. Implement Riverpod providers
-  - [ ] 5.1 Create RecurringRemindersNotifier provider
+- [x] 5. Implement Riverpod providers
+  - [x] 5.1 Create RecurringRemindersNotifier provider
     - Create `lib/providers/recurring_reminders_provider.dart`
     - Implement `AsyncNotifier<List<RecurringReminder>>` with `build()` watching all reminders
     - Implement `addReminder()`, `updateReminder()`, `deleteReminder()`, `toggleActive()` methods
@@ -153,7 +153,7 @@ This plan implements a Recurring Reminders system for the TimeLog Flutter app. T
     - On toggle: update DB, schedule or cancel based on new state; revert on failure
     - _Requirements: 1.1, 1.3, 1.4, 1.5, 1.7, 1.8, 1.11, 3.1, 3.2, 3.3, 3.5_
 
-  - [ ] 5.2 Create ReminderActionNotifier provider
+  - [x] 5.2 Create ReminderActionNotifier provider
     - Create `lib/providers/reminder_action_provider.dart`
     - Implement `StateNotifier<ReminderActionState>` with `ReminderActionState` (reminder, isLoading, error)
     - Implement `markDone()`: insert completion record, cancel today's notifications, handle DB failure by showing error without dismissing
