@@ -6,20 +6,20 @@ This plan implements a Recurring Reminders system for the TimeLog Flutter app. T
 
 ## Tasks
 
-- [ ] 1. Set up database tables and migration
-  - [ ] 1.1 Create RecurringReminders and CompletionRecords Drift table definitions
+- [x] 1. Set up database tables and migration
+  - [x] 1.1 Create RecurringReminders and CompletionRecords Drift table definitions
     - Create `lib/data/recurring_reminder.dart` with the `RecurringReminders` table class (id, name, description, startTime, endTime, repeatInterval, activeDays, isActive)
     - Create `lib/data/completion_record.dart` with the `CompletionRecords` table class (id, reminderId as FK to RecurringReminders with cascade delete, completionDate, completionTimestamp)
     - _Requirements: 9.1, 9.2, 9.3_
 
-  - [ ] 1.2 Register tables and add migration to AppDatabase
+  - [x] 1.2 Register tables and add migration to AppDatabase
     - Add both new tables to the `@DriftDatabase(tables: [...])` annotation in `lib/data/database.dart`
     - Increment `schemaVersion` from 5 to 6
     - Add migration logic in `onUpgrade`: if `from < 6`, create `recurringReminders` and `completionRecords` tables
     - Run `dart run build_runner build` to regenerate Drift code
     - _Requirements: 9.1, 9.2, 9.3_
 
-  - [ ] 1.3 Implement database CRUD and query methods
+  - [x] 1.3 Implement database CRUD and query methods
     - Add to AppDatabase: `getAllReminders()` returning ordered by startTime ascending, `watchAllReminders()` stream, `insertReminder()`, `updateReminder()`, `deleteReminder()`, `getReminderById()`
     - Add completion record methods: `insertCompletionRecord()`, `hasCompletionForToday()`, `deleteCompletionForToday()`, `getCompletionsByReminder()`, `getCompletionsByDateRange()`
     - Enforce uniqueness constraint of one completion record per reminder per date
