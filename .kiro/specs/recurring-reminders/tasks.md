@@ -161,7 +161,7 @@ This plan implements a Recurring Reminders system for the TimeLog Flutter app. T
     - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5, 7.1, 7.2, 7.3_
 
 - [ ] 6. Implement UI screens and widgets
-  - [ ] 6.1 Create DaySelectorWidget
+  - [x] 6.1 Create DaySelectorWidget
     - Create `lib/ui/widgets/day_selector.dart`
     - Multi-select weekday chips (Mon–Sun) using abbreviated names
     - Accept and emit `Set<int>` (1=Monday, 7=Sunday)
