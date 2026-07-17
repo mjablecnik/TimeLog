@@ -53,15 +53,15 @@ This plan implements a Recurring Reminders system for the TimeLog Flutter app. T
     - **Property 4: Whitespace-only name invalidates form**
     - **Validates: Requirements 2.2**
 
-- [ ] 3. Implement RecurringReminderService (scheduling engine)
-  - [ ] 3.1 Create RecurringReminderService with notification time computation
+- [x] 3. Implement RecurringReminderService (scheduling engine)
+  - [x] 3.1 Create RecurringReminderService with notification time computation
     - Create `lib/services/recurring_reminder_service.dart`
     - Implement `computeUpcomingNotificationTimes()` with interval-grid alignment logic that returns all notification times within the next 6 hours from current time (within the Time_Window)
     - Implement `isActiveDay()` using bitmask utility
     - Define `notificationIdOffset = 2000` and `getNotificationId(reminderId, slotIndex)` using formula `(reminderId × 100) + slotIndex + 2000`
     - _Requirements: 4.1, 4.2, 4.3, 4.5, 4.6, 4.7_
 
-  - [ ] 3.2 Implement notification scheduling, cancellation, and rescheduling
+  - [x] 3.2 Implement notification scheduling, cancellation, and rescheduling
     - Implement `scheduleUpcoming()` using `flutter_local_notifications` `zonedSchedule()` to batch-schedule all notifications within the next 6 hours for a reminder's Time_Window
     - Implement deduplication: before scheduling, check if a notification with the same reminder ID and time is already pending; skip if so
     - Enforce a maximum of 50 total scheduled notifications across all reminders; prioritize by earliest start time if limit exceeded
@@ -70,7 +70,7 @@ This plan implements a Recurring Reminders system for the TimeLog Flutter app. T
     - Use notification ID formula: `(reminderId × 100) + slotIndex + 2000` to support multiple notifications per reminder
     - _Requirements: 3.2, 3.3, 4.1, 4.2, 4.4, 10.1, 10.2, 10.3, 11.3, 14.1, 15.1_
 
-  - [ ] 3.3 Implement notification content construction and permission handling
+  - [x] 3.3 Implement notification content construction and permission handling
     - Set notification title = reminder name, body = description or "Klepni pro otevření" if empty/null (Czech localization)
     - Configure Android notification channel: id `recurring_reminders`, name "Recurring Reminders", high importance/priority
     - Implement `requestPermission()` and `hasPermission()` methods
@@ -79,6 +79,7 @@ This plan implements a Recurring Reminders system for the TimeLog Flutter app. T
     - Accept `FlutterLocalNotificationsPlugin` as a constructor dependency (shared instance from existing ReminderService)
     - Register a top-level `@pragma('vm:entry-point')` background notification response handler for taps when app is terminated
     - _Requirements: 5.1, 11.1, 11.2, 11.3, 11.4, 11.5, 11.6, 14.1, 15.1_
+    - Note: `ReminderService` now exposes its `FlutterLocalNotificationsPlugin` via a `plugin` getter and registers `recurringReminderBackgroundHandler` as `onDidReceiveBackgroundNotificationResponse` in its single `initialize()` call, so the whole app still only calls `FlutterLocalNotificationsPlugin.initialize()` once. Actually constructing `RecurringReminderService(reminderService.plugin, db)` and wiring its navigation callbacks into `main.dart` is deferred to task 7 (app launch/navigation wiring), which is the task that owns that integration point.
 
   - [ ]* 3.4 Write property test: Overnight window duration computation
     - **Property 5: Overnight window duration computation**
@@ -119,15 +120,17 @@ This plan implements a Recurring Reminders system for the TimeLog Flutter app. T
   - [ ]* 3.13 Write property test: Notification ID uniqueness across batch
     - **Property 14: Notification ID uniqueness across batch**
     - **Validates: Requirements 11.3**
+    - Note: properties 5-14 (3.4-3.13) remain skipped like 2.2 — `dart_check` isn't on pub.dev (see `.agents/MEMORY.md`) and all are marked optional. Added a plain unit test suite instead (`test/recurring_reminder_service_test.dart`) covering the grid alignment, overnight-window, past-window, inactive-day/reminder, completed-today, notification ID uniqueness, and content-construction behavior these properties describe.
 
-  - [ ] 3.14 Add custom notification sound file to iOS and Android bundles
+  - [x] 3.14 Add custom notification sound file to iOS and Android bundles
     - Place a custom reminder notification sound file (e.g., `reminder_sound.caf` or `.aiff`) in `ios/Runner/` for the iOS app bundle
     - Place the same sound (converted to supported format) in `android/app/src/main/res/raw/reminder_sound.ogg` (or `.mp3`/`.wav`) for the Android notification channel
     - Sound duration MUST be ≤ 30 seconds (iOS local notification limit)
     - Sound MUST be audibly distinct from the existing timer alarm sound used by the Alarm_Service
     - _Requirements: 17.2, 17.3, 17.4, 17.5_
+    - Note: used `.wav` (an iOS-supported local-notification format alongside AIFF/CAF, generated with a stdlib-only Python script since ImageMagick/ffmpeg aren't available — see `.agents/MEMORY.md`'s icon-generation precedent) at `ios/Runner/reminder_sound.wav` and `android/app/src/main/res/raw/reminder_sound.wav`: a two-note ascending chime (~0.43s), clearly distinct from `alarm.mp3`'s continuous loop tone. Registered the iOS file in `project.pbxproj` (file reference + Runner group + Resources build phase) following the existing `alarm.caf` pattern.
 
-  - [ ] 3.15 Configure flutter_local_notifications to use custom sound for recurring reminders
+  - [x] 3.15 Configure flutter_local_notifications to use custom sound for recurring reminders
     - Update `scheduleUpcoming()` in `RecurringReminderService` to set the iOS notification sound to `reminder_sound.caf` (or the chosen filename) using `DarwinNotificationDetails(sound: 'reminder_sound.caf')`
     - If the sound file fails to load at notification time, iOS will automatically fall back to the default notification sound (built-in iOS behavior)
     - Update the Android notification channel configuration (channel id `recurring_reminders`) to reference the custom sound resource (`RawResourceAndroidNotificationSound('reminder_sound')`) for future Android platform support

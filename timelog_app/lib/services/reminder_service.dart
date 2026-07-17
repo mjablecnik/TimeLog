@@ -4,6 +4,8 @@ import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/data/latest.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
 
+import 'recurring_reminder_service.dart' show recurringReminderBackgroundHandler;
+
 /// Schedules/cancels the daily "start your timer" reminder notification via
 /// `flutter_local_notifications`. Separate from [NotificationService], which
 /// handles one-shot timer-completion alerts through a native method channel.
@@ -15,6 +17,10 @@ class ReminderService {
 
   final FlutterLocalNotificationsPlugin _plugin =
       FlutterLocalNotificationsPlugin();
+
+  /// The shared plugin instance, passed to [RecurringReminderService] so the
+  /// whole app initializes `flutter_local_notifications` exactly once.
+  FlutterLocalNotificationsPlugin get plugin => _plugin;
 
   /// Initialize the plugin. Must be called before any other method.
   /// [onNotificationTap] is invoked with the notification payload whenever
@@ -58,6 +64,8 @@ class ReminderService {
       settings: settings,
       onDidReceiveNotificationResponse: (response) =>
           onNotificationTap(response.payload),
+      onDidReceiveBackgroundNotificationResponse:
+          recurringReminderBackgroundHandler,
     );
   }
 
