@@ -179,7 +179,7 @@ This plan implements a Recurring Reminders system for the TimeLog Flutter app. T
     - Use existing app dialog styling and themeProvider
     - _Requirements: 1.3, 1.4, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 12.2_
 
-  - [ ] 6.3 Create ReminderCard widget
+  - [x] 6.3 Create ReminderCard widget
     - Create `lib/ui/widgets/reminder_card.dart`
     - Display: name, time window "HH:mm – HH:mm", interval in minutes, abbreviated active days, active/inactive toggle
     - Display today's completion status with a checkbox (checked = done for today, unchecked = not done)
