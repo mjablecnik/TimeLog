@@ -1,0 +1,10 @@
+{
+  "pipeline": "/home/martin/.trayline/pipelines/tasks/squash-commits.yaml",
+  "variables": {
+    "pipeline-name": "4-create-code.yaml"
+  },
+  "completed_steps": null,
+  "next_step": "squash-commits",
+  "timestamp": "2026-07-17T20:34:41+02:00",
+  "rate_limited": true
+}
