@@ -8,6 +8,11 @@ import 'ui/screens/statistics_screen.dart';
 import 'ui/screens/settings_screen.dart';
 import 'ui/widgets/bottom_nav.dart';
 
+/// App-wide navigator key so notification-tap handlers (which run outside
+/// the widget tree, e.g. from `main()`) can push routes such as
+/// Reminder_Action_Screen without needing a `BuildContext`.
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
 class TimeLogApp extends ConsumerWidget {
   const TimeLogApp({super.key});
 
@@ -15,6 +20,7 @@ class TimeLogApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = ref.watch(themeProvider);
     return MaterialApp(
+      navigatorKey: navigatorKey,
       title: 'TimeLog',
       debugShowCheckedModeBanner: false,
       theme: theme.toMaterialTheme(),

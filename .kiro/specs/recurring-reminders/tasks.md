@@ -160,7 +160,7 @@ This plan implements a Recurring Reminders system for the TimeLog Flutter app. T
     - Implement `snooze()`: simply dismiss the screen (next notification is already pre-scheduled via batch scheduling)
     - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5, 7.1, 7.2, 7.3_
 
-- [ ] 6. Implement UI screens and widgets
+- [x] 6. Implement UI screens and widgets
   - [x] 6.1 Create DaySelectorWidget
     - Create `lib/ui/widgets/day_selector.dart`
     - Multi-select weekday chips (Mon–Sun) using abbreviated names
@@ -168,7 +168,7 @@ This plan implements a Recurring Reminders system for the TimeLog Flutter app. T
     - Use theme colors from `themeProvider`
     - _Requirements: 2.1, 2.5, 12.1_
 
-  - [ ] 6.2 Create ReminderEditDialog
+  - [x] 6.2 Create ReminderEditDialog
     - Create `lib/ui/widgets/reminder_edit_dialog.dart`
     - Fields: name (max 100 chars, input prevented beyond limit), description (max 300 chars, input prevented beyond limit), start time picker, end time picker, repeat interval selection (30/60/120/180/240), day selector widget, active toggle
     - Default values for new: startTime 08:00, endTime 00:00, interval 60, all days, active true
@@ -190,7 +190,7 @@ This plan implements a Recurring Reminders system for the TimeLog Flutter app. T
     - Visually differentiate completed reminders (e.g., muted colors, strikethrough, or checkmark overlay)
     - _Requirements: 1.2, 1.3, 1.4, 1.5, 3.1, 12.1_
 
-  - [ ] 6.4 Create ReminderSettingsScreen
+  - [x] 6.4 Create ReminderSettingsScreen
     - Create `lib/ui/screens/reminder_settings_screen.dart`
     - Display list of reminders from `recurringRemindersProvider`, ordered by start time
     - Each reminder shows today's completion status (checkbox) — checked if Completion_Record exists for today
@@ -203,7 +203,7 @@ This plan implements a Recurring Reminders system for the TimeLog Flutter app. T
     - Accessible as sub-screen within existing Settings tab
     - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 1.10, 1.11, 1.12, 12.4_
 
-  - [ ] 6.5 Create ReminderActionScreen
+  - [x] 6.5 Create ReminderActionScreen
     - Create `lib/ui/screens/reminder_action_screen.dart`
     - Display reminder name, description, "Done" button, "Snooze" button
     - Done: calls provider `markDone()`, dismisses screen on success, shows error without dismissing on failure
@@ -213,8 +213,8 @@ This plan implements a Recurring Reminders system for the TimeLog Flutter app. T
     - Use card styling, background color, and button appearance matching Timer_Screen
     - _Requirements: 5.2, 5.3, 5.4, 5.5, 5.6, 6.1, 6.2, 6.3, 6.5, 7.1, 7.2, 12.3_
 
-- [ ] 7. Wire notification tap navigation and app launch rescheduling
-  - [ ] 7.1 Implement notification tap routing and app launch integration
+- [x] 7. Wire notification tap navigation and app launch rescheduling
+  - [x] 7.1 Implement notification tap routing and app launch integration
     - Configure `flutter_local_notifications` initialization to handle notification tap callbacks
     - Parse payload with `parseReminderIdFromPayload()`
     - On tap: if reminder exists in DB, navigate to ReminderActionScreen; if deleted, navigate to ReminderSettingsScreen
@@ -223,20 +223,45 @@ This plan implements a Recurring Reminders system for the TimeLog Flutter app. T
     - Call `rescheduleAll()` on app launch within the existing app initialization flow
     - Ensure rescheduling completes within 5 seconds
     - _Requirements: 5.4, 5.5, 5.6, 10.1, 10.2, 10.3, 10.4_
+    - Note: added a `navigatorKey` (`lib/app.dart`) so `main()`'s notification-tap callback and
+      cold-launch check can push `ReminderActionScreen` without a `BuildContext`. Cold-launch
+      navigation is deferred via `WidgetsBinding.instance.addPostFrameCallback` since the widget
+      tree isn't mounted until after `runApp()`; foreground/background taps push directly since
+      the navigator is already attached. The "deleted reminder → Reminder_Settings_Screen"
+      redirect (5.6) was already implemented inside `ReminderActionScreen` itself (task 6.5), so
+      always navigating to `ReminderActionScreen` and letting it redirect satisfies this without
+      duplicating the existence check in `main.dart`. `rescheduleAll()` is called once via
+      `recurringReminderServiceProvider` alongside the existing `rescheduleReminderIfEnabled()`
+      call in the app-init sequence, before `runApp()`.
 
-  - [ ] 7.2 Register navigation entry point in Settings
+  - [x] 7.2 Register navigation entry point in Settings
     - Add "Recurring Reminders" option to the existing Settings screen that navigates to `ReminderSettingsScreen`
     - Use Czech labels consistent with the existing Settings screen (e.g., 'Opakované připomínky' as the navigation entry)
     - _Requirements: 12.4_
 
-- [ ] 8. Apply theme consistency
-  - [ ] 8.1 Ensure all reminder screens consume themeProvider
+- [x] 8. Apply theme consistency
+  - [x] 8.1 Ensure all reminder screens consume themeProvider
     - Verify ReminderSettingsScreen, ReminderEditDialog, ReminderActionScreen, ReminderCard, and DaySelector all consume colors from `themeProvider`
     - Validate immediate re-render on theme switch (Ember, Midnight, Paper) without re-navigation
     - _Requirements: 12.1, 12.2, 12.3, 12.5, 12.6_
+    - Note: verified rather than changed. `ReminderSettingsScreen`/`ReminderActionScreen` are
+      `ConsumerWidget`s that call `ref.watch(themeProvider)` directly; `ReminderCard`,
+      `ReminderEditDialog`, and `DaySelector` receive the resolved `AppThemeData` via a `theme`
+      constructor parameter from their watching parent — the same pattern already used
+      app-wide for modal content (`EditSheet`, `DescriptionSheet` both take `theme:` from
+      `history_entry_card.dart`/callers rather than watching internally), so a theme switch
+      reactively rebuilds the parent and flows the new colors down. No hardcoded colors found;
+      card styling (`theme.panel`, `BorderRadius.circular(15)`, `theme.border`) and button
+      styling (`theme.accent`/`theme.ink`, `BorderRadius.circular(12)`, `elevation: 0`) match
+      `history_entry_card.dart`/`edit_sheet.dart` exactly. `flutter analyze` clean, full
+      `flutter test` suite (9 files, verified individually per the reporter-display-quirk memory
+      note) all passing.
 
-- [ ] 9. Final checkpoint - Ensure all tests pass
+- [x] 9. Final checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
+  - Verified: `fvm flutter analyze` clean (no issues), `fvm flutter test` all 9 suites / 26 tests
+    pass (`--machine` JSON parsed to confirm, per the reporter-display-quirk memory note).
+    `pubspec.lock` unchanged after `fvm flutter pub get` (no SDK-mismatch downgrade).
 
 ## Notes
 

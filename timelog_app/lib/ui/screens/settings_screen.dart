@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../providers/reminder_provider.dart';
 import '../../providers/theme_provider.dart';
+import 'reminder_settings_screen.dart';
 
 String _formatTime(TimeOfDay time) {
   final hour = time.hour.toString().padLeft(2, '0');
@@ -149,6 +150,43 @@ class SettingsScreen extends ConsumerWidget {
                     ),
                   ),
                 ],
+              ),
+            ),
+            const SizedBox(height: 20),
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16),
+              decoration: BoxDecoration(
+                color: theme.panel,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: theme.border),
+              ),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(12),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const ReminderSettingsScreen(),
+                  ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Opakované připomínky',
+                        style: TextStyle(
+                          color: theme.text,
+                          fontFamily: 'Sora',
+                          fontSize: 14,
+                        ),
+                      ),
+                      Icon(Icons.chevron_right, color: theme.dim),
+                    ],
+                  ),
+                ),
               ),
             ),
           ],
