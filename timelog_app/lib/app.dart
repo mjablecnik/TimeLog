@@ -7,8 +7,8 @@ import 'ui/screens/timer_screen.dart';
 import 'ui/screens/history_screen.dart';
 import 'ui/screens/statistics_screen.dart';
 import 'ui/screens/settings_screen.dart';
-import 'ui/screens/reminder_action_screen.dart';
 import 'ui/widgets/bottom_nav.dart';
+import 'ui/widgets/reminder_action_sheet.dart';
 
 /// App-wide navigator key so notification-tap handlers (which run outside
 /// the widget tree, e.g. from `main()`) can push routes such as
@@ -40,6 +40,7 @@ class _MainShell extends ConsumerStatefulWidget {
 
 class _MainShellState extends ConsumerState<_MainShell> with WidgetsBindingObserver {
   int _selectedIndex = 0;
+  bool _reminderSheetOpen = false;
 
   static const List<Widget> _screens = [
     TimerScreen(),
@@ -64,39 +65,55 @@ class _MainShellState extends ConsumerState<_MainShell> with WidgetsBindingObser
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       // When resuming from background on iOS, the notification tap callback
-      // may have set the provider while the widget tree was inactive (and
-      // ref.listen didn't fire). Check and consume it now.
+      // may have set the provider while the widget tree was inactive.
+      // Check after a frame so the context is fully usable.
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
-        final pendingId = ref.read(pendingReminderActionProvider);
-        if (pendingId != null) {
-          ref.read(pendingReminderActionProvider.notifier).state = null;
-          navigatorKey.currentState?.push(
-            MaterialPageRoute(
-              builder: (_) => ReminderActionScreen(reminderId: pendingId),
-            ),
-          );
-        }
+        _consumePendingReminder();
       });
     }
+  }
+
+  void _consumePendingReminder() {
+    final pendingId = ref.read(pendingReminderActionProvider);
+    if (pendingId != null && !_reminderSheetOpen) {
+      ref.read(pendingReminderActionProvider.notifier).state = null;
+      _showReminderSheet(pendingId);
+    }
+  }
+
+  void _showReminderSheet(int reminderId) {
+    if (_reminderSheetOpen) return;
+    _reminderSheetOpen = true;
+
+    final theme = ref.read(themeProvider);
+    showModalBottomSheet<void>(
+      context: context,
+      isDismissible: false,
+      enableDrag: false,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => ReminderActionSheet(
+        reminderId: reminderId,
+        theme: theme,
+      ),
+    ).whenComplete(() {
+      _reminderSheetOpen = false;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = ref.watch(themeProvider);
 
-    // React to notification taps via the same provider-listen pattern that
-    // the timer uses for showing the description sheet. When the pending ID
-    // changes from null to a value, push the ReminderActionScreen.
+    // React to notification taps. Same pattern as the timer's description
+    // sheet: when the provider value changes, show the modal.
     ref.listen<int?>(pendingReminderActionProvider, (prev, next) {
-      if (next != null) {
-        // Reset immediately so the same tap isn't processed twice.
+      if (next != null && !_reminderSheetOpen) {
         ref.read(pendingReminderActionProvider.notifier).state = null;
-        navigatorKey.currentState?.push(
-          MaterialPageRoute(
-            builder: (_) => ReminderActionScreen(reminderId: next),
-          ),
-        );
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) _showReminderSheet(next);
+        });
       }
     });
 
