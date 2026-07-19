@@ -73,6 +73,10 @@ import UserNotifications
         content.body = "Timer complete!"
         content.sound = UNNotificationSound(named: UNNotificationSoundName("alarm.caf"))
         content.interruptionLevel = .timeSensitive
+        // Store a numeric notification ID in userInfo so that
+        // flutter_local_notifications' pendingNotificationRequests() can
+        // parse it without crashing (it reads userInfo["NotificationId"]).
+        content.userInfo = ["NotificationId": 1000]
 
         let interval = date.timeIntervalSinceNow
         guard interval > 0 else { return }

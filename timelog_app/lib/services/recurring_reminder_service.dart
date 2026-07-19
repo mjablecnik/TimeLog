@@ -190,7 +190,7 @@ class RecurringReminderService {
   /// reminders (identified by payload prefix, distinct from other app
   /// notifications like the daily reminder).
   Future<int> countScheduledNotifications() async {
-    final pending = await _plugin.pendingNotificationRequests();
+    final pending = await _safeGetPendingRequests();
     return pending
         .where((p) => p.payload?.startsWith(recurringReminderPayloadPrefix) ?? false)
         .length;
@@ -201,7 +201,7 @@ class RecurringReminderService {
   /// that reminder's own currently-pending slots are not counted as "used"
   /// (they are about to be cancelled and rescheduled by the caller).
   Future<int> availableNotificationSlots({int? excludingReminderId}) async {
-    final pending = await _plugin.pendingNotificationRequests();
+    final pending = await _safeGetPendingRequests();
     final excludedMarker = excludingReminderId == null
         ? null
         : '$recurringReminderPayloadPrefix$excludingReminderId';
@@ -212,6 +212,17 @@ class RecurringReminderService {
       return p.payload != excludedMarker;
     }).length;
     return (maxScheduledNotifications - used).clamp(0, maxScheduledNotifications);
+  }
+
+  /// Wraps [pendingNotificationRequests] with a try-catch to guard against
+  /// platform-channel errors caused by native notifications that were not
+  /// scheduled via this plugin (they may lack a numeric ID in userInfo).
+  Future<List<PendingNotificationRequest>> _safeGetPendingRequests() async {
+    try {
+      return await _plugin.pendingNotificationRequests();
+    } catch (_) {
+      return [];
+    }
   }
 
   /// Schedules all upcoming (within the 6h lookahead) notifications for
@@ -234,7 +245,7 @@ class RecurringReminderService {
     );
     if (slots.isEmpty) return;
 
-    final pending = await _plugin.pendingNotificationRequests();
+    final pending = await _safeGetPendingRequests();
     final pendingIds = pending.map((p) => p.id).toSet();
     final usedSlots = pending
         .where((p) => p.payload?.startsWith(recurringReminderPayloadPrefix) ?? false)
@@ -284,7 +295,7 @@ class RecurringReminderService {
   /// "done", deactivation, or deletion).
   Future<void> cancelReminder(int reminderId) async {
     final marker = '$recurringReminderPayloadPrefix$reminderId';
-    final pending = await _plugin.pendingNotificationRequests();
+    final pending = await _safeGetPendingRequests();
     for (final p in pending) {
       if (p.payload == marker) {
         await _plugin.cancel(id: p.id);

@@ -7,7 +7,6 @@ import '../../services/active_days_utils.dart';
 /// UI-layer state for the Reminder_Edit_Dialog form.
 class ReminderFormData {
   final String name;
-  final String? description;
   final TimeOfDay startTime;
   final TimeOfDay endTime;
   final int repeatIntervalMinutes;
@@ -16,7 +15,6 @@ class ReminderFormData {
 
   const ReminderFormData({
     required this.name,
-    this.description,
     required this.startTime,
     required this.endTime,
     required this.repeatIntervalMinutes,
@@ -27,14 +25,9 @@ class ReminderFormData {
   bool get isValid => name.trim().isNotEmpty && activeDays.isNotEmpty;
 
   RecurringRemindersCompanion toCompanion() {
-    final trimmedDescription = description?.trim();
     return RecurringRemindersCompanion(
       name: Value(name.trim()),
-      description: Value(
-        trimmedDescription == null || trimmedDescription.isEmpty
-            ? null
-            : trimmedDescription,
-      ),
+      description: const Value(null),
       startTime: Value(startTime.hour * 60 + startTime.minute),
       endTime: Value(endTime.hour * 60 + endTime.minute),
       repeatInterval: Value(repeatIntervalMinutes),

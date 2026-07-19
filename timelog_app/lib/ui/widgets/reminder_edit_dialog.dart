@@ -51,7 +51,6 @@ class _ReminderEditDialogState extends ConsumerState<ReminderEditDialog> {
   static const _intervals = [30, 60, 120, 180, 240];
 
   late final TextEditingController _nameController;
-  late final TextEditingController _descriptionController;
   late TimeOfDay _startTime;
   late TimeOfDay _endTime;
   late int _repeatInterval;
@@ -68,7 +67,6 @@ class _ReminderEditDialogState extends ConsumerState<ReminderEditDialog> {
     final reminder = widget.reminder;
     if (reminder == null) {
       _nameController = TextEditingController();
-      _descriptionController = TextEditingController();
       _startTime = const TimeOfDay(hour: 8, minute: 0);
       _endTime = const TimeOfDay(hour: 0, minute: 0);
       _repeatInterval = 60;
@@ -76,7 +74,6 @@ class _ReminderEditDialogState extends ConsumerState<ReminderEditDialog> {
       _isActive = true;
     } else {
       _nameController = TextEditingController(text: reminder.name);
-      _descriptionController = TextEditingController(text: reminder.description ?? '');
       _startTime = _fromMinutes(reminder.startTime);
       _endTime = _fromMinutes(reminder.endTime);
       _repeatInterval = reminder.repeatInterval;
@@ -91,13 +88,11 @@ class _ReminderEditDialogState extends ConsumerState<ReminderEditDialog> {
   @override
   void dispose() {
     _nameController.dispose();
-    _descriptionController.dispose();
     super.dispose();
   }
 
   ReminderFormData get _formData => ReminderFormData(
         name: _nameController.text,
-        description: _descriptionController.text,
         startTime: _startTime,
         endTime: _endTime,
         repeatIntervalMinutes: _repeatInterval,
@@ -112,7 +107,6 @@ class _ReminderEditDialogState extends ConsumerState<ReminderEditDialog> {
     final reminder = widget.reminder;
     if (reminder == null) {
       return _nameController.text.trim().isNotEmpty ||
-          _descriptionController.text.trim().isNotEmpty ||
           _startTime != const TimeOfDay(hour: 8, minute: 0) ||
           _endTime != const TimeOfDay(hour: 0, minute: 0) ||
           _repeatInterval != 60 ||
@@ -120,7 +114,6 @@ class _ReminderEditDialogState extends ConsumerState<ReminderEditDialog> {
           !_isActive;
     }
     return _nameController.text != reminder.name ||
-        _descriptionController.text != (reminder.description ?? '') ||
         _startTime != _fromMinutes(reminder.startTime) ||
         _endTime != _fromMinutes(reminder.endTime) ||
         _repeatInterval != reminder.repeatInterval ||
@@ -240,7 +233,10 @@ class _ReminderEditDialogState extends ConsumerState<ReminderEditDialog> {
           Center(
             child: GestureDetector(
               behavior: HitTestBehavior.opaque,
-              onTap: () {},
+              onTap: () {
+                // Dismiss keyboard when tapping outside text fields
+                FocusScope.of(context).unfocus();
+              },
               child: Material(
                 color: Colors.transparent,
                 child: Container(
@@ -282,23 +278,6 @@ class _ReminderEditDialogState extends ConsumerState<ReminderEditDialog> {
                                   style: TextStyle(color: theme.text, fontFamily: 'Sora'),
                                   decoration: InputDecoration(
                                     hintText: 'Název',
-                                    hintStyle: TextStyle(color: theme.faint, fontFamily: 'Sora'),
-                                    border: InputBorder.none,
-                                    counterStyle: TextStyle(color: theme.faint, fontSize: 11),
-                                  ),
-                                  onChanged: (_) => setState(() {}),
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              _FieldContainer(
-                                theme: theme,
-                                child: TextField(
-                                  controller: _descriptionController,
-                                  maxLength: 300,
-                                  maxLines: 3,
-                                  style: TextStyle(color: theme.text, fontFamily: 'Sora'),
-                                  decoration: InputDecoration(
-                                    hintText: 'Popis (nepovinné)',
                                     hintStyle: TextStyle(color: theme.faint, fontFamily: 'Sora'),
                                     border: InputBorder.none,
                                     counterStyle: TextStyle(color: theme.faint, fontSize: 11),
