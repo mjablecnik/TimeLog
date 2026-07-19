@@ -34,11 +34,11 @@ Color activityTypeColor(String type, {bool isDark = true}) {
     case 'Odpočinek':
       return Colors.blue[400]!;
     case 'Zábava':
-      return isDark ? Colors.orange[300]! : Colors.orange[700]!;
+      return isDark ? Colors.teal[300]! : Colors.teal[400]!;
     case 'Cvičení':
       return Colors.amber[600]!;
     case 'Domácí práce':
-      return Colors.teal[400]!;
+      return isDark ? Colors.orange[300]! : Colors.orange[700]!;
     case 'Přesun':
       return isDark ? Colors.indigo[300]! : Colors.indigo[400]!;
     case 'Jídlo':
