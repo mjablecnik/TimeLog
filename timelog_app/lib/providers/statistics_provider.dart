@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/activity_types.dart';
+import '../core/config.dart';
 import '../data/database.dart';
 import '../data/stats_data.dart';
 import 'database_provider.dart';
@@ -11,6 +12,11 @@ final statisticsPeriodProvider = StateProvider<StatsPeriod>((ref) {
 
 final statisticsDateProvider = StateProvider<DateTime>((ref) {
   final now = DateTime.now();
+  // If before dayStartHour, consider it still the previous day
+  if (now.hour < dayStartHour) {
+    final prev = now.subtract(const Duration(days: 1));
+    return DateTime(prev.year, prev.month, prev.day);
+  }
   return DateTime(now.year, now.month, now.day);
 });
 
@@ -28,10 +34,10 @@ final statisticsProvider = FutureProvider<StatsData>((ref) async {
 
 DateTime _rangeStart(StatsPeriod period, DateTime date) {
   if (period == StatsPeriod.daily) {
-    return DateTime(date.year, date.month, date.day);
+    return DateTime(date.year, date.month, date.day, dayStartHour);
   }
   final weekStart = date.subtract(Duration(days: date.weekday - 1));
-  return DateTime(weekStart.year, weekStart.month, weekStart.day);
+  return DateTime(weekStart.year, weekStart.month, weekStart.day, dayStartHour);
 }
 
 DateTime _rangeEnd(StatsPeriod period, DateTime start) {

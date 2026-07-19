@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/activity_types.dart';
+import '../../core/config.dart';
 import '../../core/theme.dart';
 import '../../data/database.dart' show TimeEntry;
 
@@ -24,8 +25,10 @@ class TimelinePainter extends CustomPainter {
   static const double _markerAreaHeight = 16;
   static const double _barCornerRadius = 6;
   static const double _minBlockWidth = 3;
-  static const int _defaultStartHour = 0;
-  static const int _defaultEndHour = 24;
+  /// The default visible window: full logical day from [dayStartHour] to
+  /// [dayStartHour] next day (24h span).
+  static const int _defaultStartHour = dayStartHour;
+  static const int _defaultEndHour = dayStartHour + 24;
 
   const TimelinePainter({
     required this.entries,
@@ -36,29 +39,40 @@ class TimelinePainter extends CustomPainter {
     this.isDark = true,
   });
 
+  /// The start of this logical day (6:00 on [day]).
+  DateTime get _logicalDayStart =>
+      DateTime(day.year, day.month, day.day, dayStartHour);
+
   /// Resolves the hour range to paint: an explicit override if both
   /// [startHour]/[endHour] are given, otherwise the default window widened
   /// to cover any entry that falls outside it.
+  ///
+  /// Hours are expressed as clock hours where values > 24 represent hours
+  /// past midnight into the next calendar day (e.g. 25 = 1:00 AM next day).
   (int, int) _resolveRange() {
     if (startHour != null && endHour != null) return (startHour!, endHour!);
     if (entries.isEmpty) return (_defaultStartHour, _defaultEndHour);
 
-    final dayStart = DateTime(day.year, day.month, day.day);
+    final logicalStart = _logicalDayStart;
     var rangeStartHour = _defaultStartHour;
     var rangeEndHour = _defaultEndHour;
 
     for (final entry in entries) {
       final entryStart = DateTime.parse(entry.startTime);
       final entryEnd = DateTime.parse(entry.endTime);
-      final startOffset = entryStart.difference(dayStart).inMinutes / 60.0;
-      final endOffset = entryEnd.difference(dayStart).inMinutes / 60.0;
+      // Hours since dayStartHour, then shift back to clock hours
+      final clockStart =
+          dayStartHour + entryStart.difference(logicalStart).inMinutes / 60.0;
+      final clockEnd =
+          dayStartHour + entryEnd.difference(logicalStart).inMinutes / 60.0;
 
-      if (startOffset < rangeStartHour) rangeStartHour = startOffset.floor();
-      if (endOffset > rangeEndHour) rangeEndHour = endOffset.ceil();
+      if (clockStart < rangeStartHour) rangeStartHour = clockStart.floor();
+      if (clockEnd > rangeEndHour) rangeEndHour = clockEnd.ceil();
     }
 
-    rangeStartHour = rangeStartHour.clamp(0, 23);
-    rangeEndHour = rangeEndHour.clamp(rangeStartHour + 1, 30);
+    // Clamp to a sensible range: never below 0, max dayStartHour + 24 (full logical day)
+    rangeStartHour = rangeStartHour.clamp(0, _defaultEndHour - 1);
+    rangeEndHour = rangeEndHour.clamp(rangeStartHour + 1, dayStartHour + 24);
     return (rangeStartHour, rangeEndHour);
   }
 
@@ -74,6 +88,8 @@ class TimelinePainter extends CustomPainter {
     );
 
     final (rangeStartHour, rangeEndHour) = _resolveRange();
+    // Convert display hours back to real DateTimes relative to this day.
+    // Dart handles hours > 23 by rolling over to the next calendar day.
     final rangeStart = DateTime(day.year, day.month, day.day, rangeStartHour);
     final rangeEnd = DateTime(day.year, day.month, day.day, rangeEndHour);
     final totalMs = rangeEnd.difference(rangeStart).inMilliseconds;

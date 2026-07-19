@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/activity_types.dart';
+import '../../core/config.dart';
 import '../../core/theme.dart';
 import '../../data/database.dart' show TimeEntry;
 import '../../data/stats_data.dart';
 import '../../providers/statistics_provider.dart';
+import '../../providers/history_provider.dart' show logicalDay;
 import '../../providers/theme_provider.dart';
 import '../painters/bar_painter.dart';
 import '../painters/timeline_painter.dart';
@@ -27,12 +29,16 @@ String _formatDuration(Duration duration) {
 
 bool _isCurrentPeriod(StatsPeriod period, DateTime date) {
   final now = DateTime.now();
+  // Use logical day: before dayStartHour counts as previous day
+  final today = now.hour < dayStartHour
+      ? DateTime(now.year, now.month, now.day).subtract(const Duration(days: 1))
+      : DateTime(now.year, now.month, now.day);
   if (period == StatsPeriod.daily) {
-    return date.year == now.year &&
-        date.month == now.month &&
-        date.day == now.day;
+    return date.year == today.year &&
+        date.month == today.month &&
+        date.day == today.day;
   }
-  return _weekStart(date) == _weekStart(now);
+  return _weekStart(date) == _weekStart(today);
 }
 
 const _swipeVelocityThreshold = 300.0;
@@ -362,9 +368,10 @@ class _WeekdayRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final dayEntries = entries.where((entry) {
       final start = DateTime.parse(entry.startTime);
-      return start.year == day.year &&
-          start.month == day.month &&
-          start.day == day.day;
+      final logical = logicalDay(start);
+      return logical.year == day.year &&
+          logical.month == day.month &&
+          logical.day == day.day;
     }).toList();
 
     return Row(

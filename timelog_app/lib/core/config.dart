@@ -1,3 +1,7 @@
+/// The hour at which a "logical day" starts for statistics and history.
+/// Entries between 00:00–05:59 are counted toward the previous day.
+const int dayStartHour = 6;
+
 class TimerConfig {
   static const int defaultDurationMinutes = 20;
   static const int minDurationMinutes = 1;

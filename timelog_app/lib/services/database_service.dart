@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 
+import '../core/config.dart';
 import '../data/database.dart';
 
 class DatabaseService {
@@ -70,10 +71,11 @@ class DatabaseService {
   }
 
   DateTime _dayStart(DateTime day) =>
-      DateTime(day.year, day.month, day.day, 0, 0, 0);
+      DateTime(day.year, day.month, day.day, dayStartHour);
 
   DateTime _dayEnd(DateTime day) =>
-      DateTime(day.year, day.month, day.day, 23, 59, 59, 999);
+      DateTime(day.year, day.month, day.day + 1, dayStartHour)
+          .subtract(const Duration(milliseconds: 1));
 }
 
 class TimeoutException implements Exception {

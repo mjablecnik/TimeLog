@@ -6,6 +6,7 @@ import '../../core/activity_types.dart';
 import '../../core/theme.dart';
 import '../../data/database.dart';
 import '../../providers/database_provider.dart';
+import '../../providers/history_provider.dart' show logicalDay;
 
 class ManualEntrySheet extends ConsumerStatefulWidget {
   final AppThemeData theme;
@@ -42,8 +43,9 @@ class _ManualEntrySheetState extends ConsumerState<ManualEntrySheet> {
   Future<void> _initDefaultTimes() async {
     final day = widget.selectedDay;
     final now = DateTime.now();
+    final today = logicalDay(now);
     final isToday =
-        day.year == now.year && day.month == now.month && day.day == now.day;
+        day.year == today.year && day.month == today.month && day.day == today.day;
 
     // Synchronous fallback so the `late` fields are set before the first
     // build; overwritten below if a prior entry is found for this day.

@@ -14,7 +14,8 @@ const _swipeVelocityThreshold = 300.0;
 
 bool _isToday(DateTime day) {
   final now = DateTime.now();
-  return day.year == now.year && day.month == now.month && day.day == now.day;
+  final today = logicalDay(now);
+  return day.year == today.year && day.month == today.month && day.day == today.day;
 }
 
 class HistoryScreen extends ConsumerWidget {

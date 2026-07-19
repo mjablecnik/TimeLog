@@ -10,8 +10,8 @@ class DayNavigator extends ConsumerWidget {
   const DayNavigator({super.key, required this.theme});
 
   String _dayLabel(DateTime day) {
-    final today = DateTime.now();
-    final todayDate = DateTime(today.year, today.month, today.day);
+    final now = DateTime.now();
+    final todayDate = logicalDay(now);
     final yesterday = todayDate.subtract(const Duration(days: 1));
 
     if (day.year == todayDate.year &&
@@ -29,7 +29,7 @@ class DayNavigator extends ConsumerWidget {
   }
 
   bool _isToday(DateTime day) {
-    final today = DateTime.now();
+    final today = logicalDay(DateTime.now());
     return day.year == today.year &&
         day.month == today.month &&
         day.day == today.day;
