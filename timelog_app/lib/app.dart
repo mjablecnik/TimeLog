@@ -1,8 +1,6 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'main.dart' show reminderActionStreamController;
+import 'providers/reminder_action_provider.dart';
 import 'providers/statistics_provider.dart';
 import 'providers/theme_provider.dart';
 import 'ui/screens/timer_screen.dart';
@@ -18,11 +16,7 @@ import 'ui/widgets/bottom_nav.dart';
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 class TimeLogApp extends ConsumerWidget {
-  /// If the app was cold-launched by tapping a recurring reminder notification,
-  /// this holds the reminder ID so we can show the action screen immediately.
-  final int? coldLaunchReminderId;
-
-  const TimeLogApp({super.key, this.coldLaunchReminderId});
+  const TimeLogApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -32,15 +26,13 @@ class TimeLogApp extends ConsumerWidget {
       title: 'TimeLog',
       debugShowCheckedModeBanner: false,
       theme: theme.toMaterialTheme(),
-      home: _MainShell(coldLaunchReminderId: coldLaunchReminderId),
+      home: const _MainShell(),
     );
   }
 }
 
 class _MainShell extends ConsumerStatefulWidget {
-  final int? coldLaunchReminderId;
-
-  const _MainShell({this.coldLaunchReminderId});
+  const _MainShell();
 
   @override
   ConsumerState<_MainShell> createState() => _MainShellState();
@@ -48,8 +40,6 @@ class _MainShell extends ConsumerStatefulWidget {
 
 class _MainShellState extends ConsumerState<_MainShell> {
   int _selectedIndex = 0;
-  bool _coldLaunchHandled = false;
-  StreamSubscription<int>? _reminderActionSub;
 
   static const List<Widget> _screens = [
     TimerScreen(),
@@ -59,44 +49,24 @@ class _MainShellState extends ConsumerState<_MainShell> {
   ];
 
   @override
-  void initState() {
-    super.initState();
-
-    // Listen for notification taps that arrive while the app is running
-    // (foreground or resumed from background). The navigator is guaranteed
-    // to be mounted because this widget is a child of MaterialApp.
-    _reminderActionSub = reminderActionStreamController.stream.listen((reminderId) {
-      navigatorKey.currentState?.push(
-        MaterialPageRoute(builder: (_) => ReminderActionScreen(reminderId: reminderId)),
-      );
-    });
-
-    if (widget.coldLaunchReminderId != null) {
-      // Schedule the push for after this widget's first frame, at which point
-      // the navigator (navigatorKey) is guaranteed to be mounted.
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted || _coldLaunchHandled) return;
-        _coldLaunchHandled = true;
-        navigatorKey.currentState?.push(
-          MaterialPageRoute(
-            builder: (_) => ReminderActionScreen(
-              reminderId: widget.coldLaunchReminderId!,
-            ),
-          ),
-        );
-      });
-    }
-  }
-
-  @override
-  void dispose() {
-    _reminderActionSub?.cancel();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     final theme = ref.watch(themeProvider);
+
+    // React to notification taps via the same provider-listen pattern that
+    // the timer uses for showing the description sheet. When the pending ID
+    // changes from null to a value, push the ReminderActionScreen.
+    ref.listen<int?>(pendingReminderActionProvider, (prev, next) {
+      if (next != null) {
+        // Reset immediately so the same tap isn't processed twice.
+        ref.read(pendingReminderActionProvider.notifier).state = null;
+        navigatorKey.currentState?.push(
+          MaterialPageRoute(
+            builder: (_) => ReminderActionScreen(reminderId: next),
+          ),
+        );
+      }
+    });
+
     return Scaffold(
       backgroundColor: theme.background,
       body: IndexedStack(

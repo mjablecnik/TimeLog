@@ -1,8 +1,7 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'app.dart';
+import 'providers/reminder_action_provider.dart';
 import 'providers/reminder_provider.dart';
 import 'providers/recurring_reminders_provider.dart';
 import 'providers/timer_provider.dart';
@@ -10,11 +9,6 @@ import 'services/notification_service.dart';
 import 'services/reminder_service.dart';
 import 'services/recurring_reminder_service.dart';
 import 'services/timer_service.dart';
-
-/// Stream controller that broadcasts reminder IDs to open when a notification
-/// is tapped. The app widget subscribes and performs the navigation when it
-/// receives an event — this guarantees the navigator is mounted and ready.
-final reminderActionStreamController = StreamController<int>.broadcast();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -42,22 +36,23 @@ void main() async {
       }
       final reminderId = parseReminderIdFromPayload(payload);
       if (reminderId != null) {
-        reminderActionStreamController.add(reminderId);
+        container.read(pendingReminderActionProvider.notifier).state = reminderId;
       }
     },
   );
 
   // Determine if the app was cold-launched by tapping a recurring reminder
-  // notification. If so, we pass the reminder ID to the app widget so it can
-  // show the ReminderActionScreen immediately as an overlay on first build,
-  // avoiding a race with navigatorKey not yet being attached.
-  int? coldLaunchReminderId;
+  // notification. If so, we set the pending provider so the UI picks it up
+  // once the widget tree is mounted.
   final launchPayload = await reminderService.getLaunchPayload();
   if (launchPayload == ReminderService.startTimerPayload) {
     await container.read(timerProvider.notifier).restored;
     autoStartIfIdle();
   } else {
-    coldLaunchReminderId = parseReminderIdFromPayload(launchPayload);
+    final launchReminderId = parseReminderIdFromPayload(launchPayload);
+    if (launchReminderId != null) {
+      container.read(pendingReminderActionProvider.notifier).state = launchReminderId;
+    }
   }
 
   await rescheduleReminderIfEnabled(reminderService);
@@ -66,7 +61,7 @@ void main() async {
   runApp(
     UncontrolledProviderScope(
       container: container,
-      child: TimeLogApp(coldLaunchReminderId: coldLaunchReminderId),
+      child: const TimeLogApp(),
     ),
   );
 }

@@ -4,6 +4,12 @@ import '../data/database.dart';
 import 'database_provider.dart';
 import 'recurring_reminders_provider.dart';
 
+/// Holds the reminder ID that should be opened via ReminderActionScreen.
+/// Set by the notification tap handler, consumed (reset to null) by the UI
+/// once navigation is performed — same reactive pattern as the timer's
+/// status-based sheet trigger.
+final pendingReminderActionProvider = StateProvider<int?>((ref) => null);
+
 /// State backing the Reminder_Action_Screen.
 class ReminderActionState {
   final RecurringReminder? reminder;
