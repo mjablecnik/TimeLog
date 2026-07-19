@@ -42,6 +42,7 @@ class _MainShell extends ConsumerStatefulWidget {
 
 class _MainShellState extends ConsumerState<_MainShell> with WidgetsBindingObserver {
   int _selectedIndex = 0;
+  bool _reminderActionOpen = false;
 
   static const List<Widget> _screens = [
     TimerScreen(),
@@ -74,6 +75,7 @@ class _MainShellState extends ConsumerState<_MainShell> with WidgetsBindingObser
   }
 
   Future<void> _checkPersistedPendingReminder() async {
+    if (_reminderActionOpen) return;
     final prefs = await SharedPreferences.getInstance();
     await prefs.reload();
     final reminderId = prefs.getInt(kPendingReminderIdKey);
@@ -84,6 +86,7 @@ class _MainShellState extends ConsumerState<_MainShell> with WidgetsBindingObser
   }
 
   void _consumePendingReminder() {
+    if (_reminderActionOpen) return;
     final pendingId = ref.read(pendingReminderActionProvider);
     if (pendingId != null) {
       ref.read(pendingReminderActionProvider.notifier).state = null;
@@ -92,11 +95,19 @@ class _MainShellState extends ConsumerState<_MainShell> with WidgetsBindingObser
   }
 
   void _openReminderAction(int reminderId) {
+    if (_reminderActionOpen) return;
+    _reminderActionOpen = true;
+    // Also clear prefs and provider to prevent duplicate triggers.
+    ref.read(pendingReminderActionProvider.notifier).state = null;
+    SharedPreferences.getInstance().then((prefs) => prefs.remove(kPendingReminderIdKey));
+
     navigatorKey.currentState?.push(
       MaterialPageRoute(
         builder: (_) => ReminderActionScreen(reminderId: reminderId),
       ),
-    );
+    ).then((_) {
+      _reminderActionOpen = false;
+    });
   }
 
   @override
@@ -104,7 +115,7 @@ class _MainShellState extends ConsumerState<_MainShell> with WidgetsBindingObser
     final theme = ref.watch(themeProvider);
 
     ref.listen<int?>(pendingReminderActionProvider, (prev, next) {
-      if (next != null) {
+      if (next != null && !_reminderActionOpen) {
         ref.read(pendingReminderActionProvider.notifier).state = null;
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) _openReminderAction(next);
