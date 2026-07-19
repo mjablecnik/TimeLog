@@ -9,8 +9,8 @@ import 'ui/screens/timer_screen.dart';
 import 'ui/screens/history_screen.dart';
 import 'ui/screens/statistics_screen.dart';
 import 'ui/screens/settings_screen.dart';
+import 'ui/screens/reminder_action_screen.dart';
 import 'ui/widgets/bottom_nav.dart';
-import 'ui/widgets/reminder_action_sheet.dart';
 
 /// App-wide navigator key so notification-tap handlers (which run outside
 /// the widget tree, e.g. from `main()`) can push routes such as
@@ -42,7 +42,6 @@ class _MainShell extends ConsumerStatefulWidget {
 
 class _MainShellState extends ConsumerState<_MainShell> with WidgetsBindingObserver {
   int _selectedIndex = 0;
-  bool _reminderSheetOpen = false;
 
   static const List<Widget> _screens = [
     TimerScreen(),
@@ -70,64 +69,45 @@ class _MainShellState extends ConsumerState<_MainShell> with WidgetsBindingObser
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      // On iOS the notification tap callback may have persisted the ID to
-      // SharedPreferences while the Dart isolate was suspended. Read it now.
       _checkPersistedPendingReminder();
     }
   }
 
   Future<void> _checkPersistedPendingReminder() async {
     final prefs = await SharedPreferences.getInstance();
-    // Force reload from disk in case the value was written by the callback
-    // while prefs instance was cached with stale data.
     await prefs.reload();
     final reminderId = prefs.getInt(kPendingReminderIdKey);
     if (reminderId != null) {
       await prefs.remove(kPendingReminderIdKey);
-      if (mounted && !_reminderSheetOpen) {
-        _showReminderSheet(reminderId);
-      }
+      if (mounted) _openReminderAction(reminderId);
     }
   }
 
   void _consumePendingReminder() {
     final pendingId = ref.read(pendingReminderActionProvider);
-    if (pendingId != null && !_reminderSheetOpen) {
+    if (pendingId != null) {
       ref.read(pendingReminderActionProvider.notifier).state = null;
-      _showReminderSheet(pendingId);
+      _openReminderAction(pendingId);
     }
   }
 
-  void _showReminderSheet(int reminderId) {
-    if (_reminderSheetOpen) return;
-    _reminderSheetOpen = true;
-
-    final theme = ref.read(themeProvider);
-    showModalBottomSheet<void>(
-      context: context,
-      isDismissible: false,
-      enableDrag: false,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => ReminderActionSheet(
-        reminderId: reminderId,
-        theme: theme,
+  void _openReminderAction(int reminderId) {
+    navigatorKey.currentState?.push(
+      MaterialPageRoute(
+        builder: (_) => ReminderActionScreen(reminderId: reminderId),
       ),
-    ).whenComplete(() {
-      _reminderSheetOpen = false;
-    });
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = ref.watch(themeProvider);
 
-    // React to notification taps when app is in foreground.
     ref.listen<int?>(pendingReminderActionProvider, (prev, next) {
-      if (next != null && !_reminderSheetOpen) {
+      if (next != null) {
         ref.read(pendingReminderActionProvider.notifier).state = null;
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) _showReminderSheet(next);
+          if (mounted) _openReminderAction(next);
         });
       }
     });
