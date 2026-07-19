@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'main.dart' show kPendingReminderIdKey;
 import 'providers/reminder_action_provider.dart';
 import 'providers/statistics_provider.dart';
 import 'providers/theme_provider.dart';
@@ -53,6 +55,10 @@ class _MainShellState extends ConsumerState<_MainShell> with WidgetsBindingObser
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    // Check on first frame in case provider was set before widget mounted.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _consumePendingReminder();
+    });
   }
 
   @override
@@ -64,13 +70,23 @@ class _MainShellState extends ConsumerState<_MainShell> with WidgetsBindingObser
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      // When resuming from background on iOS, the notification tap callback
-      // may have set the provider while the widget tree was inactive.
-      // Check after a frame so the context is fully usable.
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        _consumePendingReminder();
-      });
+      // On iOS the notification tap callback may have persisted the ID to
+      // SharedPreferences while the Dart isolate was suspended. Read it now.
+      _checkPersistedPendingReminder();
+    }
+  }
+
+  Future<void> _checkPersistedPendingReminder() async {
+    final prefs = await SharedPreferences.getInstance();
+    // Force reload from disk in case the value was written by the callback
+    // while prefs instance was cached with stale data.
+    await prefs.reload();
+    final reminderId = prefs.getInt(kPendingReminderIdKey);
+    if (reminderId != null) {
+      await prefs.remove(kPendingReminderIdKey);
+      if (mounted && !_reminderSheetOpen) {
+        _showReminderSheet(reminderId);
+      }
     }
   }
 
@@ -106,8 +122,7 @@ class _MainShellState extends ConsumerState<_MainShell> with WidgetsBindingObser
   Widget build(BuildContext context) {
     final theme = ref.watch(themeProvider);
 
-    // React to notification taps. Same pattern as the timer's description
-    // sheet: when the provider value changes, show the modal.
+    // React to notification taps when app is in foreground.
     ref.listen<int?>(pendingReminderActionProvider, (prev, next) {
       if (next != null && !_reminderSheetOpen) {
         ref.read(pendingReminderActionProvider.notifier).state = null;
