@@ -38,7 +38,7 @@ class _MainShell extends ConsumerStatefulWidget {
   ConsumerState<_MainShell> createState() => _MainShellState();
 }
 
-class _MainShellState extends ConsumerState<_MainShell> {
+class _MainShellState extends ConsumerState<_MainShell> with WidgetsBindingObserver {
   int _selectedIndex = 0;
 
   static const List<Widget> _screens = [
@@ -47,6 +47,39 @@ class _MainShellState extends ConsumerState<_MainShell> {
     StatisticsScreen(),
     SettingsScreen(),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      // When resuming from background on iOS, the notification tap callback
+      // may have set the provider while the widget tree was inactive (and
+      // ref.listen didn't fire). Check and consume it now.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        final pendingId = ref.read(pendingReminderActionProvider);
+        if (pendingId != null) {
+          ref.read(pendingReminderActionProvider.notifier).state = null;
+          navigatorKey.currentState?.push(
+            MaterialPageRoute(
+              builder: (_) => ReminderActionScreen(reminderId: pendingId),
+            ),
+          );
+        }
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
