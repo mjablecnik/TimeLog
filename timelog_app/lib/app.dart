@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'main.dart' show reminderActionStreamController;
 import 'providers/statistics_provider.dart';
 import 'providers/theme_provider.dart';
 import 'ui/screens/timer_screen.dart';
@@ -46,6 +49,7 @@ class _MainShell extends ConsumerStatefulWidget {
 class _MainShellState extends ConsumerState<_MainShell> {
   int _selectedIndex = 0;
   bool _coldLaunchHandled = false;
+  StreamSubscription<int>? _reminderActionSub;
 
   static const List<Widget> _screens = [
     TimerScreen(),
@@ -57,6 +61,16 @@ class _MainShellState extends ConsumerState<_MainShell> {
   @override
   void initState() {
     super.initState();
+
+    // Listen for notification taps that arrive while the app is running
+    // (foreground or resumed from background). The navigator is guaranteed
+    // to be mounted because this widget is a child of MaterialApp.
+    _reminderActionSub = reminderActionStreamController.stream.listen((reminderId) {
+      navigatorKey.currentState?.push(
+        MaterialPageRoute(builder: (_) => ReminderActionScreen(reminderId: reminderId)),
+      );
+    });
+
     if (widget.coldLaunchReminderId != null) {
       // Schedule the push for after this widget's first frame, at which point
       // the navigator (navigatorKey) is guaranteed to be mounted.
@@ -72,6 +86,12 @@ class _MainShellState extends ConsumerState<_MainShell> {
         );
       });
     }
+  }
+
+  @override
+  void dispose() {
+    _reminderActionSub?.cancel();
+    super.dispose();
   }
 
   @override

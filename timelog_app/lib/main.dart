@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'app.dart';
@@ -8,7 +10,11 @@ import 'services/notification_service.dart';
 import 'services/reminder_service.dart';
 import 'services/recurring_reminder_service.dart';
 import 'services/timer_service.dart';
-import 'ui/screens/reminder_action_screen.dart';
+
+/// Stream controller that broadcasts reminder IDs to open when a notification
+/// is tapped. The app widget subscribes and performs the navigation when it
+/// receives an event — this guarantees the navigator is mounted and ready.
+final reminderActionStreamController = StreamController<int>.broadcast();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,24 +34,6 @@ void main() async {
     }
   }
 
-  // Pushed directly (app is already running, so navigatorKey is attached).
-  // If the navigator isn't ready yet (e.g. app is resuming from background),
-  // retry on the next frame.
-  void openReminderAction(int reminderId) {
-    final nav = navigatorKey.currentState;
-    if (nav != null) {
-      nav.push(
-        MaterialPageRoute(builder: (_) => ReminderActionScreen(reminderId: reminderId)),
-      );
-    } else {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        navigatorKey.currentState?.push(
-          MaterialPageRoute(builder: (_) => ReminderActionScreen(reminderId: reminderId)),
-        );
-      });
-    }
-  }
-
   await reminderService.initialize(
     onNotificationTap: (payload) {
       if (payload == ReminderService.startTimerPayload) {
@@ -54,7 +42,7 @@ void main() async {
       }
       final reminderId = parseReminderIdFromPayload(payload);
       if (reminderId != null) {
-        openReminderAction(reminderId);
+        reminderActionStreamController.add(reminderId);
       }
     },
   );
