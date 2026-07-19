@@ -83,109 +83,107 @@ class _ReminderActionScreenState extends ConsumerState<ReminderActionScreen> {
     return Scaffold(
       backgroundColor: theme.background,
       body: SafeArea(
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: theme.panel,
-                borderRadius: BorderRadius.circular(15),
-                border: Border.all(color: theme.border),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Column(
+            children: [
+              const Spacer(flex: 3),
+              Text(
+                reminder.name,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: theme.text,
+                  fontFamily: 'Sora',
+                  fontSize: 28,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+              if (description != null && description.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                Text(
+                  description,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: theme.dim,
+                    fontFamily: 'Sora',
+                    fontSize: 16,
+                  ),
+                ),
+              ],
+              if (state.error != null) ...[
+                const SizedBox(height: 20),
+                Text(
+                  state.error!,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.red[400],
+                    fontFamily: 'Sora',
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+              const Spacer(flex: 4),
+              Row(
                 children: [
-                  Text(
-                    reminder.name,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: theme.text,
-                      fontFamily: 'Sora',
-                      fontSize: 20,
-                      fontWeight: FontWeight.w600,
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: state.isLoading ? null : _handleSnooze,
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: theme.dim,
+                        side: BorderSide(color: theme.border),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                      ),
+                      child: Text(
+                        'Odložit',
+                        style: TextStyle(
+                          fontFamily: 'Sora',
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
                   ),
-                  if (description != null && description.isNotEmpty) ...[
-                    const SizedBox(height: 12),
-                    Text(
-                      description,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: theme.dim, fontFamily: 'Sora', fontSize: 14),
-                    ),
-                  ],
-                  if (state.error != null) ...[
-                    const SizedBox(height: 16),
-                    Text(
-                      state.error!,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Colors.red[400],
-                        fontFamily: 'Sora',
-                        fontSize: 13,
-                      ),
-                    ),
-                  ],
-                  const SizedBox(height: 24),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: state.isLoading ? null : _handleSnooze,
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: theme.dim,
-                            side: BorderSide(color: theme.border),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                          ),
-                          child: Text(
-                            'Odložit',
-                            style: TextStyle(fontFamily: 'Sora', fontWeight: FontWeight.w600),
-                          ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: state.isLoading ? null : _handleDone,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: theme.accent,
+                        foregroundColor: theme.ink,
+                        disabledBackgroundColor: theme.accent.withValues(alpha: 0.3),
+                        disabledForegroundColor: theme.ink.withValues(alpha: 0.5),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
                         ),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        elevation: 0,
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: state.isLoading ? null : _handleDone,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: theme.accent,
-                            foregroundColor: theme.ink,
-                            disabledBackgroundColor: theme.accent.withValues(alpha: 0.3),
-                            disabledForegroundColor: theme.ink.withValues(alpha: 0.5),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                      child: state.isLoading
+                          ? SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                color: theme.ink,
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : Text(
+                              'Hotovo',
+                              style: TextStyle(
+                                fontFamily: 'Sora',
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            elevation: 0,
-                          ),
-                          child: state.isLoading
-                              ? SizedBox(
-                                  width: 18,
-                                  height: 18,
-                                  child: CircularProgressIndicator(
-                                    color: theme.ink,
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : Text(
-                                  'Hotovo',
-                                  style: TextStyle(
-                                    fontFamily: 'Sora',
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 ],
               ),
-            ),
+              const SizedBox(height: 32),
+            ],
           ),
         ),
       ),
