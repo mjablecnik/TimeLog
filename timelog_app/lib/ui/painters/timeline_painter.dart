@@ -24,7 +24,7 @@ class TimelinePainter extends CustomPainter {
   static const double _markerAreaHeight = 16;
   static const double _barCornerRadius = 6;
   static const double _minBlockWidth = 3;
-  static const int _defaultStartHour = 6;
+  static const int _defaultStartHour = 0;
   static const int _defaultEndHour = 24;
 
   const TimelinePainter({
