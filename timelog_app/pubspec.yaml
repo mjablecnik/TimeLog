@@ -37,6 +37,7 @@ dev_dependencies:
   json_serializable: ^6.9.2
   riverpod_generator: ^2.6.1
   flutter_launcher_icons: ^0.14.4
+  dart_check: ^0.4.0
 
 flutter_launcher_icons:
   android: true

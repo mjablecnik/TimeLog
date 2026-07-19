@@ -269,7 +269,12 @@ class RecurringReminderService {
           priority: Priority.high,
           sound: RawResourceAndroidNotificationSound(reminderSoundResourceName),
         ),
-        iOS: DarwinNotificationDetails(sound: reminderSoundFileName),
+        iOS: DarwinNotificationDetails(
+          sound: reminderSoundFileName,
+          presentAlert: true,
+          presentSound: true,
+          presentBadge: false,
+        ),
       ),
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
     );
