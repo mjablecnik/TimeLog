@@ -70,7 +70,14 @@ void main() async {
   } else {
     final launchReminderId = parseReminderIdFromPayload(launchPayload);
     if (launchReminderId != null) {
-      container.read(pendingReminderActionProvider.notifier).state = launchReminderId;
+      // Only process the launch payload once — iOS returns the same
+      // launch details on every call until the app is fully relaunched
+      // with a different intent.
+      final lastHandledLaunch = prefs.getInt('handled_launch_reminder_id');
+      if (lastHandledLaunch != launchReminderId) {
+        await prefs.setInt('handled_launch_reminder_id', launchReminderId);
+        container.read(pendingReminderActionProvider.notifier).state = launchReminderId;
+      }
     }
   }
 

@@ -279,7 +279,7 @@ class SettingsScreen extends ConsumerWidget {
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          'Testovací notifikace (za 2 min)',
+                          'Testovací notifikace (za 5 s)',
                           style: TextStyle(
                             color: theme.text,
                             fontFamily: 'Sora',
