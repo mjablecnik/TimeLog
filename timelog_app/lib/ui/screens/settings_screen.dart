@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:timezone/timezone.dart' as tz;
 
 import '../../providers/database_provider.dart';
+import '../../providers/reminder_action_provider.dart';
 import '../../providers/reminder_provider.dart';
 import '../../providers/theme_provider.dart';
 import '../../services/recurring_reminder_service.dart';
@@ -69,7 +70,7 @@ class SettingsScreen extends ConsumerWidget {
 
     final reminder = reminders.first;
     final plugin = ref.read(reminderServiceProvider).plugin;
-    final scheduledTime = tz.TZDateTime.now(tz.local).add(const Duration(minutes: 2));
+    final scheduledTime = tz.TZDateTime.now(tz.local).add(const Duration(seconds: 5));
 
     await plugin.zonedSchedule(
       id: 9999,
@@ -96,7 +97,7 @@ class SettingsScreen extends ConsumerWidget {
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Testovací notifikace přijde za 2 minuty.'),
+          content: Text('Testovací notifikace přijde za 5 sekund.'),
         ),
       );
     }
@@ -279,6 +280,54 @@ class SettingsScreen extends ConsumerWidget {
                       Expanded(
                         child: Text(
                           'Testovací notifikace (za 2 min)',
+                          style: TextStyle(
+                            color: theme.text,
+                            fontFamily: 'Sora',
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16),
+              decoration: BoxDecoration(
+                color: theme.panel,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: theme.border),
+              ),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(12),
+                onTap: () async {
+                  final db = ref.read(appDatabaseProvider);
+                  final reminders = await db.getAllReminders();
+                  if (reminders.isEmpty) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Žádná připomínka.')),
+                      );
+                    }
+                    return;
+                  }
+                  ref.read(pendingReminderActionProvider.notifier).state =
+                      reminders.first.id;
+                },
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.open_in_new, color: theme.dim, size: 20),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          'Zobrazit modal přímo (debug)',
                           style: TextStyle(
                             color: theme.text,
                             fontFamily: 'Sora',

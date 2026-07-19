@@ -12,6 +12,11 @@ import UserNotifications
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
     ) -> Bool {
         GeneratedPluginRegistrant.register(with: self)
+
+        // Ensure this AppDelegate receives notification delegate callbacks
+        // (willPresent for foreground display, didReceive for tap handling).
+        UNUserNotificationCenter.current().delegate = self
+
         setupLiveActivityChannel()
         setupNotificationChannel()
         observeWidgetActions()
@@ -221,5 +226,25 @@ import UserNotifications
     override func applicationDidBecomeActive(_ application: UIApplication) {
         super.applicationDidBecomeActive(application)
         handlePendingWidgetAction()
+    }
+
+    // MARK: - UNUserNotificationCenterDelegate
+
+    /// Show notifications even when app is in foreground.
+    override func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        willPresent notification: UNNotification,
+        withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
+    ) {
+        completionHandler([.banner, .sound])
+    }
+
+    /// Forward notification taps to flutter_local_notifications plugin.
+    override func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        didReceive response: UNNotificationResponse,
+        withCompletionHandler completionHandler: @escaping () -> Void
+    ) {
+        super.userNotificationCenter(center, didReceive: response, withCompletionHandler: completionHandler)
     }
 }
