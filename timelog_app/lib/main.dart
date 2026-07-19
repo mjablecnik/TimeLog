@@ -35,12 +35,6 @@ void main() async {
     );
   }
 
-  // Deferred to after the first frame, since the widget tree (and therefore
-  // navigatorKey) isn't mounted yet at cold-launch time.
-  void openReminderActionOnFirstFrame(int reminderId) {
-    WidgetsBinding.instance.addPostFrameCallback((_) => openReminderAction(reminderId));
-  }
-
   await reminderService.initialize(
     onNotificationTap: (payload) {
       if (payload == ReminderService.startTimerPayload) {
@@ -54,15 +48,17 @@ void main() async {
     },
   );
 
+  // Determine if the app was cold-launched by tapping a recurring reminder
+  // notification. If so, we pass the reminder ID to the app widget so it can
+  // show the ReminderActionScreen immediately as an overlay on first build,
+  // avoiding a race with navigatorKey not yet being attached.
+  int? coldLaunchReminderId;
   final launchPayload = await reminderService.getLaunchPayload();
   if (launchPayload == ReminderService.startTimerPayload) {
     await container.read(timerProvider.notifier).restored;
     autoStartIfIdle();
   } else {
-    final launchReminderId = parseReminderIdFromPayload(launchPayload);
-    if (launchReminderId != null) {
-      openReminderActionOnFirstFrame(launchReminderId);
-    }
+    coldLaunchReminderId = parseReminderIdFromPayload(launchPayload);
   }
 
   await rescheduleReminderIfEnabled(reminderService);
@@ -71,7 +67,7 @@ void main() async {
   runApp(
     UncontrolledProviderScope(
       container: container,
-      child: const TimeLogApp(),
+      child: TimeLogApp(coldLaunchReminderId: coldLaunchReminderId),
     ),
   );
 }

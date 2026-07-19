@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:timezone/timezone.dart' as tz;
 
+import '../../providers/database_provider.dart';
 import '../../providers/reminder_provider.dart';
 import '../../providers/theme_provider.dart';
+import '../../services/recurring_reminder_service.dart';
 import 'reminder_settings_screen.dart';
 
 String _formatTime(TimeOfDay time) {
@@ -45,6 +49,56 @@ class SettingsScreen extends ConsumerWidget {
     );
     if (picked != null) {
       await ref.read(reminderProvider.notifier).setTime(picked);
+    }
+  }
+
+  Future<void> _scheduleTestNotification(BuildContext context, WidgetRef ref) async {
+    final db = ref.read(appDatabaseProvider);
+    final reminders = await db.getAllReminders();
+
+    if (reminders.isEmpty) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Nejdříve vytvořte alespoň jednu opakovanou připomínku.'),
+          ),
+        );
+      }
+      return;
+    }
+
+    final reminder = reminders.first;
+    final plugin = ref.read(reminderServiceProvider).plugin;
+    final scheduledTime = tz.TZDateTime.now(tz.local).add(const Duration(minutes: 2));
+
+    await plugin.zonedSchedule(
+      id: 9999,
+      scheduledDate: scheduledTime,
+      title: '🧪 Test: ${reminder.name}',
+      body: RecurringReminderService.buildNotificationBody(reminder.description),
+      payload: '$recurringReminderPayloadPrefix${reminder.id}',
+      notificationDetails: const NotificationDetails(
+        android: AndroidNotificationDetails(
+          RecurringReminderService.channelId,
+          RecurringReminderService.channelName,
+          importance: Importance.high,
+          priority: Priority.high,
+        ),
+        iOS: DarwinNotificationDetails(
+          presentAlert: true,
+          presentSound: true,
+          presentBadge: false,
+        ),
+      ),
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+    );
+
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Testovací notifikace přijde za 2 minuty.'),
+        ),
+      );
     }
   }
 
@@ -184,6 +238,54 @@ class SettingsScreen extends ConsumerWidget {
                         ),
                       ),
                       Icon(Icons.chevron_right, color: theme.dim),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Text(
+                'Testování',
+                style: TextStyle(
+                  color: theme.dim,
+                  fontFamily: 'Sora',
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16),
+              decoration: BoxDecoration(
+                color: theme.panel,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: theme.border),
+              ),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(12),
+                onTap: () => _scheduleTestNotification(context, ref),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.bug_report, color: theme.dim, size: 20),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          'Testovací notifikace (za 2 min)',
+                          style: TextStyle(
+                            color: theme.text,
+                            fontFamily: 'Sora',
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ),
