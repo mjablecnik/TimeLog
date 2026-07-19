@@ -29,10 +29,21 @@ void main() async {
   }
 
   // Pushed directly (app is already running, so navigatorKey is attached).
+  // If the navigator isn't ready yet (e.g. app is resuming from background),
+  // retry on the next frame.
   void openReminderAction(int reminderId) {
-    navigatorKey.currentState?.push(
-      MaterialPageRoute(builder: (_) => ReminderActionScreen(reminderId: reminderId)),
-    );
+    final nav = navigatorKey.currentState;
+    if (nav != null) {
+      nav.push(
+        MaterialPageRoute(builder: (_) => ReminderActionScreen(reminderId: reminderId)),
+      );
+    } else {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        navigatorKey.currentState?.push(
+          MaterialPageRoute(builder: (_) => ReminderActionScreen(reminderId: reminderId)),
+        );
+      });
+    }
   }
 
   await reminderService.initialize(
