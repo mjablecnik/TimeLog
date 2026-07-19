@@ -1,43 +1,46 @@
-# Flutter Local Notifications — iOS Setup Guide & Troubleshooting
+# Flutter Local Notifications on iOS — Complete Setup Guide
 
-This document describes the full notification pipeline in this Flutter app, common pitfalls on iOS, and what must be in place for notification taps to work reliably.
+A practical guide for setting up `flutter_local_notifications` on iOS so that:
 
----
-
-## Architecture Overview
-
-The app uses `flutter_local_notifications` for scheduling recurring reminder notifications. When a user taps a notification, the app should show a modal (ReminderActionSheet) regardless of whether the app was:
-
-- In the **foreground** (active)
-- In the **background** (suspended)
-- **Terminated** (cold launch)
-
-### The Flow
-
-```
-Notification tap (iOS native)
-  → UNUserNotificationCenterDelegate.didReceive (AppDelegate.swift)
-    → FlutterAppDelegate forwards to plugin
-      → flutter_local_notifications calls onDidReceiveNotificationResponse (Dart)
-        → Sets pendingReminderActionProvider
-          → ref.listen in _MainShell triggers showModalBottomSheet
-```
+- Notifications display when the app is in the foreground
+- Tapping a notification triggers a Dart callback regardless of app state (foreground, background, terminated)
 
 ---
 
-## Critical iOS Native Setup (AppDelegate.swift)
+## The iOS Notification Delivery Model
 
-### 1. Set the delegate explicitly
+iOS distinguishes three app states when a notification arrives or is tapped:
+
+| App State | Notification Banner | Tap Delivery Mechanism |
+|-----------|-------------------|----------------------|
+| **Foreground** | NOT shown by default | `willPresent` delegate method |
+| **Background** (suspended) | Shown | `didReceive` delegate method → Dart callback |
+| **Terminated** | Shown | `getNotificationAppLaunchDetails()` on next launch |
+
+Understanding this is critical. Most issues come from assuming all three states behave the same way.
+
+---
+
+## Required iOS Native Setup (AppDelegate.swift)
+
+### 1. Set the notification center delegate
 
 ```swift
-UNUserNotificationCenter.current().delegate = self
+override func application(
+    _ application: UIApplication,
+    didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
+) -> Bool {
+    GeneratedPluginRegistrant.register(with: self)
+
+    UNUserNotificationCenter.current().delegate = self
+
+    return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+}
 ```
 
-**Where:** In `application(_:didFinishLaunchingWithOptions:)`, BEFORE `super.application(...)`.
+**This is the most common source of bugs.** Without explicitly setting `delegate = self`, iOS has no object to deliver notification events to. Taps will silently do nothing.
 
-**Why:** Without this, iOS has no delegate to deliver notification events to. Taps simply get swallowed. This is the #1 cause of "notification tap does nothing."
-
-### 2. Implement willPresent (foreground display)
+### 2. Show notifications in foreground
 
 ```swift
 override func userNotificationCenter(
@@ -49,9 +52,9 @@ override func userNotificationCenter(
 }
 ```
 
-**Why:** iOS does NOT show notification banners when the app is in the foreground by default. Without this override, scheduled notifications are silently delivered but invisible to the user.
+Without this, scheduled notifications are delivered silently when the app is active — the user sees nothing.
 
-### 3. Implement didReceive (tap forwarding)
+### 3. Forward taps to the Flutter plugin
 
 ```swift
 override func userNotificationCenter(
@@ -63,119 +66,195 @@ override func userNotificationCenter(
 }
 ```
 
-**Why:** This forwards the tap event to `FlutterAppDelegate`, which then passes it to `flutter_local_notifications` plugin. The plugin calls the Dart `onDidReceiveNotificationResponse` callback. Without `super`, the plugin never receives the tap.
+Calling `super` passes the tap event to `FlutterAppDelegate`, which routes it to `flutter_local_notifications`. The plugin then calls your Dart `onDidReceiveNotificationResponse` callback.
+
+**If you forget `super`, the Dart callback will never fire for taps from background.**
 
 ---
 
-## Dart-Side Setup (main.dart)
-
-### Plugin Initialization
+## Dart-Side Plugin Initialization
 
 ```dart
-await reminderService.initialize(
-  onNotificationTap: (payload) {
-    final reminderId = parseReminderIdFromPayload(payload);
-    if (reminderId != null) {
-      // Persist so the value survives even if Dart is mid-resume
-      SharedPreferences.getInstance().then((prefs) {
-        prefs.setInt(kPendingReminderIdKey, reminderId);
-      });
-      // Also set provider for immediate foreground handling
-      container.read(pendingReminderActionProvider.notifier).state = reminderId;
-    }
+await flutterLocalNotificationsPlugin.initialize(
+  settings,
+  onDidReceiveNotificationResponse: (response) {
+    // Called when user taps notification (foreground + background)
+    handleNotificationTap(response.payload);
   },
+  onDidReceiveBackgroundNotificationResponse: backgroundHandler,
 );
 ```
 
-### Key Points
+### Key rules:
 
-- The callback fires on the **main isolate** for foreground and background taps (iOS keeps Dart alive when backgrounded).
-- For cold launch, use `getNotificationAppLaunchDetails()` to retrieve the payload.
-- Always persist to SharedPreferences as a safety net — the provider alone may not survive edge cases.
-
----
-
-## UI-Side Setup (app.dart — _MainShell)
-
-### Showing the modal
-
-The app uses two complementary mechanisms:
-
-1. **`ref.listen`** on `pendingReminderActionProvider` — catches state changes when the widget tree is active.
-2. **`didChangeAppLifecycleState(resumed)`** — reads from SharedPreferences on resume (covers case where provider change was missed during suspension).
-
-### Why modal instead of Navigator.push?
-
-`Navigator.push` requires `navigatorKey.currentState` to be non-null. When the app returns from background, there's a timing window where the navigator isn't ready. `showModalBottomSheet` uses the widget's own `context` which is always available — same pattern the timer uses for its description sheet.
+- `onDidReceiveNotificationResponse` fires on the **main isolate** for both foreground and background taps (on iOS, the Dart isolate stays alive when backgrounded)
+- `onDidReceiveBackgroundNotificationResponse` must be a **top-level function** — it runs in a separate isolate on Android (on iOS it's less relevant but still required to be registered)
+- For **terminated app** taps, use `getNotificationAppLaunchDetails()` after initialization
 
 ---
 
-## Common Pitfalls
+## Handling the Terminated App Case
 
-| Problem | Cause | Fix |
-|---------|-------|-----|
-| Notification tap does nothing | `UNUserNotificationCenter.delegate` not set | Add `UNUserNotificationCenter.current().delegate = self` in AppDelegate |
-| Notification doesn't show in foreground | Missing `willPresent` override | Implement it returning `[.banner, .sound]` |
-| Tap works in foreground but not background | `didReceive` not calling `super` | Ensure `super.userNotificationCenter(center, didReceive:...)` is called |
-| Navigator.push silently fails | `navigatorKey.currentState` is null during resume | Use `showModalBottomSheet` with widget context instead |
-| Provider state change missed on resume | Widget tree inactive when state was set | Also persist to SharedPreferences + check on `resumed` lifecycle event |
-| `getNotificationAppLaunchDetails` returns false | App was backgrounded, not terminated | This API only works for cold launch. Use `onDidReceiveNotificationResponse` for background |
+```dart
+final details = await plugin.getNotificationAppLaunchDetails();
+if (details?.didNotificationLaunchApp ?? false) {
+  final payload = details!.notificationResponse?.payload;
+  // Process the tap
+}
+```
 
----
+### Warning: `getNotificationAppLaunchDetails` quirks on iOS
 
-## Differences: Timer vs Recurring Reminders
-
-The timer "works from background" but uses a completely different mechanism:
-
-- Timer has its own `Timer.periodic` running in Dart
-- On resume, `TimerNotifier.didChangeAppLifecycleState(resumed)` recalculates time from persisted `endAt`
-- Timer changes state to `logging` internally — no notification tap needed
-- `TimerScreen` uses `ref.listen` on `timerProvider` to show the description sheet
-
-The timer does NOT rely on notification tap callbacks at all. Its notification is just an alert — the state transition happens internally.
-
-Recurring reminders have no internal timer. The ONLY trigger is the notification tap → callback → modal. That's why the native delegate setup is absolutely critical for them.
+- Returns the same launch details on **every call** until the app is relaunched with a different intent
+- Only returns `didNotificationLaunchApp = true` when the app was **terminated** — NOT when it was merely backgrounded
+- You must deduplicate: track the last processed payload to avoid re-processing on hot restart or subsequent calls
 
 ---
 
-## Testing Checklist
+## Common Pitfalls & Solutions
 
-When modifying notification behavior, verify ALL these scenarios:
+### Notification tap does nothing
 
-- [ ] App in foreground → notification banner appears
-- [ ] App in foreground → tap banner → modal appears
-- [ ] App in background → tap notification → app resumes + modal appears
-- [ ] App terminated → tap notification → app launches + modal appears
-- [ ] Multiple rapid taps → only one modal opens (deduplication)
-- [ ] Modal "Hotovo" → marks done, cancels remaining notifications for today
-- [ ] Modal "Odložit" → dismisses modal, next scheduled notification still fires
+**Cause:** `UNUserNotificationCenter.current().delegate` is not set.
 
-### Quick Test Button
+**Fix:** Add `UNUserNotificationCenter.current().delegate = self` in `didFinishLaunchingWithOptions`, before `super.application(...)`.
 
-Settings screen has "Testovací notifikace (za 5 sekund)" for rapid iteration. Also "Zobrazit modal přímo (debug)" to verify the modal works independently of the notification pipeline.
+### Notification doesn't appear when app is in foreground
+
+**Cause:** iOS suppresses notification banners for the active app by default.
+
+**Fix:** Implement `willPresent` returning `[.banner, .sound]`.
+
+### Tap works in foreground but not from background
+
+**Cause:** `didReceive` override is missing or doesn't call `super`.
+
+**Fix:** Add the `didReceive` override and ensure it calls `super.userNotificationCenter(center, didReceive: response, withCompletionHandler: completionHandler)`.
+
+### Callback fires but UI doesn't react
+
+**Cause:** The Dart isolate may have been suspended when the callback fires. State changes to in-memory objects (providers, streams, variables) may be lost or arrive before the widget tree resumes rendering.
+
+**Fix:** Persist the payload to `SharedPreferences` in the callback. On app resume (`didChangeAppLifecycleState == resumed`), read from SharedPreferences with `prefs.reload()` to get fresh data.
+
+### Notification action triggers twice
+
+**Cause:** Multiple detection paths (callback + lifecycle resume + launch details) all fire for the same tap.
+
+**Fix:** Use a boolean guard (e.g. `_actionInProgress`) that blocks duplicate processing. Clear it when the resulting action completes (e.g. when a screen is popped).
+
+### `getNotificationAppLaunchDetails` fires on every app start
+
+**Cause:** iOS caches the launch intent. The API returns the same result repeatedly.
+
+**Fix:** Store the last processed payload ID in SharedPreferences. Skip processing if it matches.
 
 ---
 
-## File Locations
+## Recommended Architecture
 
-| File | Responsibility |
-|------|---------------|
-| `ios/Runner/AppDelegate.swift` | Native notification delegate setup |
-| `lib/services/reminder_service.dart` | Plugin initialization, `onNotificationTap` callback registration |
-| `lib/services/recurring_reminder_service.dart` | Scheduling logic, payload format |
-| `lib/main.dart` | Wires callback → provider + SharedPreferences |
-| `lib/app.dart` | `_MainShell` — lifecycle observer + `ref.listen` → shows modal |
-| `lib/ui/widgets/reminder_action_sheet.dart` | The modal UI (Done/Snooze) |
-| `lib/providers/reminder_action_provider.dart` | `pendingReminderActionProvider` + action state |
+```
+Notification tap (iOS native)
+  → AppDelegate.didReceive (calls super)
+    → FlutterAppDelegate forwards to plugin
+      → onDidReceiveNotificationResponse (Dart callback)
+        → Persist payload to SharedPreferences (safety net)
+        → Set in-memory state (provider/stream/variable)
+          → UI reacts and shows appropriate screen
+
+App resume from background:
+  → didChangeAppLifecycleState(resumed)
+    → Read SharedPreferences (with reload())
+      → If pending payload exists → clear it → show screen
+
+Cold launch:
+  → getNotificationAppLaunchDetails()
+    → If didNotificationLaunchApp → process payload (deduplicated)
+```
+
+This triple-path approach covers all edge cases:
+- **Provider/stream** handles the instant foreground case
+- **SharedPreferences on resume** handles the case where the callback fires but UI doesn't react
+- **Launch details** handles the terminated app case
+
+---
+
+## Comparing Internal Timers vs Notification Taps
+
+If your app has features triggered by internal timers (countdown, alarms), those will "just work" from background because:
+
+- The Dart `Timer` keeps running (or state is restored from persisted `endAt` on resume)
+- State changes happen internally — no external callback dependency
+- The notification is just an alert; the logic doesn't depend on the user tapping it
+
+Features that rely **solely** on notification taps (like "confirm task completion") are fundamentally different:
+- There is no internal trigger — the ONLY entry point is the tap callback
+- If the native delegate setup is broken, there is zero fallback
+- This makes the `AppDelegate.swift` setup absolutely critical for these features
+
+---
+
+## Minimal AppDelegate.swift Template
+
+```swift
+import Flutter
+import UIKit
+import UserNotifications
+
+@main
+@objc class AppDelegate: FlutterAppDelegate {
+
+    override func application(
+        _ application: UIApplication,
+        didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
+    ) -> Bool {
+        GeneratedPluginRegistrant.register(with: self)
+        UNUserNotificationCenter.current().delegate = self
+        return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+    }
+
+    // Show notification banners even when app is in foreground
+    override func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        willPresent notification: UNNotification,
+        withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
+    ) {
+        completionHandler([.banner, .sound])
+    }
+
+    // Forward notification taps to flutter_local_notifications plugin
+    override func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        didReceive response: UNNotificationResponse,
+        withCompletionHandler completionHandler: @escaping () -> Void
+    ) {
+        super.userNotificationCenter(center, didReceive: response, withCompletionHandler: completionHandler)
+    }
+}
+```
+
+---
+
+## Quick Checklist
+
+- [ ] `UNUserNotificationCenter.current().delegate = self` in AppDelegate
+- [ ] `willPresent` override returns `[.banner, .sound]`
+- [ ] `didReceive` override calls `super`
+- [ ] Dart plugin initialized with `onDidReceiveNotificationResponse`
+- [ ] Cold launch handled via `getNotificationAppLaunchDetails()`
+- [ ] Launch details deduplicated (not processed twice)
+- [ ] Payload persisted to SharedPreferences as fallback
+- [ ] Resume lifecycle checks SharedPreferences with `reload()`
+- [ ] Guard against duplicate action triggers
 
 ---
 
 ## TL;DR
 
-If notification taps stop working on iOS, check AppDelegate.swift first:
+If notification taps aren't working on iOS, check `AppDelegate.swift` first. Three lines solve 90% of problems:
 
-1. Is `UNUserNotificationCenter.current().delegate = self` set?
-2. Is `willPresent` implemented (for foreground)?
-3. Is `didReceive` calling `super` (for tap forwarding)?
+1. `UNUserNotificationCenter.current().delegate = self`
+2. `willPresent` → `completionHandler([.banner, .sound])`
+3. `didReceive` → `super.userNotificationCenter(...)`
 
-These three lines are the foundation. Everything else is secondary.
+Everything else is secondary.
