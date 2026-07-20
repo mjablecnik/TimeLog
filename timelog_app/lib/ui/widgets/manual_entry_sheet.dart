@@ -164,7 +164,7 @@ class _ManualEntrySheetState extends ConsumerState<ManualEntrySheet> {
         return;
       }
 
-      final project = isWorkActivityType(_selectedType)
+      final project = hasProjectField(_selectedType)
           ? (_projectController?.text.trim() ?? '')
           : '';
       final entertainmentType = isEntertainmentActivityType(_selectedType)
@@ -349,7 +349,7 @@ class _ManualEntrySheetState extends ConsumerState<ManualEntrySheet> {
                         }).toList(),
                       ),
                     ],
-                    if (isWorkActivityType(_selectedType)) ...[
+                    if (hasProjectField(_selectedType)) ...[
                       const SizedBox(height: 16),
                       Container(
                         decoration: BoxDecoration(

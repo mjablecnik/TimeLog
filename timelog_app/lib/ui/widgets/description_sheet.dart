@@ -192,7 +192,7 @@ class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
   Future<void> _savePrefillAndResume() async {
     setState(() => _saving = true);
     final notifier = ref.read(timerProvider.notifier);
-    final project = isWorkActivityType(_selectedType)
+    final project = hasProjectField(_selectedType)
         ? _projectController?.text.trim()
         : null;
     final entertainmentType = isEntertainmentActivityType(_selectedType)
@@ -224,7 +224,7 @@ class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
         return;
       }
 
-      final project = isWorkActivityType(_selectedType)
+      final project = hasProjectField(_selectedType)
           ? (_projectController?.text.trim() ?? '')
           : '';
       final entertainmentType = isEntertainmentActivityType(_selectedType)
@@ -365,7 +365,7 @@ class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
                       );
                     }).toList(),
                   ),
-                  if (isWorkActivityType(_selectedType)) ...[
+                  if (hasProjectField(_selectedType)) ...[
                     const SizedBox(height: 16),
                     Container(
                       decoration: BoxDecoration(

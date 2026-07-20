@@ -47,7 +47,9 @@ DateTime _rangeEnd(StatsPeriod period, DateTime start) {
 
 StatsData _computeStats(List<TimeEntry> entries, StatsPeriod period) {
   final byActivityType = <String, Duration>{};
-  final byProject = <String, Duration>{};
+  // Key: "activityType\x00projectName" to keep entries unique per type
+  final projectMap = <String, Duration>{};
+  final projectTypes = <String, String>{};
   final byEntertainmentType = <String, Duration>{};
   var totalTracked = Duration.zero;
 
@@ -64,12 +66,10 @@ StatsData _computeStats(List<TimeEntry> entries, StatsPeriod period) {
     );
 
     final project = entry.project;
-    if (isWorkActivityType(entry.activityType) && project != null && project.isNotEmpty) {
-      byProject.update(
-        project,
-        (value) => value + duration,
-        ifAbsent: () => duration,
-      );
+    if (hasProjectField(entry.activityType) && project != null && project.isNotEmpty) {
+      final key = '${entry.activityType}\x00$project';
+      projectMap.update(key, (value) => value + duration, ifAbsent: () => duration);
+      projectTypes[key] = entry.activityType;
     }
 
     final entertainmentType = entry.entertainmentType;
@@ -84,6 +84,16 @@ StatsData _computeStats(List<TimeEntry> entries, StatsPeriod period) {
     }
   }
 
+  final projectStats = projectMap.entries.map((e) {
+    final name = e.key.split('\x00')[1];
+    return ProjectStat(
+      name: name,
+      activityType: projectTypes[e.key]!,
+      duration: e.value,
+    );
+  }).toList()
+    ..sort((a, b) => b.duration.compareTo(a.duration));
+
   final wakingHours = period == StatsPeriod.daily ? 16 : 16 * 7;
   final untracked = Duration(hours: wakingHours) - totalTracked;
 
@@ -91,7 +101,7 @@ StatsData _computeStats(List<TimeEntry> entries, StatsPeriod period) {
     totalTracked: totalTracked,
     untrackedTime: untracked.isNegative ? Duration.zero : untracked,
     byActivityType: byActivityType,
-    byProject: byProject,
+    byProject: projectStats,
     byEntertainmentType: byEntertainmentType,
     entries: entries,
   );

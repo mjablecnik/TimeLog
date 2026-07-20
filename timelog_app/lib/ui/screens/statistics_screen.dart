@@ -427,8 +427,7 @@ class _StatsBody extends StatelessWidget {
     final isDark = theme.themeKey != AppTheme.paper;
     final typeEntries = stats.byActivityType.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
-    final projectEntries = stats.byProject.entries.toList()
-      ..sort((a, b) => b.value.compareTo(a.value));
+    final projectEntries = stats.byProject;
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
@@ -473,9 +472,18 @@ class _StatsBody extends StatelessWidget {
               padding: const EdgeInsets.only(bottom: 8),
               child: Row(
                 children: [
+                  Container(
+                    width: 8,
+                    height: 8,
+                    margin: const EdgeInsets.only(right: 8),
+                    decoration: BoxDecoration(
+                      color: activityTypeColor(entry.activityType, isDark: isDark),
+                      shape: BoxShape.circle,
+                    ),
+                  ),
                   Expanded(
                     child: Text(
-                      entry.key,
+                      entry.name,
                       style: TextStyle(
                         color: theme.text,
                         fontFamily: 'Sora',
@@ -486,7 +494,7 @@ class _StatsBody extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    _formatDuration(entry.value),
+                    _formatDuration(entry.duration),
                     style: TextStyle(
                       color: theme.dim,
                       fontFamily: 'Sora',

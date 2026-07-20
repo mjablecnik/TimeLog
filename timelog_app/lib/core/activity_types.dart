@@ -17,6 +17,13 @@ const List<String> workActivityTypes = ['Práce'];
 
 bool isWorkActivityType(String type) => workActivityTypes.contains(type);
 
+/// Activity types that represent housework and can optionally have a project.
+bool isHouseworkActivityType(String type) => type == 'Domácí práce';
+
+/// Whether this activity type supports a project field.
+bool hasProjectField(String type) =>
+    isWorkActivityType(type) || isHouseworkActivityType(type);
+
 /// Sub-type choices shown when the "Zábava" activity type is selected.
 const List<String> entertainmentTypes = ['Aktivní zábava', 'Pasivní zábava'];
 
