@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'main.dart' show kPendingReminderIdKey;
+import 'providers/recurring_reminders_provider.dart';
 import 'providers/reminder_action_provider.dart';
 import 'providers/statistics_provider.dart';
 import 'providers/theme_provider.dart';
@@ -71,6 +72,9 @@ class _MainShellState extends ConsumerState<_MainShell> with WidgetsBindingObser
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       _checkPersistedPendingReminder();
+      // Reschedule recurring reminder notifications on resume so that
+      // slots beyond the original 6-hour lookahead window get scheduled.
+      ref.read(recurringReminderServiceProvider).rescheduleAll();
     }
   }
 
