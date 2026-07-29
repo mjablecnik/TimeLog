@@ -297,7 +297,13 @@ class _EditSheetState extends ConsumerState<EditSheet> {
                             elevation: 4,
                             borderRadius: BorderRadius.circular(12),
                             color: theme.panel,
-                            child: ConstrainedBox(
+                            surfaceTintColor: Colors.transparent,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: theme.panel,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: theme.border),
+                              ),
                               constraints: const BoxConstraints(maxHeight: 200),
                               child: ListView.builder(
                                 shrinkWrap: true,
