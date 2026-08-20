@@ -7,6 +7,7 @@ import '../../core/activity_types.dart';
 import '../../core/theme.dart';
 import '../../data/database.dart';
 import '../../providers/database_provider.dart';
+import '../../providers/task_providers.dart';
 import '../../providers/timer_provider.dart';
 
 const _lastActivityTypeKey = 'last_activity_type';
@@ -70,7 +71,7 @@ class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
   }
 
   Future<void> _loadKnownProjects() async {
-    final projects = await ref.read(projectServiceProvider).getKnownProjects();
+    final projects = await ref.read(autocompleteProjectsProvider.future);
     if (mounted) setState(() => _knownProjects = projects);
   }
 

@@ -7,6 +7,7 @@ import '../../core/theme.dart';
 import '../../data/database.dart';
 import '../../providers/database_provider.dart';
 import '../../providers/history_provider.dart' show logicalDay;
+import '../../providers/task_providers.dart';
 
 class ManualEntrySheet extends ConsumerStatefulWidget {
   final AppThemeData theme;
@@ -85,7 +86,7 @@ class _ManualEntrySheetState extends ConsumerState<ManualEntrySheet> {
   }
 
   Future<void> _loadKnownProjects() async {
-    final projects = await ref.read(projectServiceProvider).getKnownProjects();
+    final projects = await ref.read(autocompleteProjectsProvider.future);
     if (mounted) setState(() => _knownProjects = projects);
   }
 

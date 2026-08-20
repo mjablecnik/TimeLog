@@ -7,6 +7,7 @@ import 'providers/reminder_action_provider.dart';
 import 'providers/statistics_provider.dart';
 import 'providers/theme_provider.dart';
 import 'ui/screens/timer_screen.dart';
+import 'ui/screens/tasks_screen.dart';
 import 'ui/screens/history_screen.dart';
 import 'ui/screens/statistics_screen.dart';
 import 'ui/screens/settings_screen.dart';
@@ -47,6 +48,7 @@ class _MainShellState extends ConsumerState<_MainShell> with WidgetsBindingObser
 
   static const List<Widget> _screens = [
     TimerScreen(),
+    TasksScreen(),
     HistoryScreen(),
     StatisticsScreen(),
     SettingsScreen(),
@@ -136,7 +138,7 @@ class _MainShellState extends ConsumerState<_MainShell> with WidgetsBindingObser
       bottomNavigationBar: AppBottomNav(
         selectedIndex: _selectedIndex,
         onTap: (index) {
-          if (index == 2) {
+          if (index == 3) {
             ref.invalidate(statisticsProvider);
           }
           setState(() => _selectedIndex = index);

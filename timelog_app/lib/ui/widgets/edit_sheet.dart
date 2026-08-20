@@ -6,6 +6,7 @@ import '../../core/activity_types.dart';
 import '../../core/theme.dart';
 import '../../data/database.dart';
 import '../../providers/database_provider.dart';
+import '../../providers/task_providers.dart';
 
 class EditSheet extends ConsumerStatefulWidget {
   final AppThemeData theme;
@@ -75,7 +76,7 @@ class _EditSheetState extends ConsumerState<EditSheet> {
   }
 
   Future<void> _loadKnownProjects() async {
-    final projects = await ref.read(projectServiceProvider).getKnownProjects();
+    final projects = await ref.read(autocompleteProjectsProvider.future);
     if (mounted) setState(() => _knownProjects = projects);
   }
 
