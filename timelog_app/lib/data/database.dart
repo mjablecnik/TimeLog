@@ -7,18 +7,26 @@ import 'package:path_provider/path_provider.dart';
 
 import 'completion_record.dart';
 import 'recurring_reminder.dart';
+import 'task.dart';
+import 'task_project.dart';
 import 'time_entry.dart';
 
 part 'database.g.dart';
 
-@DriftDatabase(tables: [TimeEntries, RecurringReminders, CompletionRecords])
+@DriftDatabase(tables: [
+  TimeEntries,
+  RecurringReminders,
+  CompletionRecords,
+  TaskProjects,
+  Tasks,
+])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -48,6 +56,10 @@ class AppDatabase extends _$AppDatabase {
           if (from < 6) {
             await m.createTable(recurringReminders);
             await m.createTable(completionRecords);
+          }
+          if (from < 7) {
+            await m.createTable(taskProjects);
+            await m.createTable(tasks);
           }
         },
       );
@@ -124,6 +136,148 @@ class AppDatabase extends _$AppDatabase {
               t.completionDate.isBiggerOrEqualValue(startDate) &
               t.completionDate.isSmallerOrEqualValue(endDate))
           ..orderBy([(t) => OrderingTerm.asc(t.completionDate)]))
+        .get();
+  }
+
+  // --- TaskProjects CRUD ---
+
+  Future<List<TaskProject>> getAllTaskProjects() {
+    return (select(taskProjects)
+          ..orderBy([
+            (t) => OrderingTerm(expression: t.name.collate(Collate.noCase)),
+          ]))
+        .get();
+  }
+
+  Stream<List<TaskProject>> watchAllTaskProjects() {
+    return (select(taskProjects)
+          ..orderBy([
+            (t) => OrderingTerm(expression: t.name.collate(Collate.noCase)),
+          ]))
+        .watch();
+  }
+
+  Future<int> insertTaskProject(TaskProjectsCompanion entry) {
+    return into(taskProjects).insert(entry);
+  }
+
+  Future<int> deleteTaskProject(int id) {
+    return (delete(taskProjects)..where((t) => t.id.equals(id))).go();
+  }
+
+  Future<List<String>> getTaskProjectNames() async {
+    final rows = await (select(taskProjects)
+          ..orderBy([
+            (t) => OrderingTerm(expression: t.name.collate(Collate.noCase)),
+          ]))
+        .get();
+    return rows.map((r) => r.name).toList();
+  }
+
+  // --- Tasks CRUD ---
+
+  Future<List<TaskItem>> getTasksForProject(
+    int? projectId, {
+    bool includeArchived = false,
+  }) {
+    final query = select(tasks)
+      ..where((t) => projectId == null
+          ? t.projectId.isNull()
+          : t.projectId.equals(projectId))
+      ..orderBy([(t) => OrderingTerm.asc(t.sortPosition)]);
+    if (!includeArchived) {
+      query.where((t) => t.isArchived.equals(false));
+    }
+    return query.get();
+  }
+
+  Stream<List<TaskItem>> watchTasksForProject(
+    int? projectId, {
+    bool includeArchived = false,
+  }) {
+    final query = select(tasks)
+      ..where((t) => projectId == null
+          ? t.projectId.isNull()
+          : t.projectId.equals(projectId))
+      ..orderBy([(t) => OrderingTerm.asc(t.sortPosition)]);
+    if (!includeArchived) {
+      query.where((t) => t.isArchived.equals(false));
+    }
+    return query.watch();
+  }
+
+  Future<int> insertTask(TasksCompanion entry) {
+    return into(tasks).insert(entry);
+  }
+
+  Future<bool> updateTaskFields(int id, TasksCompanion entry) async {
+    final rows = await (update(tasks)..where((t) => t.id.equals(id)))
+        .write(entry);
+    return rows > 0;
+  }
+
+  Future<int> deleteTask(int id) {
+    return (delete(tasks)..where((t) => t.id.equals(id))).go();
+  }
+
+  Future<void> updateTaskSortPositions(List<TaskItem> orderedTasks) async {
+    await batch((b) {
+      for (var i = 0; i < orderedTasks.length; i++) {
+        b.update(
+          tasks,
+          TasksCompanion(sortPosition: Value(i)),
+          where: (t) => t.id.equals(orderedTasks[i].id),
+        );
+      }
+    });
+  }
+
+  Future<bool> markTaskCompleted(int id, DateTime completedAt) async {
+    final rows = await (update(tasks)..where((t) => t.id.equals(id))).write(
+      TasksCompanion(
+        isCompleted: const Value(true),
+        completedAt: Value(completedAt),
+      ),
+    );
+    return rows > 0;
+  }
+
+  Future<bool> unmarkTaskCompleted(int id) async {
+    final rows = await (update(tasks)..where((t) => t.id.equals(id))).write(
+      const TasksCompanion(
+        isCompleted: Value(false),
+        completedAt: Value(null),
+      ),
+    );
+    return rows > 0;
+  }
+
+  Future<bool> archiveTask(int id) async {
+    final rows = await (update(tasks)..where((t) => t.id.equals(id))).write(
+      const TasksCompanion(isArchived: Value(true)),
+    );
+    return rows > 0;
+  }
+
+  Future<bool> unarchiveTask(int id, int newSortPosition) async {
+    final rows = await (update(tasks)..where((t) => t.id.equals(id))).write(
+      TasksCompanion(
+        isCompleted: const Value(false),
+        completedAt: const Value(null),
+        isArchived: const Value(false),
+        sortPosition: Value(newSortPosition),
+      ),
+    );
+    return rows > 0;
+  }
+
+  Future<List<TaskItem>> getExpiredCompletedTasks() async {
+    final cutoff = DateTime.now().subtract(const Duration(hours: 12));
+    return (select(tasks)
+          ..where((t) =>
+              t.isCompleted.equals(true) &
+              t.isArchived.equals(false) &
+              t.completedAt.isSmallerOrEqualValue(cutoff)))
         .get();
   }
 }
