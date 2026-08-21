@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'main.dart' show kPendingReminderIdKey;
@@ -30,6 +31,13 @@ class TimeLogApp extends ConsumerWidget {
       title: 'TimeLog',
       debugShowCheckedModeBanner: false,
       theme: theme.toMaterialTheme(),
+      locale: const Locale('cs'),
+      supportedLocales: const [Locale('cs')],
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
       home: const _MainShell(),
     );
   }
