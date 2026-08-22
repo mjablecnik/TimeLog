@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/config.dart' show statsTabIndex;
 import '../../core/theme.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../providers/history_provider.dart';
+import '../../providers/main_tab_provider.dart';
 import '../../providers/theme_provider.dart';
+import '../widgets/bottom_nav.dart';
 import '../widgets/day_navigator.dart';
 import '../widgets/day_summary.dart';
 import '../widgets/empty_state.dart';
@@ -43,6 +46,16 @@ class HistoryScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: theme.background,
+      bottomNavigationBar: AppBottomNav(
+        selectedIndex: statsTabIndex,
+        onTap: (index) {
+          Navigator.of(context).pop();
+          if (index != statsTabIndex) {
+            ref.read(mainTabIndexProvider.notifier).state = index;
+          }
+        },
+        theme: theme,
+      ),
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -59,6 +72,14 @@ class HistoryScreen extends ConsumerWidget {
                     fontFamily: 'Sora',
                     fontSize: 20,
                     fontWeight: FontWeight.w600,
+                  ),
+                ),
+                Positioned(
+                  left: 16,
+                  child: IconButton(
+                    icon: Icon(Icons.arrow_back, color: theme.text),
+                    tooltip: l10n.commonBack,
+                    onPressed: () => Navigator.of(context).pop(),
                   ),
                 ),
                 Positioned(

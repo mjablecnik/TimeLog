@@ -2,6 +2,12 @@
 /// Entries between 00:00–02:59 are counted toward the previous day.
 const int dayStartHour = 3;
 
+/// Index of the Stats tab within `_MainShellState._screens` / `AppBottomNav`
+/// (see `app.dart`) — History is reached from Stats (top-right icon), not
+/// its own tab, but stays visually "under" Stats in the bottom nav while
+/// viewing it.
+const statsTabIndex = 2;
+
 class TimerConfig {
   static const int defaultDurationMinutes = 20;
   static const int minDurationMinutes = 1;

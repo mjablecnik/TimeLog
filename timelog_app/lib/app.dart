@@ -2,16 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'core/config.dart' show statsTabIndex;
 import 'l10n/generated/app_localizations.dart';
 import 'main.dart' show kPendingReminderIdKey;
 import 'providers/locale_provider.dart';
+import 'providers/main_tab_provider.dart';
 import 'providers/recurring_reminders_provider.dart';
 import 'providers/reminder_action_provider.dart';
 import 'providers/statistics_provider.dart';
 import 'providers/theme_provider.dart';
 import 'ui/screens/timer_screen.dart';
 import 'ui/screens/tasks_screen.dart';
-import 'ui/screens/history_screen.dart';
 import 'ui/screens/statistics_screen.dart';
 import 'ui/screens/settings_screen.dart';
 import 'ui/screens/reminder_action_screen.dart';
@@ -65,13 +66,11 @@ class _MainShell extends ConsumerStatefulWidget {
 }
 
 class _MainShellState extends ConsumerState<_MainShell> with WidgetsBindingObserver {
-  int _selectedIndex = 0;
   bool _reminderActionOpen = false;
 
   static const List<Widget> _screens = [
     TimerScreen(),
     TasksScreen(),
-    HistoryScreen(),
     StatisticsScreen(),
     SettingsScreen(),
   ];
@@ -151,19 +150,21 @@ class _MainShellState extends ConsumerState<_MainShell> with WidgetsBindingObser
       }
     });
 
+    final selectedIndex = ref.watch(mainTabIndexProvider);
+
     return Scaffold(
       backgroundColor: theme.background,
       body: IndexedStack(
-        index: _selectedIndex,
+        index: selectedIndex,
         children: _screens,
       ),
       bottomNavigationBar: AppBottomNav(
-        selectedIndex: _selectedIndex,
+        selectedIndex: selectedIndex,
         onTap: (index) {
-          if (index == 3) {
+          if (index == statsTabIndex) {
             ref.invalidate(statisticsProvider);
           }
-          setState(() => _selectedIndex = index);
+          ref.read(mainTabIndexProvider.notifier).state = index;
         },
         theme: theme,
       ),
