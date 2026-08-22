@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../../providers/reminder_action_provider.dart';
 import '../../providers/theme_provider.dart';
 import 'reminder_settings_screen.dart';
@@ -58,6 +59,7 @@ class _ReminderActionScreenState extends ConsumerState<ReminderActionScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = ref.watch(themeProvider);
+    final l10n = AppLocalizations.of(context)!;
     final state = ref.watch(reminderActionProvider);
 
     if (!_loaded) {
@@ -137,7 +139,7 @@ class _ReminderActionScreenState extends ConsumerState<ReminderActionScreen> {
                         padding: const EdgeInsets.symmetric(vertical: 16),
                       ),
                       child: Text(
-                        'Odložit',
+                        l10n.reminderSnooze,
                         style: TextStyle(
                           fontFamily: 'Sora',
                           fontSize: 16,
@@ -171,7 +173,7 @@ class _ReminderActionScreenState extends ConsumerState<ReminderActionScreen> {
                               ),
                             )
                           : Text(
-                              'Hotovo',
+                              l10n.reminderDone,
                               style: TextStyle(
                                 fontFamily: 'Sora',
                                 fontSize: 16,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../../providers/timer_provider.dart';
 import '../../services/timer_service.dart';
 
@@ -68,32 +69,33 @@ class TimerControls extends ConsumerWidget {
   }
 
   Future<void> _stopWithConfirmation(BuildContext context, TimerNotifier notifier) async {
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: theme.background,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(
-          'Reset timer?',
+          l10n.timerResetTitle,
           style: TextStyle(
               color: theme.text, fontFamily: 'Sora', fontWeight: FontWeight.w600),
         ),
         content: Text(
-          'Do you really want to reset the timer?',
+          l10n.timerResetBody,
           style: TextStyle(color: theme.dim, fontFamily: 'Sora', fontSize: 14),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
             child: Text(
-              'Cancel',
+              l10n.commonCancel,
               style: TextStyle(color: theme.dim, fontFamily: 'Sora'),
             ),
           ),
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(true),
             child: Text(
-              'Reset',
+              l10n.commonReset,
               style: TextStyle(
                   color: Colors.red[400],
                   fontFamily: 'Sora',

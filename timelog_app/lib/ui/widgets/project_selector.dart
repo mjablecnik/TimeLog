@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme.dart';
 import '../../data/database.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../../providers/task_providers.dart';
 
 /// Horizontal scrollable chip bar showing all Task_Projects alphabetically,
@@ -32,6 +33,7 @@ class ProjectSelector extends ConsumerWidget {
     List<TaskProject> projects,
     int? selectedId,
   ) {
+    final l10n = AppLocalizations.of(context)!;
     return SizedBox(
       height: 44,
       child: ListView(
@@ -51,7 +53,7 @@ class ProjectSelector extends ConsumerWidget {
           ],
           _ProjectChip(
             theme: theme,
-            label: 'Nepřiřazeno',
+            label: l10n.commonUnassigned,
             isSelected: selectedId == null,
             onTap: () =>
                 ref.read(selectedTaskProjectProvider.notifier).state = null,
@@ -67,6 +69,7 @@ class ProjectSelector extends ConsumerWidget {
   }
 
   Future<void> _createProject(BuildContext context, WidgetRef ref) async {
+    final l10n = AppLocalizations.of(context)!;
     final name = await showDialog<String>(
       context: context,
       builder: (ctx) => _CreateProjectDialog(theme: theme),
@@ -78,7 +81,7 @@ class ProjectSelector extends ConsumerWidget {
     } catch (_) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Vytvoření projektu se nezdařilo.')),
+          SnackBar(content: Text(l10n.projectCreateFailed)),
         );
       }
     }
@@ -89,13 +92,14 @@ class ProjectSelector extends ConsumerWidget {
     WidgetRef ref,
     TaskProject project,
   ) async {
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: theme.background,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(
-          'Smazat projekt "${project.name}"?',
+          l10n.projectDeleteTitle(project.name),
           style: TextStyle(
             color: theme.text,
             fontFamily: 'Sora',
@@ -103,18 +107,18 @@ class ProjectSelector extends ConsumerWidget {
           ),
         ),
         content: Text(
-          'Všechny úkoly v tomto projektu budou trvale smazány.',
+          l10n.projectDeleteBody,
           style: TextStyle(color: theme.dim, fontFamily: 'Sora', fontSize: 14),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text('Zrušit', style: TextStyle(color: theme.dim, fontFamily: 'Sora')),
+            child: Text(l10n.commonCancel, style: TextStyle(color: theme.dim, fontFamily: 'Sora')),
           ),
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(true),
             child: Text(
-              'Smazat',
+              l10n.commonDelete,
               style: TextStyle(
                 color: Colors.red[400],
                 fontFamily: 'Sora',
@@ -136,7 +140,7 @@ class ProjectSelector extends ConsumerWidget {
     } catch (_) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Smazání projektu se nezdařilo.')),
+          SnackBar(content: Text(l10n.projectDeleteFailed)),
         );
       }
     }
@@ -247,11 +251,12 @@ class _CreateProjectDialogState extends State<_CreateProjectDialog> {
   @override
   Widget build(BuildContext context) {
     final theme = widget.theme;
+    final l10n = AppLocalizations.of(context)!;
     return AlertDialog(
       backgroundColor: theme.background,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       title: Text(
-        'Nový projekt',
+        l10n.projectCreateTitle,
         style: TextStyle(color: theme.text, fontFamily: 'Sora', fontWeight: FontWeight.w600),
       ),
       content: Container(
@@ -267,7 +272,7 @@ class _CreateProjectDialogState extends State<_CreateProjectDialog> {
           maxLength: 100,
           style: TextStyle(color: theme.text, fontFamily: 'Sora'),
           decoration: InputDecoration(
-            hintText: 'Název projektu',
+            hintText: l10n.projectNameFieldHint,
             hintStyle: TextStyle(color: theme.faint, fontFamily: 'Sora'),
             border: InputBorder.none,
             counterStyle: TextStyle(color: theme.faint, fontSize: 11),
@@ -281,14 +286,14 @@ class _CreateProjectDialogState extends State<_CreateProjectDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: Text('Zrušit', style: TextStyle(color: theme.dim, fontFamily: 'Sora')),
+          child: Text(l10n.commonCancel, style: TextStyle(color: theme.dim, fontFamily: 'Sora')),
         ),
         TextButton(
           onPressed: _isValid
               ? () => Navigator.of(context).pop(_controller.text.trim())
               : null,
           child: Text(
-            'Vytvořit',
+            l10n.commonCreate,
             style: TextStyle(
               color: _isValid ? theme.accent : theme.faint,
               fontFamily: 'Sora',

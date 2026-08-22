@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/date_format_utils.dart';
 import '../../core/theme.dart';
 import '../../data/database.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../../providers/task_providers.dart';
 import 'task_edit_dialog.dart';
 
@@ -25,20 +26,22 @@ class _TaskCardState extends ConsumerState<TaskCard> {
   String? _error;
 
   Future<void> _toggleComplete() async {
+    final l10n = AppLocalizations.of(context)!;
     setState(() => _error = null);
     try {
       await ref.read(taskServiceProvider).toggleComplete(widget.task.id);
     } catch (_) {
-      if (mounted) setState(() => _error = 'Nepodařilo se aktualizovat stav úkolu.');
+      if (mounted) setState(() => _error = l10n.taskToggleFailed);
     }
   }
 
   Future<void> _unarchive() async {
+    final l10n = AppLocalizations.of(context)!;
     setState(() => _error = null);
     try {
       await ref.read(taskServiceProvider).unarchiveTask(widget.task.id);
     } catch (_) {
-      if (mounted) setState(() => _error = 'Nepodařilo se obnovit úkol.');
+      if (mounted) setState(() => _error = l10n.taskUnarchiveFailed);
     }
   }
 
@@ -58,34 +61,35 @@ class _TaskCardState extends ConsumerState<TaskCard> {
             deadline: result.deadline,
           );
     } catch (_) {
-      if (mounted) setState(() => _error = 'Nepodařilo se uložit úkol.');
+      if (mounted) setState(() => _error = AppLocalizations.of(context)!.taskSaveFailed);
     }
   }
 
   Future<void> _delete() async {
     final theme = widget.theme;
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: theme.background,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(
-          'Smazat úkol?',
+          l10n.taskDeleteTitle,
           style: TextStyle(color: theme.text, fontFamily: 'Sora', fontWeight: FontWeight.w600),
         ),
         content: Text(
-          '"${widget.task.title}" bude trvale odstraněn.',
+          l10n.taskDeleteBody(widget.task.title),
           style: TextStyle(color: theme.dim, fontFamily: 'Sora', fontSize: 14),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text('Zrušit', style: TextStyle(color: theme.dim, fontFamily: 'Sora')),
+            child: Text(l10n.commonCancel, style: TextStyle(color: theme.dim, fontFamily: 'Sora')),
           ),
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(true),
             child: Text(
-              'Smazat',
+              l10n.commonDelete,
               style: TextStyle(
                   color: Colors.red[400], fontFamily: 'Sora', fontWeight: FontWeight.w600),
             ),
@@ -99,7 +103,7 @@ class _TaskCardState extends ConsumerState<TaskCard> {
     try {
       await ref.read(taskServiceProvider).deleteTask(widget.task.id);
     } catch (_) {
-      if (mounted) setState(() => _error = 'Nepodařilo se smazat úkol.');
+      if (mounted) setState(() => _error = l10n.taskDeleteFailed);
     }
   }
 

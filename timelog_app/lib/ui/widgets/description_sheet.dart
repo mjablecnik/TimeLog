@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/activity_types.dart';
 import '../../core/theme.dart';
 import '../../data/database.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../../providers/database_provider.dart';
 import '../../providers/task_providers.dart';
 import '../../providers/timer_provider.dart';
@@ -215,11 +216,12 @@ class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
       _error = null;
     });
 
+    final l10n = AppLocalizations.of(context)!;
     try {
       final dbService = ref.read(databaseServiceProvider).valueOrNull;
       if (dbService == null) {
         setState(() {
-          _error = 'Database unavailable. Please try again.';
+          _error = l10n.errorDatabaseUnavailable;
           _saving = false;
         });
         return;
@@ -257,7 +259,7 @@ class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
       if (mounted) Navigator.of(context).pop();
     } catch (_) {
       setState(() {
-        _error = 'Failed to save entry. Please try again.';
+        _error = l10n.errorSaveEntryFailed;
         _saving = false;
       });
     }
@@ -266,6 +268,7 @@ class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
   @override
   Widget build(BuildContext context) {
     final theme = widget.theme;
+    final l10n = AppLocalizations.of(context)!;
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
     return PopScope(
@@ -306,7 +309,7 @@ class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
                     children: [
                       Expanded(
                         child: Text(
-                          'What did you accomplish?',
+                          l10n.descriptionTitle,
                           style: TextStyle(
                             color: theme.text,
                             fontFamily: 'Sora',
@@ -322,7 +325,7 @@ class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
                           padding: EdgeInsets.zero,
                           onPressed: _saving ? null : _resetForm,
                           icon: Icon(Icons.restart_alt, color: theme.dim),
-                          tooltip: 'Vymazat formulář',
+                          tooltip: l10n.descriptionClearFormTooltip,
                         ),
                       ),
                     ],
@@ -354,7 +357,7 @@ class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
                             ),
                           ),
                           child: Text(
-                            type,
+                            activityTypeLabel(l10n, type),
                             style: TextStyle(
                               color: isSelected ? color : theme.text,
                               fontFamily: 'Sora',
@@ -391,7 +394,7 @@ class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
                             focusNode: focusNode,
                             style: TextStyle(color: theme.text, fontFamily: 'Sora', fontSize: 15),
                             decoration: InputDecoration(
-                              hintText: 'Project name...',
+                              hintText: l10n.projectNameHint,
                               hintStyle: TextStyle(color: theme.faint, fontFamily: 'Sora'),
                               border: InputBorder.none,
                             ),
@@ -456,7 +459,7 @@ class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
                               ),
                             ),
                             child: Text(
-                              type,
+                              entertainmentTypeLabel(l10n, type),
                               style: TextStyle(
                                 color: isSelected ? color : theme.text,
                                 fontFamily: 'Sora',
@@ -484,7 +487,7 @@ class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
                       autofocus: true,
                       style: TextStyle(color: theme.text, fontFamily: 'Sora', fontSize: 15),
                       decoration: InputDecoration(
-                        hintText: 'Describe what you worked on...',
+                        hintText: l10n.descriptionHint,
                         hintStyle: TextStyle(color: theme.faint, fontFamily: 'Sora'),
                         border: InputBorder.none,
                         counterStyle: TextStyle(color: theme.faint, fontSize: 11),
@@ -528,7 +531,7 @@ class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
                               ),
                             )
                           : Text(
-                              widget.isPrefillMode ? 'Save Draft' : 'Submit',
+                              widget.isPrefillMode ? l10n.prefillSaveDraft : l10n.commonSubmit,
                               style: TextStyle(
                                 fontFamily: 'Sora',
                                 fontWeight: FontWeight.w600,
@@ -545,7 +548,7 @@ class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
                         foregroundColor: theme.dim,
                       ),
                       child: Text(
-                        'Skip',
+                        l10n.commonSkip,
                         style: TextStyle(
                           fontFamily: 'Sora',
                           fontWeight: FontWeight.w600,
@@ -561,7 +564,7 @@ class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
                         foregroundColor: theme.dim,
                       ),
                       child: Text(
-                        'Zrušit',
+                        l10n.commonCancel,
                         style: TextStyle(
                           fontFamily: 'Sora',
                           fontWeight: FontWeight.w600,

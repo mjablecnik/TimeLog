@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../../providers/reminder_action_provider.dart';
 
 /// Modal bottom sheet shown when the user taps a Recurring_Reminder
@@ -64,13 +65,13 @@ class _ReminderActionSheetState extends ConsumerState<ReminderActionSheet> {
       child: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24),
-          child: _buildContent(theme, state),
+          child: _buildContent(theme, AppLocalizations.of(context)!, state),
         ),
       ),
     );
   }
 
-  Widget _buildContent(AppThemeData theme, ReminderActionState state) {
+  Widget _buildContent(AppThemeData theme, AppLocalizations l10n, ReminderActionState state) {
     if (!_loaded) {
       return SizedBox(
         height: 120,
@@ -150,7 +151,7 @@ class _ReminderActionSheetState extends ConsumerState<ReminderActionSheet> {
                   padding: const EdgeInsets.symmetric(vertical: 14),
                 ),
                 child: Text(
-                  'Odložit',
+                  l10n.reminderSnooze,
                   style: TextStyle(fontFamily: 'Sora', fontWeight: FontWeight.w600),
                 ),
               ),
@@ -180,7 +181,7 @@ class _ReminderActionSheetState extends ConsumerState<ReminderActionSheet> {
                         ),
                       )
                     : Text(
-                        'Hotovo',
+                        l10n.reminderDone,
                         style: TextStyle(
                           fontFamily: 'Sora',
                           fontWeight: FontWeight.w600,

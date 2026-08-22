@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme.dart';
+import '../../l10n/generated/app_localizations.dart';
 
 class DurationAdjuster extends StatelessWidget {
   final int minutes;
@@ -22,6 +23,7 @@ class DurationAdjuster extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -33,7 +35,7 @@ class DurationAdjuster extends StatelessWidget {
         ),
         const SizedBox(width: 16),
         Text(
-          '$minutes min',
+          l10n.durationMinutesLabel(minutes),
           style: TextStyle(
             color: theme.dim,
             fontFamily: 'Sora',

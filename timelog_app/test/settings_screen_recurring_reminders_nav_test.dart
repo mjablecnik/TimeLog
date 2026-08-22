@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:timelog_app/data/database.dart';
+import 'package:timelog_app/l10n/generated/app_localizations.dart';
 import 'package:timelog_app/providers/database_provider.dart';
 import 'package:timelog_app/ui/screens/reminder_settings_screen.dart';
 import 'package:timelog_app/ui/screens/settings_screen.dart';
@@ -28,7 +29,12 @@ void main() {
       await tester.pumpWidget(
         UncontrolledProviderScope(
           container: container,
-          child: const MaterialApp(home: SettingsScreen()),
+          child: const MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            locale: Locale('cs'),
+            home: SettingsScreen(),
+          ),
         ),
       );
       await tester.pump();

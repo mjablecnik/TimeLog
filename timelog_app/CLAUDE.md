@@ -12,6 +12,7 @@ SDK `^3.10.4`. Fully offline, no backend, no environment variables.
 ```sh
 flutter pub get                                              # install deps
 dart run build_runner build --delete-conflicting-outputs     # regenerate Drift/Freezed/Riverpod code
+flutter gen-l10n                                              # regenerate AppLocalizations from lib/l10n/*.arb
 flutter run -d linux                                          # run (or macos/windows/chrome/<device-id>)
 flutter test                                                  # run all tests
 flutter test test/timer_service_test.dart                     # run one test file
@@ -48,7 +49,19 @@ See [DOCS.md](DOCS.md#project-structure) for the full annotated tree. Summary:
   `schemaVersion` and adding an `onUpgrade` step in `lib/data/database.dart`, then
   regenerating with `build_runner`.
 - Generated files (`database.g.dart`, `timer_service.freezed.dart`) are committed — always
-  regenerate and commit them together with the source change that triggered them.
+  regenerate and commit them together with the source change that triggered them. The same
+  applies to `lib/l10n/generated/app_localizations*.dart`: whenever `lib/l10n/app_en.arb` or
+  `lib/l10n/app_cs.arb` changes, run `flutter gen-l10n` and commit the regenerated output.
+- i18n: every user-facing string goes through generated `AppLocalizations` (`AppLocalizations.of
+  (context)!`), backed by `lib/l10n/app_en.arb` (template/source of truth) and `lib/l10n/app_cs.arb`.
+  Internal identifiers persisted in the DB or compared via `==`/`switch` (the `activityTypes` /
+  `entertainmentTypes` string values in `lib/core/activity_types.dart`) are never translated in
+  place — use `activityTypeLabel()`/`entertainmentTypeLabel()` to get a localized display string
+  for one of those keys. Background code with no `BuildContext` (notification builders in
+  `reminder_service.dart`/`recurring_reminder_service.dart`) reads the persisted language via
+  `loadAppLocalizations()` (`lib/core/app_locale.dart`). The active language is
+  `localeProvider` (`lib/providers/locale_provider.dart`), persisted to SharedPreferences under
+  `app_language` (`'en'`/`'cs'`, absent = follow system locale).
 
 ## Important notes
 

@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/app_locale.dart';
 import '../data/database.dart';
 import 'database_provider.dart';
 import 'recurring_reminders_provider.dart';
@@ -41,7 +42,11 @@ class ReminderActionNotifier extends StateNotifier<ReminderActionState> {
       await _ref.read(recurringRemindersProvider.notifier).markDoneForToday(reminderId);
       state = ReminderActionState(reminder: state.reminder);
     } catch (e) {
-      state = ReminderActionState(reminder: state.reminder, error: e.toString());
+      final l10n = await loadAppLocalizations();
+      final message = e is InsufficientNotificationCapacityError
+          ? l10n.reminderCapacityError(e.available, e.required)
+          : l10n.errorGeneric;
+      state = ReminderActionState(reminder: state.reminder, error: message);
     }
   }
 

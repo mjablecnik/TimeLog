@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:timezone/timezone.dart' as tz;
 
+import '../../core/date_format_utils.dart';
 import '../../core/theme.dart';
 import '../../data/database.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../../providers/database_provider.dart';
 import '../../providers/recurring_reminders_provider.dart';
 import '../../services/active_days_utils.dart';
@@ -31,8 +33,6 @@ class ReminderCard extends ConsumerStatefulWidget {
 }
 
 class _ReminderCardState extends ConsumerState<ReminderCard> {
-  static const _dayLabels = ['Po', 'Út', 'St', 'Čt', 'Pá', 'So', 'Ne'];
-
   bool _completedToday = false;
   bool _loadingCompletion = true;
   String? _error;
@@ -69,11 +69,12 @@ class _ReminderCardState extends ConsumerState<ReminderCard> {
     return '$h:$m';
   }
 
-  String _formatActiveDays(int mask) {
+  String _formatActiveDays(AppLocalizations l10n, int mask) {
+    final labels = weekdayShortLabels(l10n);
     final days = decodeDays(mask);
     return List.generate(7, (i) => i + 1)
         .where(days.contains)
-        .map((day) => _dayLabels[day - 1])
+        .map((day) => labels[day - 1])
         .join(', ');
   }
 
@@ -89,7 +90,7 @@ class _ReminderCardState extends ConsumerState<ReminderCard> {
       await _loadCompletion();
     } catch (_) {
       if (mounted) {
-        setState(() => _error = 'Nepodařilo se aktualizovat stav dokončení.');
+        setState(() => _error = AppLocalizations.of(context)!.reminderCompletionUpdateFailed);
       }
     }
   }
@@ -99,7 +100,13 @@ class _ReminderCardState extends ConsumerState<ReminderCard> {
     try {
       await ref.read(recurringRemindersProvider.notifier).toggleActive(widget.reminder.id);
     } catch (e) {
-      if (mounted) setState(() => _error = e.toString());
+      if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
+      if (e is InsufficientNotificationCapacityError) {
+        setState(() => _error = l10n.reminderCapacityError(e.available, e.required));
+      } else {
+        setState(() => _error = l10n.reminderActiveToggleFailed);
+      }
     }
   }
 
@@ -107,6 +114,7 @@ class _ReminderCardState extends ConsumerState<ReminderCard> {
   Widget build(BuildContext context) {
     final reminder = widget.reminder;
     final theme = widget.theme;
+    final l10n = AppLocalizations.of(context)!;
     final isDone = _completedToday;
     final labelColor = reminder.isActive ? theme.text : theme.faint;
     final valueColor = reminder.isActive ? theme.accent : theme.faint;
@@ -172,7 +180,7 @@ class _ReminderCardState extends ConsumerState<ReminderCard> {
               ),
               const SizedBox(width: 10),
               Text(
-                '${reminder.repeatInterval} min',
+                l10n.durationMinutesLabel(reminder.repeatInterval),
                 style: TextStyle(
                   fontFamily: 'JetBrainsMono',
                   fontSize: 13,
@@ -183,7 +191,7 @@ class _ReminderCardState extends ConsumerState<ReminderCard> {
           ),
           const SizedBox(height: 4),
           Text(
-            _formatActiveDays(reminder.activeDays),
+            _formatActiveDays(l10n, reminder.activeDays),
             style: TextStyle(
               fontFamily: 'Sora',
               fontSize: 12,

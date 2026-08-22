@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 
+import '../../core/date_format_utils.dart';
 import '../../core/theme.dart';
+import '../../l10n/generated/app_localizations.dart';
 
 /// Multi-select weekday chip row. Days follow Dart's `DateTime.weekday`
 /// convention: 1=Monday ... 7=Sunday.
 class DaySelector extends StatelessWidget {
-  static const List<String> _labels = ['Po', 'Út', 'St', 'Čt', 'Pá', 'So', 'Ne'];
-
   final Set<int> activeDays;
   final ValueChanged<Set<int>> onChanged;
   final AppThemeData theme;
@@ -30,6 +30,7 @@ class DaySelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final labels = weekdayShortLabels(AppLocalizations.of(context)!);
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: List.generate(7, (index) {
@@ -49,7 +50,7 @@ class DaySelector extends StatelessWidget {
               ),
             ),
             child: Text(
-              _labels[index],
+              labels[index],
               style: TextStyle(
                 color: isSelected ? theme.ink : theme.dim,
                 fontFamily: 'Sora',

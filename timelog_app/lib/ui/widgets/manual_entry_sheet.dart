@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/activity_types.dart';
 import '../../core/theme.dart';
 import '../../data/database.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../../providers/database_provider.dart';
 import '../../providers/history_provider.dart' show logicalDay;
 import '../../providers/task_providers.dart';
@@ -96,9 +97,9 @@ class _ManualEntrySheetState extends ConsumerState<ManualEntrySheet> {
     return '$h:$m';
   }
 
-  static const _timeOrderError = 'End time must be after start time.';
-
   Future<void> _pickTime(bool isStart) async {
+    final l10n = AppLocalizations.of(context)!;
+    final timeOrderError = l10n.errorEndBeforeStart;
     final current = isStart ? _startTime : _endTime;
     final picked = await showTimePicker(
       context: context,
@@ -120,8 +121,8 @@ class _ManualEntrySheetState extends ConsumerState<ManualEntrySheet> {
         _endTime = updated;
       }
       if (!_endTime.isAfter(_startTime)) {
-        _error = _timeOrderError;
-      } else if (_error == _timeOrderError) {
+        _error = timeOrderError;
+      } else if (_error == timeOrderError) {
         _error = null;
       }
     });
@@ -140,12 +141,13 @@ class _ManualEntrySheetState extends ConsumerState<ManualEntrySheet> {
       _controller.text.trim().isNotEmpty && !_saving && !_entertainmentSelectionMissing;
 
   Future<void> _submit() async {
+    final l10n = AppLocalizations.of(context)!;
     if (_controller.text.trim().isEmpty) {
-      setState(() => _error = 'Description cannot be empty.');
+      setState(() => _error = l10n.errorDescriptionEmpty);
       return;
     }
     if (!_endTime.isAfter(_startTime)) {
-      setState(() => _error = _timeOrderError);
+      setState(() => _error = l10n.errorEndBeforeStart);
       return;
     }
     if (!_canSubmit) return;
@@ -159,7 +161,7 @@ class _ManualEntrySheetState extends ConsumerState<ManualEntrySheet> {
       final dbService = ref.read(databaseServiceProvider).valueOrNull;
       if (dbService == null) {
         setState(() {
-          _error = 'Database unavailable. Please try again.';
+          _error = l10n.errorDatabaseUnavailable;
           _saving = false;
         });
         return;
@@ -190,7 +192,7 @@ class _ManualEntrySheetState extends ConsumerState<ManualEntrySheet> {
       if (mounted) Navigator.of(context).pop();
     } catch (_) {
       setState(() {
-        _error = 'Failed to save entry. Please try again.';
+        _error = l10n.errorSaveEntryFailed;
         _saving = false;
       });
     }
@@ -199,6 +201,7 @@ class _ManualEntrySheetState extends ConsumerState<ManualEntrySheet> {
   @override
   Widget build(BuildContext context) {
     final theme = widget.theme;
+    final l10n = AppLocalizations.of(context)!;
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
     return GestureDetector(
@@ -234,7 +237,7 @@ class _ManualEntrySheetState extends ConsumerState<ManualEntrySheet> {
                   padding: const EdgeInsets.symmetric(horizontal: 24),
                   children: [
                     Text(
-                      'Add entry',
+                      l10n.manualEntryTitle,
                       style: TextStyle(
                         color: theme.text,
                         fontFamily: 'Sora',
@@ -248,7 +251,7 @@ class _ManualEntrySheetState extends ConsumerState<ManualEntrySheet> {
                         Expanded(
                           child: _TimeField(
                             theme: theme,
-                            label: 'Start',
+                            label: l10n.timeFieldStart,
                             time: _formatTime(_startTime),
                             onTap: () => _pickTime(true),
                           ),
@@ -257,7 +260,7 @@ class _ManualEntrySheetState extends ConsumerState<ManualEntrySheet> {
                         Expanded(
                           child: _TimeField(
                             theme: theme,
-                            label: 'End',
+                            label: l10n.timeFieldEnd,
                             time: _formatTime(_endTime),
                             onTap: () => _pickTime(false),
                           ),
@@ -296,7 +299,7 @@ class _ManualEntrySheetState extends ConsumerState<ManualEntrySheet> {
                               ),
                             ),
                             child: Text(
-                              type,
+                              activityTypeLabel(l10n, type),
                               style: TextStyle(
                                 color: isSelected ? color : theme.text,
                                 fontFamily: 'Sora',
@@ -337,7 +340,7 @@ class _ManualEntrySheetState extends ConsumerState<ManualEntrySheet> {
                                 ),
                               ),
                               child: Text(
-                                type,
+                                entertainmentTypeLabel(l10n, type),
                                 style: TextStyle(
                                   color: isSelected ? color : theme.text,
                                   fontFamily: 'Sora',
@@ -380,7 +383,7 @@ class _ManualEntrySheetState extends ConsumerState<ManualEntrySheet> {
                                   fontFamily: 'Sora',
                                   fontSize: 15),
                               decoration: InputDecoration(
-                                hintText: 'Project name...',
+                                hintText: l10n.projectNameHint,
                                 hintStyle: TextStyle(
                                     color: theme.faint, fontFamily: 'Sora'),
                                 border: InputBorder.none,
@@ -444,7 +447,7 @@ class _ManualEntrySheetState extends ConsumerState<ManualEntrySheet> {
                         style: TextStyle(
                             color: theme.text, fontFamily: 'Sora', fontSize: 15),
                         decoration: InputDecoration(
-                          hintText: 'Describe what you worked on...',
+                          hintText: l10n.descriptionHint,
                           hintStyle:
                               TextStyle(color: theme.faint, fontFamily: 'Sora'),
                           border: InputBorder.none,
@@ -492,7 +495,7 @@ class _ManualEntrySheetState extends ConsumerState<ManualEntrySheet> {
                                 ),
                               )
                             : Text(
-                                'Submit',
+                                l10n.commonSubmit,
                                 style: TextStyle(
                                   fontFamily: 'Sora',
                                   fontWeight: FontWeight.w600,
@@ -509,7 +512,7 @@ class _ManualEntrySheetState extends ConsumerState<ManualEntrySheet> {
                         foregroundColor: theme.dim,
                       ),
                       child: Text(
-                        'Cancel',
+                        l10n.commonCancel,
                         style: TextStyle(
                           fontFamily: 'Sora',
                           fontWeight: FontWeight.w600,

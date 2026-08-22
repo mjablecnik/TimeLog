@@ -4,6 +4,7 @@ import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/data/latest.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
 
+import '../core/app_locale.dart';
 import 'recurring_reminder_service.dart' show recurringReminderBackgroundHandler;
 
 /// Schedules/cancels the daily "start your timer" reminder notification via
@@ -84,11 +85,12 @@ class ReminderService {
 
   /// Schedule (or reschedule) a daily repeating notification at [time].
   Future<void> scheduleDailyReminder(TimeOfDay time) async {
+    final l10n = await loadAppLocalizations();
     await _plugin.zonedSchedule(
       id: notificationId,
       scheduledDate: _nextInstanceOf(time),
       title: 'TimeLog',
-      body: 'Time to start your timer!',
+      body: l10n.reminderDailyNotificationBody,
       payload: startTimerPayload,
       notificationDetails: const NotificationDetails(
         android: AndroidNotificationDetails(

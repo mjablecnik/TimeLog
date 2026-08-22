@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme.dart';
 import '../../data/database.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../../providers/recurring_reminders_provider.dart';
 import '../../services/active_days_utils.dart';
 import 'day_selector.dart';
@@ -30,7 +31,7 @@ class ReminderEditDialog extends ConsumerStatefulWidget {
   }) {
     return showGeneralDialog<void>(
       context: context,
-      barrierLabel: 'Reminder edit dialog',
+      barrierLabel: AppLocalizations.of(context)!.reminderEditBarrierLabel,
       barrierDismissible: false,
       barrierColor: Colors.transparent,
       transitionDuration: const Duration(milliseconds: 150),
@@ -143,13 +144,14 @@ class _ReminderEditDialogState extends ConsumerState<ReminderEditDialog> {
       if (mounted) Navigator.of(context).pop();
       return;
     }
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: widget.theme.background,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(
-          'Zahodit změny?',
+          l10n.reminderDiscardTitle,
           style: TextStyle(
             color: widget.theme.text,
             fontFamily: 'Sora',
@@ -157,21 +159,21 @@ class _ReminderEditDialogState extends ConsumerState<ReminderEditDialog> {
           ),
         ),
         content: Text(
-          'Neuložené změny budou ztraceny.',
+          l10n.reminderDiscardBody,
           style: TextStyle(color: widget.theme.dim, fontFamily: 'Sora', fontSize: 14),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
             child: Text(
-              'Zpět',
+              l10n.commonBack,
               style: TextStyle(color: widget.theme.dim, fontFamily: 'Sora'),
             ),
           ),
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(true),
             child: Text(
-              'Zahodit',
+              l10n.reminderDiscardConfirm,
               style: TextStyle(color: Colors.red[400], fontFamily: 'Sora'),
             ),
           ),
@@ -198,12 +200,14 @@ class _ReminderEditDialogState extends ConsumerState<ReminderEditDialog> {
       }
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
-      if (mounted) {
-        setState(() {
-          _error = e.toString();
-          _saving = false;
-        });
-      }
+      if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
+      setState(() {
+        _error = e is InsufficientNotificationCapacityError
+            ? l10n.reminderCapacityError(e.available, e.required)
+            : l10n.errorGeneric;
+        _saving = false;
+      });
     }
   }
 
@@ -213,6 +217,7 @@ class _ReminderEditDialogState extends ConsumerState<ReminderEditDialog> {
   @override
   Widget build(BuildContext context) {
     final theme = widget.theme;
+    final l10n = AppLocalizations.of(context)!;
     final data = _formData;
 
     return PopScope<void>(
@@ -256,7 +261,7 @@ class _ReminderEditDialogState extends ConsumerState<ReminderEditDialog> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        _isEditing ? 'Upravit připomínku' : 'Nová připomínka',
+                        _isEditing ? l10n.reminderEditTitle : l10n.reminderNewTitle,
                         style: TextStyle(
                           color: theme.text,
                           fontFamily: 'Sora',
@@ -277,7 +282,7 @@ class _ReminderEditDialogState extends ConsumerState<ReminderEditDialog> {
                                   maxLength: 100,
                                   style: TextStyle(color: theme.text, fontFamily: 'Sora'),
                                   decoration: InputDecoration(
-                                    hintText: 'Název',
+                                    hintText: l10n.reminderNameHint,
                                     hintStyle: TextStyle(color: theme.faint, fontFamily: 'Sora'),
                                     border: InputBorder.none,
                                     counterStyle: TextStyle(color: theme.faint, fontSize: 11),
@@ -291,7 +296,7 @@ class _ReminderEditDialogState extends ConsumerState<ReminderEditDialog> {
                                   Expanded(
                                     child: _TimeField(
                                       theme: theme,
-                                      label: 'Od',
+                                      label: l10n.reminderFromLabel,
                                       time: _formatTime(_startTime),
                                       onTap: () => _pickTime(true),
                                     ),
@@ -300,7 +305,7 @@ class _ReminderEditDialogState extends ConsumerState<ReminderEditDialog> {
                                   Expanded(
                                     child: _TimeField(
                                       theme: theme,
-                                      label: 'Do',
+                                      label: l10n.reminderToLabel,
                                       time: _formatTime(_endTime),
                                       onTap: () => _pickTime(false),
                                     ),
@@ -310,7 +315,7 @@ class _ReminderEditDialogState extends ConsumerState<ReminderEditDialog> {
                               if (_isOvernight) ...[
                                 const SizedBox(height: 8),
                                 Text(
-                                  'Okno přesahuje přes půlnoc do dalšího dne.',
+                                  l10n.reminderOvernightNote,
                                   style: TextStyle(
                                     color: theme.accent,
                                     fontFamily: 'Sora',
@@ -320,7 +325,7 @@ class _ReminderEditDialogState extends ConsumerState<ReminderEditDialog> {
                               ],
                               const SizedBox(height: 16),
                               Text(
-                                'Interval opakování',
+                                l10n.reminderIntervalLabel,
                                 style: TextStyle(
                                   color: theme.dim,
                                   fontFamily: 'Sora',
@@ -350,7 +355,7 @@ class _ReminderEditDialogState extends ConsumerState<ReminderEditDialog> {
                                         ),
                                       ),
                                       child: Text(
-                                        '$minutes min',
+                                        l10n.durationMinutesLabel(minutes),
                                         style: TextStyle(
                                           color: isSelected ? theme.accent : theme.text,
                                           fontFamily: 'JetBrainsMono',
@@ -364,7 +369,7 @@ class _ReminderEditDialogState extends ConsumerState<ReminderEditDialog> {
                               ),
                               const SizedBox(height: 16),
                               Text(
-                                'Aktivní dny',
+                                l10n.reminderActiveDaysLabel,
                                 style: TextStyle(
                                   color: theme.dim,
                                   fontFamily: 'Sora',
@@ -382,7 +387,7 @@ class _ReminderEditDialogState extends ConsumerState<ReminderEditDialog> {
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
-                                    'Aktivní',
+                                    l10n.reminderActiveLabel,
                                     style: TextStyle(
                                       color: theme.text,
                                       fontFamily: 'Sora',
@@ -420,7 +425,7 @@ class _ReminderEditDialogState extends ConsumerState<ReminderEditDialog> {
                             onPressed: _saving ? null : _tryDismiss,
                             style: TextButton.styleFrom(foregroundColor: theme.dim),
                             child: Text(
-                              'Zrušit',
+                              l10n.commonCancel,
                               style: TextStyle(fontFamily: 'Sora', fontWeight: FontWeight.w600),
                             ),
                           ),
@@ -447,7 +452,7 @@ class _ReminderEditDialogState extends ConsumerState<ReminderEditDialog> {
                                     ),
                                   )
                                 : Text(
-                                    'Uložit',
+                                    l10n.commonSave,
                                     style: TextStyle(
                                       fontFamily: 'Sora',
                                       fontWeight: FontWeight.w600,

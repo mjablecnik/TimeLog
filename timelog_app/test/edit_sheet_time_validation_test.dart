@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:timelog_app/core/theme.dart';
 import 'package:timelog_app/data/database.dart';
+import 'package:timelog_app/l10n/generated/app_localizations.dart';
 import 'package:timelog_app/providers/database_provider.dart';
 import 'package:timelog_app/ui/widgets/edit_sheet.dart';
 
@@ -74,6 +75,9 @@ void main() {
         UncontrolledProviderScope(
           container: container,
           child: MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            locale: const Locale('en'),
             builder: (context, child) => MediaQuery(
               data: MediaQuery.of(context)
                   .copyWith(alwaysUse24HourFormat: true),

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme.dart';
 import '../../data/database.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../../providers/task_providers.dart';
 import '../../providers/theme_provider.dart';
 import '../../services/task_service.dart';
@@ -46,6 +47,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> with WidgetsBindingOb
   }
 
   Future<void> _addTask(BuildContext context, AppThemeData theme, int? projectId) async {
+    final l10n = AppLocalizations.of(context)!;
     final result = await TaskEditDialog.show(context, theme: theme);
     if (result == null) return;
 
@@ -59,7 +61,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> with WidgetsBindingOb
     } catch (_) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Vytvoření úkolu se nezdařilo.')),
+          SnackBar(content: Text(l10n.taskCreateFailed)),
         );
       }
     }
@@ -71,7 +73,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> with WidgetsBindingOb
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Přesunutí úkolu se nezdařilo.')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.taskReorderFailed)),
         );
       }
     }
@@ -83,6 +85,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> with WidgetsBindingOb
     ref.watch(taskProjectPersistenceProvider);
 
     final theme = ref.watch(themeProvider);
+    final l10n = AppLocalizations.of(context)!;
     final tasksAsync = ref.watch(taskListProvider);
     final selectedProjectId = ref.watch(selectedTaskProjectProvider);
     final showArchived = ref.watch(showArchivedTasksProvider);
@@ -104,7 +107,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> with WidgetsBindingOb
               alignment: Alignment.center,
               children: [
                 Text(
-                  'Úkoly',
+                  l10n.tasksTitle,
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: theme.text,
@@ -132,7 +135,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> with WidgetsBindingOb
                             ),
                             const SizedBox(width: 8),
                             Text(
-                              'Zobrazit archivované úkoly',
+                              l10n.tasksShowArchived,
                               style: TextStyle(color: theme.text, fontFamily: 'Sora', fontSize: 13),
                             ),
                           ],
@@ -150,6 +153,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> with WidgetsBindingOb
               child: tasksAsync.when(
                 data: (tasks) => _TaskListBody(
                   theme: theme,
+                  l10n: l10n,
                   tasks: tasks,
                   showArchived: showArchived,
                   selectedProjectId: selectedProjectId,
@@ -160,7 +164,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> with WidgetsBindingOb
                 ),
                 error: (error, _) => Center(
                   child: Text(
-                    'Načtení úkolů se nezdařilo.',
+                    l10n.tasksLoadFailed,
                     style: TextStyle(color: theme.dim, fontFamily: 'Sora'),
                   ),
                 ),
@@ -175,6 +179,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> with WidgetsBindingOb
 
 class _TaskListBody extends StatelessWidget {
   final AppThemeData theme;
+  final AppLocalizations l10n;
   final List<TaskItem> tasks;
   final bool showArchived;
   final int? selectedProjectId;
@@ -182,6 +187,7 @@ class _TaskListBody extends StatelessWidget {
 
   const _TaskListBody({
     required this.theme,
+    required this.l10n,
     required this.tasks,
     required this.showArchived,
     required this.selectedProjectId,
@@ -206,13 +212,13 @@ class _TaskListBody extends StatelessWidget {
               Icon(Icons.checklist_outlined, size: 52, color: theme.faint),
               const SizedBox(height: 16),
               Text(
-                'Zatím žádné úkoly',
+                l10n.tasksEmptyTitle,
                 textAlign: TextAlign.center,
                 style: TextStyle(color: theme.dim, fontFamily: 'Sora', fontSize: 16),
               ),
               const SizedBox(height: 8),
               Text(
-                'Klepnutím na + vytvořte první úkol',
+                l10n.tasksEmptySubtitle,
                 textAlign: TextAlign.center,
                 style: TextStyle(color: theme.faint, fontFamily: 'Sora', fontSize: 13),
               ),
@@ -247,7 +253,7 @@ class _TaskListBody extends StatelessWidget {
             key: const ValueKey('archived-header'),
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
             child: Text(
-              'Archivováno',
+              l10n.tasksArchivedHeader,
               style: TextStyle(
                 color: theme.faint,
                 fontFamily: 'Sora',

@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:timelog_app/core/platform_channel.dart';
+import 'package:timelog_app/l10n/generated/app_localizations.dart';
 import 'package:timelog_app/providers/timer_provider.dart';
 import 'package:timelog_app/services/timer_service.dart';
 import 'package:timelog_app/ui/screens/timer_screen.dart';
@@ -36,7 +37,12 @@ void main() {
       await tester.pumpWidget(
         UncontrolledProviderScope(
           container: container,
-          child: const MaterialApp(home: TimerScreen()),
+          child: const MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            locale: Locale('cs'),
+            home: TimerScreen(),
+          ),
         ),
       );
       await tester.pump(const Duration(milliseconds: 50));
@@ -46,7 +52,7 @@ void main() {
       expect(container.read(timerProvider).status, TimerStatus.running);
 
       // Open the prefill sheet; this pauses the running timer.
-      await tester.tap(find.byTooltip('Pre-fill description'));
+      await tester.tap(find.byTooltip('Předvyplnit popis'));
       await tester.pumpAndSettle();
       expect(container.read(timerProvider).status, TimerStatus.paused);
 

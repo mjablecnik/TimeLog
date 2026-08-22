@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/theme.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../../providers/theme_provider.dart';
 import '../../providers/timer_provider.dart';
 import '../../services/timer_service.dart';
@@ -141,6 +142,7 @@ class _TimerScreenState extends ConsumerState<TimerScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = ref.watch(themeProvider);
+    final l10n = AppLocalizations.of(context)!;
 
     ref.listen<TimerState>(timerProvider, (prev, next) {
       if (prev?.status != TimerStatus.ringing && next.status == TimerStatus.ringing) {
@@ -221,7 +223,7 @@ class _TimerScreenState extends ConsumerState<TimerScreen> {
 
                 // Phase label
                 Text(
-                  _phaseLabel(status),
+                  _phaseLabel(l10n, status),
                   style: TextStyle(
                     color: theme.dim,
                     fontFamily: 'Sora',
@@ -254,7 +256,7 @@ class _TimerScreenState extends ConsumerState<TimerScreen> {
                   IconButton(
                     onPressed: () => _showPrefillSheet(context, theme, timerState),
                     icon: Icon(Icons.edit_note_rounded, color: theme.dim),
-                    tooltip: 'Pre-fill description',
+                    tooltip: l10n.timerPrefillTooltip,
                   ),
                 ],
 
@@ -276,18 +278,18 @@ class _TimerScreenState extends ConsumerState<TimerScreen> {
     );
   }
 
-  String _phaseLabel(TimerStatus status) {
+  String _phaseLabel(AppLocalizations l10n, TimerStatus status) {
     switch (status) {
       case TimerStatus.idle:
-        return 'READY';
+        return l10n.timerPhaseReady;
       case TimerStatus.running:
-        return 'FOCUS';
+        return l10n.timerPhaseFocus;
       case TimerStatus.paused:
-        return 'PAUSED';
+        return l10n.timerPhasePaused;
       case TimerStatus.ringing:
-        return 'TIME UP';
+        return l10n.timerPhaseTimeUp;
       case TimerStatus.logging:
-        return 'LOGGING';
+        return l10n.timerPhaseLogging;
     }
   }
 }

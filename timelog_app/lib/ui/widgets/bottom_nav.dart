@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme.dart';
+import '../../l10n/generated/app_localizations.dart';
 
 class AppBottomNav extends StatelessWidget {
   final int selectedIndex;
@@ -16,6 +17,7 @@ class AppBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       decoration: BoxDecoration(
         color: theme.background,
@@ -30,7 +32,7 @@ class AppBottomNav extends StatelessWidget {
               _NavItem(
                 icon: Icons.timer_outlined,
                 activeIcon: Icons.timer,
-                label: 'Timer',
+                label: l10n.navTimer,
                 isActive: selectedIndex == 0,
                 theme: theme,
                 onTap: () => onTap(0),
@@ -38,7 +40,7 @@ class AppBottomNav extends StatelessWidget {
               _NavItem(
                 icon: Icons.checklist_outlined,
                 activeIcon: Icons.checklist,
-                label: 'Úkoly',
+                label: l10n.tasksTitle,
                 isActive: selectedIndex == 1,
                 theme: theme,
                 onTap: () => onTap(1),
@@ -46,7 +48,7 @@ class AppBottomNav extends StatelessWidget {
               _NavItem(
                 icon: Icons.history_outlined,
                 activeIcon: Icons.history,
-                label: 'History',
+                label: l10n.historyTitle,
                 isActive: selectedIndex == 2,
                 theme: theme,
                 onTap: () => onTap(2),
@@ -54,7 +56,7 @@ class AppBottomNav extends StatelessWidget {
               _NavItem(
                 icon: Icons.bar_chart_outlined,
                 activeIcon: Icons.bar_chart,
-                label: 'Stats',
+                label: l10n.navStats,
                 isActive: selectedIndex == 3,
                 theme: theme,
                 onTap: () => onTap(3),
@@ -62,7 +64,7 @@ class AppBottomNav extends StatelessWidget {
               _NavItem(
                 icon: Icons.settings_outlined,
                 activeIcon: Icons.settings,
-                label: 'Settings',
+                label: l10n.settingsTitle,
                 isActive: selectedIndex == 4,
                 theme: theme,
                 onTap: () => onTap(4),

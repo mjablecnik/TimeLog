@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../../providers/history_provider.dart';
 
 class DayNavigator extends ConsumerWidget {
@@ -9,7 +10,7 @@ class DayNavigator extends ConsumerWidget {
 
   const DayNavigator({super.key, required this.theme});
 
-  String _dayLabel(DateTime day) {
+  String _dayLabel(AppLocalizations l10n, DateTime day) {
     final now = DateTime.now();
     final todayDate = logicalDay(now);
     final yesterday = todayDate.subtract(const Duration(days: 1));
@@ -17,12 +18,12 @@ class DayNavigator extends ConsumerWidget {
     if (day.year == todayDate.year &&
         day.month == todayDate.month &&
         day.day == todayDate.day) {
-      return 'Today';
+      return l10n.dayToday;
     }
     if (day.year == yesterday.year &&
         day.month == yesterday.month &&
         day.day == yesterday.day) {
-      return 'Yesterday';
+      return l10n.dayYesterday;
     }
 
     return '${day.day}. ${day.month}. ${day.year}';
@@ -37,6 +38,7 @@ class DayNavigator extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final selectedDay = ref.watch(selectedDayProvider);
     final isToday = _isToday(selectedDay);
 
@@ -81,7 +83,7 @@ class DayNavigator extends ConsumerWidget {
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             child: Text(
-              _dayLabel(selectedDay),
+              _dayLabel(l10n, selectedDay),
               style: TextStyle(
                 color: theme.text,
                 fontFamily: 'Sora',

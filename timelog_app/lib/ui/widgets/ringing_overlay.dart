@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme.dart';
+import '../../l10n/generated/app_localizations.dart';
 
 class RingingOverlay extends StatefulWidget {
   final AppThemeData theme;
@@ -42,6 +43,7 @@ class _RingingOverlayState extends State<RingingOverlay>
   @override
   Widget build(BuildContext context) {
     final theme = widget.theme;
+    final l10n = AppLocalizations.of(context)!;
 
     return Container(
       color: theme.background.withValues(alpha: 0.95),
@@ -77,7 +79,7 @@ class _RingingOverlayState extends State<RingingOverlay>
             ),
             const SizedBox(height: 16),
             Text(
-              'Time is up!',
+              l10n.timerTimeUpTitle,
               style: TextStyle(
                 color: theme.text,
                 fontFamily: 'Sora',
@@ -97,7 +99,7 @@ class _RingingOverlayState extends State<RingingOverlay>
                   border: Border.all(color: theme.border),
                 ),
                 child: Text(
-                  'Dismiss',
+                  l10n.ringingDismiss,
                   style: TextStyle(
                     color: theme.text,
                     fontFamily: 'Sora',

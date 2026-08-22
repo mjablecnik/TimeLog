@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../../providers/history_provider.dart';
 import '../../providers/theme_provider.dart';
 import '../widgets/day_navigator.dart';
@@ -36,6 +37,7 @@ class HistoryScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = ref.watch(themeProvider);
+    final l10n = AppLocalizations.of(context)!;
     final entriesAsync = ref.watch(dayEntriesProvider);
     final selectedDay = ref.watch(selectedDayProvider);
 
@@ -50,7 +52,7 @@ class HistoryScreen extends ConsumerWidget {
               alignment: Alignment.center,
               children: [
                 Text(
-                  'History',
+                  l10n.historyTitle,
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: theme.text,
@@ -115,7 +117,7 @@ class HistoryScreen extends ConsumerWidget {
                   ),
                   error: (error, _) => Center(
                     child: Text(
-                      'Failed to load entries.',
+                      l10n.historyLoadError,
                       style: TextStyle(color: theme.dim, fontFamily: 'Sora'),
                     ),
                   ),

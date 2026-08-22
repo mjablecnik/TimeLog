@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/generated/app_localizations.dart';
+
 const List<String> activityTypes = [
   'Práce',
   'Domácí práce',
@@ -28,6 +30,49 @@ bool hasProjectField(String type) =>
 const List<String> entertainmentTypes = ['Aktivní zábava', 'Pasivní zábava'];
 
 bool isEntertainmentActivityType(String type) => type == 'Zábava';
+
+/// Maps an internal [type] key (a stable identifier persisted in the
+/// database — never translate the key itself) to its localized display
+/// label. Used everywhere a `type` from [activityTypes] is rendered as
+/// text; the underlying key is still used for `onTap`, color lookup,
+/// selection comparison, and DB writes.
+String activityTypeLabel(AppLocalizations l10n, String type) {
+  switch (type) {
+    case 'Práce':
+      return l10n.activityWork;
+    case 'Domácí práce':
+      return l10n.activityHousework;
+    case 'Přesun':
+      return l10n.activityCommute;
+    case 'Zábava':
+      return l10n.activityEntertainment;
+    case 'Cvičení':
+      return l10n.activityExercise;
+    case 'Seberozvoj':
+      return l10n.activitySelfDevelopment;
+    case 'Odpočinek':
+      return l10n.activityRest;
+    case 'Hygiena':
+      return l10n.activityHygiene;
+    case 'Jídlo':
+      return l10n.activityMeal;
+    default:
+      return type;
+  }
+}
+
+/// Maps an internal entertainment sub-type key (from [entertainmentTypes])
+/// to its localized display label. See [activityTypeLabel].
+String entertainmentTypeLabel(AppLocalizations l10n, String type) {
+  switch (type) {
+    case 'Aktivní zábava':
+      return l10n.entertainmentActive;
+    case 'Pasivní zábava':
+      return l10n.entertainmentPassive;
+    default:
+      return type;
+  }
+}
 
 /// Returns the distinct badge color for [type]. [isDark] selects the
 /// variant for the "Zábava" and "Přesun" types, which need a different

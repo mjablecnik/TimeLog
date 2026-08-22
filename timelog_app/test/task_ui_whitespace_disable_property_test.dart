@@ -7,6 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:timelog_app/core/theme.dart';
 import 'package:timelog_app/data/database.dart';
+import 'package:timelog_app/l10n/generated/app_localizations.dart';
 import 'package:timelog_app/providers/database_provider.dart';
 import 'package:timelog_app/ui/widgets/project_selector.dart';
 import 'package:timelog_app/ui/widgets/task_edit_dialog.dart';
@@ -41,6 +42,9 @@ void main() {
     (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: Locale('cs'),
           home: Scaffold(body: TaskEditDialog(theme: AppThemeData.midnight)),
         ),
       );
@@ -80,6 +84,9 @@ void main() {
         UncontrolledProviderScope(
           container: container,
           child: const MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            locale: Locale('cs'),
             home: Scaffold(body: ProjectSelector(theme: AppThemeData.midnight)),
           ),
         ),

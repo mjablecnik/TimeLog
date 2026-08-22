@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme.dart';
 import '../../data/database.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../../providers/recurring_reminders_provider.dart';
 import '../../providers/theme_provider.dart';
 import '../widgets/reminder_card.dart';
@@ -27,28 +28,29 @@ class ReminderSettingsScreen extends ConsumerWidget {
     AppThemeData theme,
     RecurringReminder reminder,
   ) async {
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: theme.background,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(
-          'Smazat připomínku?',
+          l10n.reminderDeleteTitle,
           style: TextStyle(color: theme.text, fontFamily: 'Sora', fontWeight: FontWeight.w600),
         ),
         content: Text(
-          'Připomínka „${reminder.name}“ bude trvale smazána.',
+          l10n.reminderDeleteBody(reminder.name),
           style: TextStyle(color: theme.dim, fontFamily: 'Sora', fontSize: 14),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text('Zpět', style: TextStyle(color: theme.dim, fontFamily: 'Sora')),
+            child: Text(l10n.commonBack, style: TextStyle(color: theme.dim, fontFamily: 'Sora')),
           ),
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(true),
             child: Text(
-              'Smazat',
+              l10n.commonDelete,
               style: TextStyle(color: Colors.red[400], fontFamily: 'Sora'),
             ),
           ),
@@ -61,7 +63,7 @@ class ReminderSettingsScreen extends ConsumerWidget {
     } catch (_) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Smazání připomínky se nezdařilo.')),
+          SnackBar(content: Text(l10n.reminderDeleteFailed)),
         );
       }
     }
@@ -70,6 +72,7 @@ class ReminderSettingsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = ref.watch(themeProvider);
+    final l10n = AppLocalizations.of(context)!;
     final remindersAsync = ref.watch(recurringRemindersProvider);
 
     return Scaffold(
@@ -83,7 +86,7 @@ class ReminderSettingsScreen extends ConsumerWidget {
               alignment: Alignment.center,
               children: [
                 Text(
-                  'Opakované připomínky',
+                  l10n.settingsRecurringRemindersLabel,
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: theme.text,
@@ -122,13 +125,13 @@ class ReminderSettingsScreen extends ConsumerWidget {
                             Icon(Icons.notifications_none, size: 52, color: theme.faint),
                             const SizedBox(height: 16),
                             Text(
-                              'Zatím nemáte žádné připomínky',
+                              l10n.remindersEmptyTitle,
                               textAlign: TextAlign.center,
                               style: TextStyle(color: theme.dim, fontFamily: 'Sora', fontSize: 16),
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              'Klepnutím na + vytvořte první připomínku',
+                              l10n.remindersEmptySubtitle,
                               textAlign: TextAlign.center,
                               style: TextStyle(color: theme.faint, fontFamily: 'Sora', fontSize: 13),
                             ),
@@ -157,7 +160,7 @@ class ReminderSettingsScreen extends ConsumerWidget {
                 ),
                 error: (error, _) => Center(
                   child: Text(
-                    'Nepodařilo se načíst připomínky.',
+                    l10n.remindersLoadFailed,
                     style: TextStyle(color: theme.dim, fontFamily: 'Sora'),
                   ),
                 ),

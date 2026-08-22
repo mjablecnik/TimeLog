@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/activity_types.dart';
+import '../../core/date_format_utils.dart';
 import '../../core/theme.dart';
 import '../../data/database.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../../providers/database_provider.dart';
 import 'edit_sheet.dart';
 
@@ -31,14 +33,10 @@ class _HistoryEntryCardState extends ConsumerState<HistoryEntryCard> {
     return '$h:$m';
   }
 
-  String _formatDuration(String startIso, String endIso) {
+  String _entryDuration(AppLocalizations l10n, String startIso, String endIso) {
     final start = DateTime.parse(startIso);
     final end = DateTime.parse(endIso);
-    final totalMinutes = end.difference(start).inMinutes;
-    if (totalMinutes < 60) return '${totalMinutes}m';
-    final hours = totalMinutes ~/ 60;
-    final mins = totalMinutes % 60;
-    return mins > 0 ? '${hours}h ${mins}m' : '${hours}h';
+    return formatDuration(l10n, end.difference(start));
   }
 
   String _truncateDescription(String desc, {int maxLen = 50}) {
@@ -48,32 +46,33 @@ class _HistoryEntryCardState extends ConsumerState<HistoryEntryCard> {
 
   Future<void> _delete(BuildContext context) async {
     final theme = widget.theme;
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: theme.background,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(
-          'Delete entry?',
+          l10n.historyDeleteEntryTitle,
           style: TextStyle(
               color: theme.text, fontFamily: 'Sora', fontWeight: FontWeight.w600),
         ),
         content: Text(
-          'This action cannot be undone.',
+          l10n.historyDeleteEntryBody,
           style: TextStyle(color: theme.dim, fontFamily: 'Sora', fontSize: 14),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
             child: Text(
-              'Cancel',
+              l10n.commonCancel,
               style: TextStyle(color: theme.dim, fontFamily: 'Sora'),
             ),
           ),
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(true),
             child: Text(
-              'Delete',
+              l10n.commonDelete,
               style: TextStyle(
                   color: Colors.red[400],
                   fontFamily: 'Sora',
@@ -89,13 +88,13 @@ class _HistoryEntryCardState extends ConsumerState<HistoryEntryCard> {
     try {
       final dbService = ref.read(databaseServiceProvider).valueOrNull;
       if (dbService == null) {
-        if (mounted) setState(() => _deleteError = 'Database unavailable.');
+        if (mounted) setState(() => _deleteError = l10n.historyDbUnavailableShort);
         return;
       }
       await dbService.deleteEntry(widget.entry.id);
     } catch (_) {
       if (mounted) {
-        setState(() => _deleteError = 'Failed to delete entry.');
+        setState(() => _deleteError = l10n.historyDeleteEntryFailed);
       }
     }
   }
@@ -116,6 +115,7 @@ class _HistoryEntryCardState extends ConsumerState<HistoryEntryCard> {
   Widget build(BuildContext context) {
     final entry = widget.entry;
     final theme = widget.theme;
+    final l10n = AppLocalizations.of(context)!;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
@@ -156,7 +156,7 @@ class _HistoryEntryCardState extends ConsumerState<HistoryEntryCard> {
                       border: Border.all(color: color),
                     ),
                     child: Text(
-                      entry.activityType,
+                      activityTypeLabel(l10n, entry.activityType),
                       style: TextStyle(
                         fontFamily: 'Sora',
                         fontSize: 11,
@@ -169,7 +169,7 @@ class _HistoryEntryCardState extends ConsumerState<HistoryEntryCard> {
               ),
               const SizedBox(width: 8),
               Text(
-                _formatDuration(entry.startTime, entry.endTime),
+                _entryDuration(l10n, entry.startTime, entry.endTime),
                 style: TextStyle(
                   fontFamily: 'Sora',
                   fontSize: 12,
@@ -207,7 +207,7 @@ class _HistoryEntryCardState extends ConsumerState<HistoryEntryCard> {
               entry.entertainmentType!.isNotEmpty) ...[
             const SizedBox(height: 4),
             Text(
-              entry.entertainmentType!,
+              entertainmentTypeLabel(l10n, entry.entertainmentType!),
               style: TextStyle(
                 fontFamily: 'Sora',
                 fontSize: 12,

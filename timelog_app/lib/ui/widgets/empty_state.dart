@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme.dart';
+import '../../l10n/generated/app_localizations.dart';
 
 class EmptyState extends StatelessWidget {
   final AppThemeData theme;
@@ -9,6 +10,7 @@ class EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -16,7 +18,7 @@ class EmptyState extends StatelessWidget {
           Icon(Icons.history_toggle_off_outlined, size: 52, color: theme.faint),
           const SizedBox(height: 16),
           Text(
-            'No entries for this day',
+            l10n.historyEmptyTitle,
             style: TextStyle(
               color: theme.dim,
               fontFamily: 'Sora',
@@ -25,7 +27,7 @@ class EmptyState extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Start a timer to log your work',
+            l10n.historyEmptySubtitle,
             style: TextStyle(
               color: theme.faint,
               fontFamily: 'Sora',

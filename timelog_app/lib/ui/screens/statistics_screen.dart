@@ -3,28 +3,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/activity_types.dart';
 import '../../core/config.dart';
+import '../../core/date_format_utils.dart';
 import '../../core/theme.dart';
 import '../../data/database.dart' show TimeEntry;
 import '../../data/stats_data.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../../providers/statistics_provider.dart';
 import '../../providers/history_provider.dart' show logicalDay;
 import '../../providers/theme_provider.dart';
 import '../painters/bar_painter.dart';
 import '../painters/timeline_painter.dart';
 
-const _weekdayLabels = ['Po', 'Út', 'St', 'Čt', 'Pá', 'So', 'Ne'];
-
 DateTime _weekStart(DateTime date) {
   final start = date.subtract(Duration(days: date.weekday - 1));
   return DateTime(start.year, start.month, start.day);
-}
-
-String _formatDuration(Duration duration) {
-  final totalMinutes = duration.inMinutes;
-  if (totalMinutes < 60) return '${totalMinutes}m';
-  final hours = totalMinutes ~/ 60;
-  final mins = totalMinutes % 60;
-  return mins > 0 ? '${hours}h ${mins}m' : '${hours}h';
 }
 
 bool _isCurrentPeriod(StatsPeriod period, DateTime date) {
@@ -49,6 +41,7 @@ class StatisticsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = ref.watch(themeProvider);
+    final l10n = AppLocalizations.of(context)!;
     final statsAsync = ref.watch(statisticsProvider);
     final period = ref.watch(statisticsPeriodProvider);
     final date = ref.watch(statisticsDateProvider);
@@ -61,7 +54,7 @@ class StatisticsScreen extends ConsumerWidget {
           children: [
             const SizedBox(height: 12),
             Text(
-              'Statistiky',
+              l10n.statsTitle,
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: theme.text,
@@ -106,8 +99,9 @@ class StatisticsScreen extends ConsumerWidget {
                           entries: stats.entries,
                           weekStart: _weekStart(date),
                           theme: theme,
+                          l10n: l10n,
                         ),
-                      Expanded(child: _StatsBody(stats: stats, theme: theme)),
+                      Expanded(child: _StatsBody(stats: stats, theme: theme, l10n: l10n)),
                     ],
                   ),
                   loading: () => Center(
@@ -115,7 +109,7 @@ class StatisticsScreen extends ConsumerWidget {
                   ),
                   error: (error, _) => Center(
                     child: Text(
-                      'Nepodařilo se načíst statistiky.',
+                      l10n.statsLoadFailed,
                       style: TextStyle(color: theme.dim, fontFamily: 'Sora'),
                     ),
                   ),
@@ -137,6 +131,7 @@ class _PeriodToggle extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final period = ref.watch(statisticsPeriodProvider);
+    final l10n = AppLocalizations.of(context)!;
 
     return Center(
       child: Container(
@@ -149,14 +144,14 @@ class _PeriodToggle extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             _PeriodSegment(
-              label: 'Den',
+              label: l10n.statsPeriodDay,
               isActive: period == StatsPeriod.daily,
               theme: theme,
               onTap: () => ref.read(statisticsPeriodProvider.notifier).state =
                   StatsPeriod.daily,
             ),
             _PeriodSegment(
-              label: 'Týden',
+              label: l10n.statsPeriodWeek,
               isActive: period == StatsPeriod.weekly,
               theme: theme,
               onTap: () => ref.read(statisticsPeriodProvider.notifier).state =
@@ -211,18 +206,18 @@ class _DateNav extends ConsumerWidget {
 
   const _DateNav({required this.theme});
 
-  String _label(StatsPeriod period, DateTime date) {
+  String _label(AppLocalizations l10n, StatsPeriod period, DateTime date) {
     final now = DateTime.now();
     if (period == StatsPeriod.daily) {
       final today = DateTime(now.year, now.month, now.day);
       final yesterday = today.subtract(const Duration(days: 1));
-      if (date == today) return 'Dnes';
-      if (date == yesterday) return 'Včera';
+      if (date == today) return l10n.dayToday;
+      if (date == yesterday) return l10n.dayYesterday;
       return '${date.day}. ${date.month}. ${date.year}';
     }
 
     final weekStart = _weekStart(date);
-    if (weekStart == _weekStart(now)) return 'Tento týden';
+    if (weekStart == _weekStart(now)) return l10n.statsThisWeek;
     final weekEnd = weekStart.add(const Duration(days: 6));
     return '${weekStart.day}. ${weekStart.month}. – ${weekEnd.day}. ${weekEnd.month}. ${weekEnd.year}';
   }
@@ -231,6 +226,7 @@ class _DateNav extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final period = ref.watch(statisticsPeriodProvider);
     final date = ref.watch(statisticsDateProvider);
+    final l10n = AppLocalizations.of(context)!;
     final step = period == StatsPeriod.daily ? 1 : 7;
     final isCurrent = _isCurrentPeriod(period, date);
 
@@ -245,7 +241,7 @@ class _DateNav extends ConsumerWidget {
           },
         ),
         Text(
-          _label(period, date),
+          _label(l10n, period, date),
           style: TextStyle(
             color: theme.text,
             fontFamily: 'Sora',
@@ -312,16 +308,19 @@ class _WeeklyTimeline extends StatelessWidget {
   final List<TimeEntry> entries;
   final DateTime weekStart;
   final AppThemeData theme;
+  final AppLocalizations l10n;
 
   const _WeeklyTimeline({
     required this.entries,
     required this.weekStart,
     required this.theme,
+    required this.l10n,
   });
 
   @override
   Widget build(BuildContext context) {
     final isDark = theme.themeKey != AppTheme.paper;
+    final weekdayLabels = weekdayShortLabels(l10n);
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -336,7 +335,7 @@ class _WeeklyTimeline extends StatelessWidget {
             Padding(
               padding: EdgeInsets.only(bottom: i < 6 ? 6 : 0),
               child: _WeekdayRow(
-                label: _weekdayLabels[i],
+                label: weekdayLabels[i],
                 day: weekStart.add(Duration(days: i)),
                 entries: entries,
                 theme: theme,
@@ -410,15 +409,16 @@ class _WeekdayRow extends StatelessWidget {
 class _StatsBody extends StatelessWidget {
   final StatsData stats;
   final AppThemeData theme;
+  final AppLocalizations l10n;
 
-  const _StatsBody({required this.stats, required this.theme});
+  const _StatsBody({required this.stats, required this.theme, required this.l10n});
 
   @override
   Widget build(BuildContext context) {
     if (stats.byActivityType.isEmpty) {
       return Center(
         child: Text(
-          'Žádné záznamy pro toto období',
+          l10n.statsNoEntriesPeriod,
           style: TextStyle(color: theme.dim, fontFamily: 'Sora', fontSize: 15),
         ),
       );
@@ -433,7 +433,7 @@ class _StatsBody extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
       children: [
         Text(
-          'Podle typu aktivity',
+          l10n.statsByActivityType,
           style: TextStyle(
             color: theme.dim,
             fontFamily: 'Sora',
@@ -453,12 +453,13 @@ class _StatsBody extends StatelessWidget {
                   : entry.value.inSeconds / stats.totalTracked.inSeconds,
               color: activityTypeColor(entry.key, isDark: isDark),
               theme: theme,
+              l10n: l10n,
             ),
           ),
         if (projectEntries.isNotEmpty) ...[
           const SizedBox(height: 8),
           Text(
-            'Podle projektu',
+            l10n.statsByProject,
             style: TextStyle(
               color: theme.dim,
               fontFamily: 'Sora',
@@ -494,7 +495,7 @@ class _StatsBody extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    _formatDuration(entry.duration),
+                    formatDuration(l10n, entry.duration),
                     style: TextStyle(
                       color: theme.dim,
                       fontFamily: 'Sora',
@@ -517,7 +518,7 @@ class _StatsBody extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Celkem sledováno',
+                l10n.statsTotalTracked,
                 style: TextStyle(
                   color: theme.dim,
                   fontFamily: 'Sora',
@@ -525,7 +526,7 @@ class _StatsBody extends StatelessWidget {
                 ),
               ),
               Text(
-                _formatDuration(stats.totalTracked),
+                formatDuration(l10n, stats.totalTracked),
                 style: TextStyle(
                   color: theme.text,
                   fontFamily: 'Sora',
@@ -548,7 +549,7 @@ class _StatsBody extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Nesledovaný čas',
+                l10n.statsUntrackedTime,
                 style: TextStyle(
                   color: theme.dim,
                   fontFamily: 'Sora',
@@ -556,7 +557,7 @@ class _StatsBody extends StatelessWidget {
                 ),
               ),
               Text(
-                _formatDuration(stats.untrackedTime),
+                formatDuration(l10n, stats.untrackedTime),
                 style: TextStyle(
                   color: theme.text,
                   fontFamily: 'Sora',
@@ -578,6 +579,7 @@ class _ActivityTypeBar extends StatelessWidget {
   final double progress;
   final Color color;
   final AppThemeData theme;
+  final AppLocalizations l10n;
 
   const _ActivityTypeBar({
     required this.type,
@@ -585,6 +587,7 @@ class _ActivityTypeBar extends StatelessWidget {
     required this.progress,
     required this.color,
     required this.theme,
+    required this.l10n,
   });
 
   @override
@@ -597,7 +600,7 @@ class _ActivityTypeBar extends StatelessWidget {
           children: [
             Expanded(
               child: Text(
-                type,
+                activityTypeLabel(l10n, type),
                 style: TextStyle(
                   color: theme.text,
                   fontFamily: 'Sora',
@@ -607,7 +610,7 @@ class _ActivityTypeBar extends StatelessWidget {
               ),
             ),
             Text(
-              '${_formatDuration(duration)} · $percent%',
+              '${formatDuration(l10n, duration)} · $percent%',
               style: TextStyle(color: theme.dim, fontFamily: 'Sora', fontSize: 12),
             ),
           ],

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/activity_types.dart';
 import '../../core/theme.dart';
 import '../../data/database.dart';
+import '../../l10n/generated/app_localizations.dart';
 import '../../providers/database_provider.dart';
 import '../../providers/task_providers.dart';
 
@@ -93,12 +94,13 @@ class _EditSheetState extends ConsumerState<EditSheet> {
       _controller.text.trim().isNotEmpty && !_saving && !_entertainmentSelectionMissing;
 
   Future<void> _save() async {
+    final l10n = AppLocalizations.of(context)!;
     if (_controller.text.trim().isEmpty) {
-      setState(() => _error = 'Description cannot be empty.');
+      setState(() => _error = l10n.errorDescriptionEmpty);
       return;
     }
     if (!_endTime.isAfter(_startTime)) {
-      setState(() => _error = 'End time must be after start time.');
+      setState(() => _error = l10n.errorEndBeforeStart);
       return;
     }
     if (!_canSave) return;
@@ -112,7 +114,7 @@ class _EditSheetState extends ConsumerState<EditSheet> {
       final dbService = ref.read(databaseServiceProvider).valueOrNull;
       if (dbService == null) {
         setState(() {
-          _error = 'Database unavailable. Please try again.';
+          _error = l10n.errorDatabaseUnavailable;
           _saving = false;
         });
         return;
@@ -142,7 +144,7 @@ class _EditSheetState extends ConsumerState<EditSheet> {
       if (mounted) Navigator.of(context).pop();
     } catch (_) {
       setState(() {
-        _error = 'Failed to save. Please try again.';
+        _error = l10n.errorSaveFailed;
         _saving = false;
       });
     }
@@ -151,6 +153,7 @@ class _EditSheetState extends ConsumerState<EditSheet> {
   @override
   Widget build(BuildContext context) {
     final theme = widget.theme;
+    final l10n = AppLocalizations.of(context)!;
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
     return GestureDetector(
@@ -186,7 +189,7 @@ class _EditSheetState extends ConsumerState<EditSheet> {
                   padding: const EdgeInsets.symmetric(horizontal: 24),
                   children: [
                 Text(
-                  'Edit description',
+                  l10n.editSheetTitle,
                   style: TextStyle(
                     color: theme.text,
                     fontFamily: 'Sora',
@@ -200,7 +203,7 @@ class _EditSheetState extends ConsumerState<EditSheet> {
                     Expanded(
                       child: _TimeField(
                         theme: theme,
-                        label: 'Start',
+                        label: l10n.timeFieldStart,
                         time: _formatTime(_startTime),
                         onTap: () => _pickTime(true),
                       ),
@@ -209,7 +212,7 @@ class _EditSheetState extends ConsumerState<EditSheet> {
                     Expanded(
                       child: _TimeField(
                         theme: theme,
-                        label: 'End',
+                        label: l10n.timeFieldEnd,
                         time: _formatTime(_endTime),
                         onTap: () => _pickTime(false),
                       ),
@@ -248,7 +251,7 @@ class _EditSheetState extends ConsumerState<EditSheet> {
                           ),
                         ),
                         child: Text(
-                          type,
+                          activityTypeLabel(l10n, type),
                           style: TextStyle(
                             color: isSelected ? color : theme.text,
                             fontFamily: 'Sora',
@@ -285,7 +288,7 @@ class _EditSheetState extends ConsumerState<EditSheet> {
                           focusNode: focusNode,
                           style: TextStyle(color: theme.text, fontFamily: 'Sora', fontSize: 15),
                           decoration: InputDecoration(
-                            hintText: 'Project name...',
+                            hintText: l10n.projectNameHint,
                             hintStyle: TextStyle(color: theme.faint, fontFamily: 'Sora'),
                             border: InputBorder.none,
                           ),
@@ -356,7 +359,7 @@ class _EditSheetState extends ConsumerState<EditSheet> {
                             ),
                           ),
                           child: Text(
-                            type,
+                            entertainmentTypeLabel(l10n, type),
                             style: TextStyle(
                               color: isSelected ? color : theme.text,
                               fontFamily: 'Sora',
@@ -386,7 +389,7 @@ class _EditSheetState extends ConsumerState<EditSheet> {
                     style: TextStyle(
                         color: theme.text, fontFamily: 'Sora', fontSize: 15),
                     decoration: InputDecoration(
-                      hintText: 'Describe what you worked on...',
+                      hintText: l10n.descriptionHint,
                       hintStyle:
                           TextStyle(color: theme.faint, fontFamily: 'Sora'),
                       border: InputBorder.none,
@@ -434,7 +437,7 @@ class _EditSheetState extends ConsumerState<EditSheet> {
                             ),
                           )
                         : Text(
-                            'Save',
+                            l10n.commonSave,
                             style: TextStyle(
                               fontFamily: 'Sora',
                               fontWeight: FontWeight.w600,
@@ -450,7 +453,7 @@ class _EditSheetState extends ConsumerState<EditSheet> {
                     foregroundColor: theme.dim,
                   ),
                   child: Text(
-                    'Cancel',
+                    l10n.commonCancel,
                     style: TextStyle(
                       fontFamily: 'Sora',
                       fontWeight: FontWeight.w600,

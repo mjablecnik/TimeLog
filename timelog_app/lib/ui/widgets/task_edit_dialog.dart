@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme.dart';
 import '../../data/database.dart';
+import '../../l10n/generated/app_localizations.dart';
 
 /// Values entered in a [TaskEditDialog] on save. The caller is responsible
 /// for persisting them via TaskService (create or update).
@@ -103,6 +104,7 @@ class _TaskEditDialogState extends State<TaskEditDialog> {
   @override
   Widget build(BuildContext context) {
     final theme = widget.theme;
+    final l10n = AppLocalizations.of(context)!;
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
     return GestureDetector(
@@ -136,7 +138,7 @@ class _TaskEditDialogState extends State<TaskEditDialog> {
                   padding: const EdgeInsets.symmetric(horizontal: 24),
                   children: [
                     Text(
-                      _isEditing ? 'Upravit úkol' : 'Nový úkol',
+                      _isEditing ? l10n.taskEditTitle : l10n.taskNewTitle,
                       style: TextStyle(
                         color: theme.text,
                         fontFamily: 'Sora',
@@ -158,7 +160,7 @@ class _TaskEditDialogState extends State<TaskEditDialog> {
                         autofocus: !_isEditing,
                         style: TextStyle(color: theme.text, fontFamily: 'Sora'),
                         decoration: InputDecoration(
-                          hintText: 'Název úkolu',
+                          hintText: l10n.taskTitleHint,
                           hintStyle: TextStyle(color: theme.faint, fontFamily: 'Sora'),
                           border: InputBorder.none,
                           counterStyle: TextStyle(color: theme.faint, fontSize: 11),
@@ -180,7 +182,7 @@ class _TaskEditDialogState extends State<TaskEditDialog> {
                         maxLines: 4,
                         style: TextStyle(color: theme.text, fontFamily: 'Sora', fontSize: 15),
                         decoration: InputDecoration(
-                          hintText: 'Popis (volitelné)',
+                          hintText: l10n.taskDescriptionHint,
                           hintStyle: TextStyle(color: theme.faint, fontFamily: 'Sora'),
                           border: InputBorder.none,
                           counterStyle: TextStyle(color: theme.faint, fontSize: 11),
@@ -204,7 +206,7 @@ class _TaskEditDialogState extends State<TaskEditDialog> {
                             Expanded(
                               child: Text(
                                 _deadline == null
-                                    ? 'Termín (volitelné)'
+                                    ? l10n.taskDeadlineHint
                                     : _formatPickedDeadline(_deadline!),
                                 style: TextStyle(
                                   color: _deadline == null ? theme.faint : theme.text,
@@ -234,7 +236,7 @@ class _TaskEditDialogState extends State<TaskEditDialog> {
                           onPressed: () => Navigator.of(context).pop(),
                           style: TextButton.styleFrom(foregroundColor: theme.dim),
                           child: Text(
-                            'Zrušit',
+                            l10n.commonCancel,
                             style: TextStyle(fontFamily: 'Sora', fontWeight: FontWeight.w600),
                           ),
                         ),
@@ -252,7 +254,7 @@ class _TaskEditDialogState extends State<TaskEditDialog> {
                             elevation: 0,
                           ),
                           child: Text(
-                            'Uložit',
+                            l10n.commonSave,
                             style: TextStyle(fontFamily: 'Sora', fontWeight: FontWeight.w600),
                           ),
                         ),

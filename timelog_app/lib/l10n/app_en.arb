@@ -1,0 +1,226 @@
+{
+  "@@locale": "en",
+
+  "commonCancel": "Cancel",
+  "commonBack": "Back",
+  "commonSave": "Save",
+  "commonDelete": "Delete",
+  "commonSubmit": "Submit",
+  "commonSkip": "Skip",
+  "commonReset": "Reset",
+  "commonCreate": "Create",
+  "commonUnassigned": "Unassigned",
+
+  "errorDatabaseUnavailable": "Database unavailable. Please try again.",
+  "errorSaveEntryFailed": "Failed to save entry. Please try again.",
+  "errorSaveFailed": "Failed to save. Please try again.",
+  "errorDescriptionEmpty": "Description cannot be empty.",
+  "errorEndBeforeStart": "End time must be after start time.",
+  "errorGeneric": "Something went wrong. Please try again.",
+
+  "projectNameHint": "Project name...",
+  "projectNameFieldHint": "Project name",
+  "descriptionHint": "Describe what you worked on...",
+  "timeFieldStart": "Start",
+  "timeFieldEnd": "End",
+  "durationMinutesLabel": "{minutes} min",
+  "@durationMinutesLabel": {
+    "placeholders": {
+      "minutes": { "type": "int" }
+    }
+  },
+
+  "durationMinutesOnly": "{minutes}m",
+  "@durationMinutesOnly": {
+    "placeholders": {
+      "minutes": { "type": "int" }
+    }
+  },
+  "durationHoursOnly": "{hours}h",
+  "@durationHoursOnly": {
+    "placeholders": {
+      "hours": { "type": "int" }
+    }
+  },
+  "durationHoursMinutes": "{hours}h {minutes}m",
+  "@durationHoursMinutes": {
+    "placeholders": {
+      "hours": { "type": "int" },
+      "minutes": { "type": "int" }
+    }
+  },
+
+  "weekdayMon": "Mo",
+  "weekdayTue": "Tu",
+  "weekdayWed": "We",
+  "weekdayThu": "Th",
+  "weekdayFri": "Fr",
+  "weekdaySat": "Sa",
+  "weekdaySun": "Su",
+
+  "activityWork": "Work",
+  "activityHousework": "Housework",
+  "activityCommute": "Commute",
+  "activityEntertainment": "Entertainment",
+  "activityExercise": "Exercise",
+  "activitySelfDevelopment": "Self-development",
+  "activityRest": "Rest",
+  "activityHygiene": "Hygiene",
+  "activityMeal": "Meal",
+  "entertainmentActive": "Active entertainment",
+  "entertainmentPassive": "Passive entertainment",
+
+  "timerPrefillTooltip": "Pre-fill description",
+  "timerPhaseReady": "READY",
+  "timerPhaseFocus": "FOCUS",
+  "timerPhasePaused": "PAUSED",
+  "timerPhaseTimeUp": "TIME UP",
+  "timerPhaseLogging": "LOGGING",
+  "timerResetTitle": "Reset timer?",
+  "timerResetBody": "Do you really want to reset the timer?",
+  "timerTimeUpTitle": "Time is up!",
+  "ringingDismiss": "Dismiss",
+
+  "descriptionClearFormTooltip": "Clear form",
+  "descriptionTitle": "What did you accomplish?",
+  "prefillSaveDraft": "Save Draft",
+
+  "editSheetTitle": "Edit description",
+
+  "manualEntryTitle": "Add entry",
+
+  "historyTitle": "History",
+  "historyLoadError": "Failed to load entries.",
+  "historyEntryCount": "{count, plural, one{{count} entry} other{{count} entries}}",
+  "@historyEntryCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "historyTotalLabel": "Total: {duration}",
+  "@historyTotalLabel": {
+    "placeholders": {
+      "duration": { "type": "String" }
+    }
+  },
+  "historyDeleteEntryTitle": "Delete entry?",
+  "historyDeleteEntryBody": "This action cannot be undone.",
+  "historyDbUnavailableShort": "Database unavailable.",
+  "historyDeleteEntryFailed": "Failed to delete entry.",
+  "historyEmptyTitle": "No entries for this day",
+  "historyEmptySubtitle": "Start a timer to log your work",
+  "dayToday": "Today",
+  "dayYesterday": "Yesterday",
+
+  "tasksTitle": "Tasks",
+  "taskCreateFailed": "Failed to create task.",
+  "taskReorderFailed": "Failed to move task.",
+  "tasksShowArchived": "Show archived tasks",
+  "tasksLoadFailed": "Failed to load tasks.",
+  "tasksEmptyTitle": "No tasks yet",
+  "tasksEmptySubtitle": "Tap + to create your first task",
+  "tasksArchivedHeader": "Archived",
+  "taskToggleFailed": "Failed to update task status.",
+  "taskUnarchiveFailed": "Failed to restore task.",
+  "taskSaveFailed": "Failed to save task.",
+  "taskDeleteTitle": "Delete task?",
+  "taskDeleteBody": "\"{title}\" will be permanently removed.",
+  "@taskDeleteBody": {
+    "placeholders": {
+      "title": { "type": "String" }
+    }
+  },
+  "taskDeleteFailed": "Failed to delete task.",
+  "taskEditTitle": "Edit task",
+  "taskNewTitle": "New task",
+  "taskTitleHint": "Task title",
+  "taskDescriptionHint": "Description (optional)",
+  "taskDeadlineHint": "Deadline (optional)",
+
+  "projectCreateFailed": "Failed to create project.",
+  "projectDeleteTitle": "Delete project \"{name}\"?",
+  "@projectDeleteTitle": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "projectDeleteBody": "All tasks in this project will be permanently deleted.",
+  "projectDeleteFailed": "Failed to delete project.",
+  "projectCreateTitle": "New project",
+
+  "statsTitle": "Statistics",
+  "statsPeriodDay": "Day",
+  "statsPeriodWeek": "Week",
+  "statsLoadFailed": "Failed to load statistics.",
+  "statsThisWeek": "This week",
+  "statsNoEntriesPeriod": "No entries for this period",
+  "statsByActivityType": "By activity type",
+  "statsByProject": "By project",
+  "statsTotalTracked": "Total tracked",
+  "statsUntrackedTime": "Untracked time",
+  "navStats": "Stats",
+
+  "navTimer": "Timer",
+
+  "settingsTitle": "Settings",
+  "settingsDailyReminderSection": "Daily reminder",
+  "settingsReminderToggleLabel": "Remind me to start the timer",
+  "settingsReminderTimeLabel": "Reminder time",
+  "settingsRecurringRemindersLabel": "Recurring reminders",
+  "settingsTestingSection": "Testing",
+  "settingsTestNotificationButton": "Test notification (in 5 s)",
+  "settingsShowModalDebugButton": "Show modal directly (debug)",
+  "settingsNotificationsDisabled": "Notifications are disabled. Enable them in your phone's settings.",
+  "settingsNoRemindersYet": "First create at least one recurring reminder.",
+  "settingsTestNotificationTitle": "🧪 Test: {name}",
+  "@settingsTestNotificationTitle": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "settingsTestNotificationScheduled": "Test notification will arrive in 5 seconds.",
+  "settingsNoReminder": "No reminder.",
+  "settingsLanguageSection": "Language",
+
+  "reminderDeleteTitle": "Delete reminder?",
+  "reminderDeleteBody": "Reminder \"{name}\" will be permanently deleted.",
+  "@reminderDeleteBody": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "reminderDeleteFailed": "Failed to delete reminder.",
+  "remindersEmptyTitle": "You don't have any reminders yet",
+  "remindersEmptySubtitle": "Tap + to create your first reminder",
+  "remindersLoadFailed": "Failed to load reminders.",
+
+  "reminderSnooze": "Snooze",
+  "reminderDone": "Done",
+
+  "reminderCompletionUpdateFailed": "Failed to update completion status.",
+  "reminderActiveToggleFailed": "Failed to update reminder.",
+  "reminderCapacityError": "Not enough notification slots: {available} available, {required} needed.",
+  "@reminderCapacityError": {
+    "placeholders": {
+      "available": { "type": "int" },
+      "required": { "type": "int" }
+    }
+  },
+
+  "reminderDiscardTitle": "Discard changes?",
+  "reminderDiscardBody": "Unsaved changes will be lost.",
+  "reminderDiscardConfirm": "Discard",
+  "reminderEditTitle": "Edit reminder",
+  "reminderNewTitle": "New reminder",
+  "reminderNameHint": "Name",
+  "reminderFromLabel": "From",
+  "reminderToLabel": "To",
+  "reminderOvernightNote": "Window spans past midnight into the next day.",
+  "reminderIntervalLabel": "Repeat interval",
+  "reminderActiveDaysLabel": "Active days",
+  "reminderActiveLabel": "Active",
+  "reminderEditBarrierLabel": "Reminder edit dialog",
+
+  "reminderDailyNotificationBody": "Time to start your timer!",
+  "recurringReminderDefaultNotificationBody": "Tap to open"
+}

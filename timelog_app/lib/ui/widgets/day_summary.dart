@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../../core/date_format_utils.dart';
 import '../../core/theme.dart';
 import '../../data/database.dart';
+import '../../l10n/generated/app_localizations.dart';
 
 class DaySummary extends StatelessWidget {
   final List<TimeEntry> entries;
@@ -9,28 +11,26 @@ class DaySummary extends StatelessWidget {
 
   const DaySummary({super.key, required this.entries, required this.theme});
 
-  String _totalTime() {
+  Duration _totalTime() {
     int totalMinutes = 0;
     for (final entry in entries) {
       final start = DateTime.parse(entry.startTime);
       final end = DateTime.parse(entry.endTime);
       totalMinutes += end.difference(start).inMinutes;
     }
-    if (totalMinutes < 60) return '${totalMinutes}m';
-    final hours = totalMinutes ~/ 60;
-    final mins = totalMinutes % 60;
-    return mins > 0 ? '${hours}h ${mins}m' : '${hours}h';
+    return Duration(minutes: totalMinutes);
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final count = entries.length;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
         children: [
           Text(
-            '$count ${count == 1 ? 'entry' : 'entries'}',
+            l10n.historyEntryCount(count),
             style: TextStyle(
               color: theme.dim,
               fontFamily: 'Sora',
@@ -39,7 +39,7 @@ class DaySummary extends StatelessWidget {
           ),
           const SizedBox(width: 16),
           Text(
-            'Total: ${_totalTime()}',
+            l10n.historyTotalLabel(formatDuration(l10n, _totalTime())),
             style: TextStyle(
               color: theme.dim,
               fontFamily: 'Sora',

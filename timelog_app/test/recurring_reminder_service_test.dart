@@ -1,5 +1,7 @@
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:timelog_app/l10n/generated/app_localizations.dart';
 import 'package:timelog_app/services/active_days_utils.dart';
 import 'package:timelog_app/services/recurring_reminder_service.dart';
 
@@ -177,10 +179,17 @@ void main() {
     }
   });
 
-  test('buildNotificationBody falls back to the Czech default text', () {
-    expect(RecurringReminderService.buildNotificationBody(null), 'Klepni pro otevření');
-    expect(RecurringReminderService.buildNotificationBody('   '), 'Klepni pro otevření');
-    expect(RecurringReminderService.buildNotificationBody('Vezmi si prášky'), 'Vezmi si prášky');
+  test('buildNotificationBody falls back to the localized default text', () {
+    final csL10n = lookupAppLocalizations(const Locale('cs'));
+    expect(RecurringReminderService.buildNotificationBody(null, csL10n), 'Klepni pro otevření');
+    expect(RecurringReminderService.buildNotificationBody('   ', csL10n), 'Klepni pro otevření');
+    expect(
+      RecurringReminderService.buildNotificationBody('Vezmi si prášky', csL10n),
+      'Vezmi si prášky',
+    );
+
+    final enL10n = lookupAppLocalizations(const Locale('en'));
+    expect(RecurringReminderService.buildNotificationBody(null, enL10n), 'Tap to open');
   });
 
   test('parseReminderIdFromPayload extracts the id or returns null', () {

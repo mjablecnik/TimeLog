@@ -1,15 +1,14 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 
+import '../core/app_locale.dart';
 import '../data/database.dart';
+import '../l10n/generated/app_localizations.dart';
 import 'active_days_utils.dart';
 
 /// Prefix for the notification payload identifying a recurring reminder tap.
 /// Full payload format: `recurring_reminder:` followed by the reminder ID.
 const String recurringReminderPayloadPrefix = 'recurring_reminder:';
-
-/// Shown as the notification body when a reminder has no description.
-const String recurringReminderDefaultBody = 'Klepni pro otevření';
 
 /// Extracts the reminder ID from a notification [payload], or `null` if the
 /// payload is missing or does not belong to a recurring reminder.
@@ -80,11 +79,11 @@ class RecurringReminderService {
   static bool isActiveDay(int activeDaysBitmask, int weekday) =>
       isDayActive(activeDaysBitmask, weekday);
 
-  /// Builds the notification body: the description, or the default Czech
-  /// placeholder text if the description is null or blank.
-  static String buildNotificationBody(String? description) {
+  /// Builds the notification body: the description, or a localized
+  /// placeholder text (via [l10n]) if the description is null or blank.
+  static String buildNotificationBody(String? description, AppLocalizations l10n) {
     if (description == null || description.trim().isEmpty) {
-      return recurringReminderDefaultBody;
+      return l10n.recurringReminderDefaultNotificationBody;
     }
     return description;
   }
@@ -231,6 +230,7 @@ class RecurringReminderService {
   Future<void> scheduleUpcoming(RecurringReminder reminder) async {
     if (!reminder.isActive) return;
 
+    final l10n = await loadAppLocalizations();
     final now = tz.TZDateTime.now(tz.local);
     final hasCompletion =
         await _db.hasCompletionForToday(reminder.id, isoDateString(now));
@@ -256,7 +256,7 @@ class RecurringReminderService {
       if (remainingCapacity <= 0) break;
       final id = getNotificationId(reminder.id, slot.slotIndex);
       if (pendingIds.contains(id)) continue;
-      await _scheduleOne(reminder: reminder, id: id, time: slot.time);
+      await _scheduleOne(reminder: reminder, id: id, time: slot.time, l10n: l10n);
       remainingCapacity--;
     }
   }
@@ -265,12 +265,13 @@ class RecurringReminderService {
     required RecurringReminder reminder,
     required int id,
     required DateTime time,
+    required AppLocalizations l10n,
   }) async {
     await _plugin.zonedSchedule(
       id: id,
       scheduledDate: tz.TZDateTime.from(time, tz.local),
       title: reminder.name,
-      body: buildNotificationBody(reminder.description),
+      body: buildNotificationBody(reminder.description, l10n),
       payload: '$recurringReminderPayloadPrefix${reminder.id}',
       notificationDetails: const NotificationDetails(
         android: AndroidNotificationDetails(
