@@ -28,6 +28,19 @@ Key features:
 - Three color themes (Ember, Midnight, Paper) — Midnight is the default
 - Cross-platform Flutter app: Android, iOS, Linux, macOS, Windows, Web
 
+## Screenshots
+
+<p>
+  <img src="screenshots/01-timer-ready.png" width="32%" />
+  <img src="screenshots/02-timer-running.png" width="32%" />
+  <img src="screenshots/03-tag-entry.png" width="32%" />
+</p>
+<p>
+  <img src="screenshots/04-tasks.png" width="32%" />
+  <img src="screenshots/05-stats.png" width="32%" />
+  <img src="screenshots/06-history.png" width="32%" />
+</p>
+
 ## Prerequisites
 
 - Flutter SDK with Dart `^3.10.4` (the repo pins Flutter `3.44.6` via `.fvmrc` if you use
