@@ -31,14 +31,14 @@ Key features:
 ## Screenshots
 
 <p>
-  <img src="screenshots/01-timer-ready.png" width="32%" />
-  <img src="screenshots/02-timer-running.png" width="32%" />
-  <img src="screenshots/03-tag-entry.png" width="32%" />
+  <img src="timelog_app/screenshots/01-timer-ready.png" width="32%" />
+  <img src="timelog_app/screenshots/02-timer-running.png" width="32%" />
+  <img src="timelog_app/screenshots/03-tag-entry.png" width="32%" />
 </p>
 <p>
-  <img src="screenshots/04-tasks.png" width="32%" />
-  <img src="screenshots/05-stats.png" width="32%" />
-  <img src="screenshots/06-history.png" width="32%" />
+  <img src="timelog_app/screenshots/04-tasks.png" width="32%" />
+  <img src="timelog_app/screenshots/05-stats.png" width="32%" />
+  <img src="timelog_app/screenshots/06-history.png" width="32%" />
 </p>
 
 ## Prerequisites
