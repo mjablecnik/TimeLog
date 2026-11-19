@@ -92,6 +92,7 @@ class ProjectSelector extends ConsumerWidget {
       await ref
           .read(taskServiceProvider)
           .createProject(result.name, scope: result.scope);
+      ref.invalidate(suggestionsProvider);
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_lastTaskProjectScopeKey, result.scope.name);
     } catch (_) {
@@ -184,6 +185,7 @@ class ProjectSelector extends ConsumerWidget {
     await ref
         .read(taskServiceProvider)
         .updateProjectScope(project.id, result.scope);
+    ref.invalidate(suggestionsProvider);
   }
 
   Future<void> _confirmDeleteProject(
@@ -233,6 +235,7 @@ class ProjectSelector extends ConsumerWidget {
 
     try {
       await ref.read(taskServiceProvider).deleteProject(project.id);
+      ref.invalidate(suggestionsProvider);
       if (ref.read(selectedTaskProjectProvider) == project.id) {
         ref.read(selectedTaskProjectProvider.notifier).state = null;
       }

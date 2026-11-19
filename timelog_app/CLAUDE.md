@@ -48,6 +48,9 @@ See [DOCS.md](DOCS.md#project-structure) for the full annotated tree. Summary:
 - Name suggestions are per category (`SuggestionScope`: paid work, unpaid work, housework,
   other), stored by `ProjectService` and read through `suggestionsProvider(scope)`, which also
   merges the Tasks-tab projects of that category. A Tasks project has a `scope` column.
+  The provider is `autoDispose`, and every place that saves a name or changes a Tasks project calls
+  `ref.invalidate(suggestionsProvider)` — do the same when adding a new one, or the new name is not
+  offered until the app restarts.
 - Riverpod: `StateNotifierProvider` for mutable app state (`timerProvider`, `themeProvider`),
   plain `Provider`/`FutureProvider` for service singletons. Read theme via
   `ref.watch(themeProvider)` and use `AppThemeData` fields — never hardcode colors.

@@ -7,6 +7,7 @@ import '../../core/theme.dart';
 import '../../data/database.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../providers/database_provider.dart';
+import '../../providers/task_providers.dart';
 import 'activity_picker/activity_picker.dart';
 
 class EditSheet extends ConsumerStatefulWidget {
@@ -132,6 +133,7 @@ class _EditSheetState extends ConsumerState<EditSheet> {
       final name = values.project ?? values.customName;
       if (scope != null && name != null) {
         await ref.read(projectServiceProvider).saveName(scope, name);
+        ref.invalidate(suggestionsProvider);
       }
 
       if (mounted) Navigator.of(context).pop();

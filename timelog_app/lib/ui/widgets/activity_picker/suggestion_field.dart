@@ -44,6 +44,9 @@ class SuggestionField extends ConsumerWidget {
       ),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       child: Autocomplete<String>(
+        // A new category rebuilds the field so its options are recomputed even
+        // while it has focus; the text typed so far comes back via initialText.
+        key: ValueKey(scope),
         initialValue: TextEditingValue(text: initialText),
         optionsBuilder: (textEditingValue) {
           final query = textEditingValue.text.trim().toLowerCase();

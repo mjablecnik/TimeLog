@@ -14,6 +14,8 @@ import 'package:timelog_app/core/theme.dart';
 import 'package:timelog_app/data/database.dart';
 import 'package:timelog_app/l10n/generated/app_localizations.dart';
 import 'package:timelog_app/providers/database_provider.dart';
+import 'package:timelog_app/providers/task_providers.dart';
+import 'package:timelog_app/services/project_service.dart';
 import 'package:timelog_app/ui/widgets/activity_picker/activity_picker.dart';
 import 'package:timelog_app/ui/widgets/description_sheet.dart';
 import 'package:timelog_app/ui/widgets/edit_sheet.dart';
@@ -211,6 +213,50 @@ void main() {
       await tester.pumpAndSettle();
       expect(latest, const ActivitySelection(typeKey: 'Práce', subtypeKey: 'unpaid', project: 'Kept'));
       expect(find.text('Kept'), findsOneWidget);
+    });
+
+    testWidgets('switching paid / unpaid offers the names of the new category even while focused',
+        (tester) async {
+      await ProjectService().saveName(SuggestionScope.workPaid, 'PaidName');
+      await ProjectService().saveName(SuggestionScope.workUnpaid, 'UnpaidName');
+      await _pump(tester, _picker(onChanged: (_) {}));
+
+      await tester.tap(find.byType(TextField));
+      await tester.pumpAndSettle();
+      expect(find.text('PaidName'), findsOneWidget);
+      expect(find.text('UnpaidName'), findsNothing);
+
+      await tester.tap(find.byKey(const ValueKey('subtype-chip-unpaid')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byType(TextField));
+      await tester.pumpAndSettle();
+      expect(find.text('UnpaidName'), findsOneWidget);
+      expect(find.text('PaidName'), findsNothing);
+    });
+
+    testWidgets('saving an entry refreshes the suggestions of its category', (tester) async {
+      final container = await _pump(
+        tester,
+        ManualEntrySheet(theme: AppThemeData.midnight, selectedDay: DateTime(2026, 1, 15)),
+        scrollable: false,
+      );
+      // Something else (for example an open sheet) already holds the list.
+      final sub = container.listen(suggestionsProvider(SuggestionScope.workPaid), (_, _) {});
+      addTearDown(sub.close);
+      expect(await container.read(suggestionsProvider(SuggestionScope.workPaid).future), isEmpty);
+
+      await tester.enterText(find.byType(TextField).first, 'LateName');
+      await tester.enterText(find.byType(TextField).last, 'Some description');
+      await tester.pump();
+      await tester.ensureVisible(find.byType(ElevatedButton));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byType(ElevatedButton));
+      await tester.pumpAndSettle();
+
+      expect(
+        await container.read(suggestionsProvider(SuggestionScope.workPaid).future),
+        ['LateName'],
+      );
     });
   });
 

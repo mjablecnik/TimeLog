@@ -33,7 +33,7 @@ final taskListProvider = StreamProvider<List<TaskItem>>((ref) {
 /// category first, then the names used in the timer entries of that category.
 /// Both tabs read the same list, so a name known in one is offered in the other.
 final suggestionsProvider =
-    FutureProvider.family<List<String>, SuggestionScope>((ref, scope) async {
+    FutureProvider.autoDispose.family<List<String>, SuggestionScope>((ref, scope) async {
   final taskService = ref.watch(taskServiceProvider);
   final projectService = ref.watch(projectServiceProvider);
   final db = ref.watch(appDatabaseProvider);
