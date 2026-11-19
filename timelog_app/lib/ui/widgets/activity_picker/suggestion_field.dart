@@ -36,26 +36,28 @@ class SuggestionField extends ConsumerWidget {
     final names =
         ref.watch(suggestionsProvider(scope)).valueOrNull ?? const <String>[];
 
-    return Container(
-      decoration: BoxDecoration(
-        color: theme.panel,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: theme.border),
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-      child: Autocomplete<String>(
-        // A new category rebuilds the field so its options are recomputed even
-        // while it has focus; the text typed so far comes back via initialText.
-        key: ValueKey(scope),
-        initialValue: TextEditingValue(text: initialText),
-        optionsBuilder: (textEditingValue) {
-          final query = textEditingValue.text.trim().toLowerCase();
-          if (query.isEmpty) return names;
-          return names.where((n) => n.toLowerCase().contains(query));
-        },
-        onSelected: onChanged,
-        fieldViewBuilder: (context, controller, focusNode, onSubmitted) {
-          return TextField(
+    // The box decoration lives inside fieldViewBuilder, so the options list is
+    // laid out against the full width of the visible input box.
+    return Autocomplete<String>(
+      // A new category rebuilds the field so its options are recomputed even
+      // while it has focus; the text typed so far comes back via initialText.
+      key: ValueKey(scope),
+      initialValue: TextEditingValue(text: initialText),
+      optionsBuilder: (textEditingValue) {
+        final query = textEditingValue.text.trim().toLowerCase();
+        if (query.isEmpty) return names;
+        return names.where((n) => n.toLowerCase().contains(query));
+      },
+      onSelected: onChanged,
+      fieldViewBuilder: (context, controller, focusNode, onSubmitted) {
+        return Container(
+          decoration: BoxDecoration(
+            color: theme.panel,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: theme.border),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          child: TextField(
             controller: controller,
             focusNode: focusNode,
             autofocus: autofocus,
@@ -72,37 +74,42 @@ class SuggestionField extends ConsumerWidget {
               border: InputBorder.none,
               counterStyle: TextStyle(color: theme.faint, fontSize: 11),
             ),
-          );
-        },
-        optionsViewBuilder: (context, onSelected, options) {
-          return Align(
-            alignment: Alignment.topLeft,
-            child: Material(
-              elevation: 4,
+          ),
+        );
+      },
+      optionsViewBuilder: (context, onSelected, options) {
+        return Align(
+          alignment: Alignment.topLeft,
+          child: Material(
+            elevation: 8,
+            // theme.panel is translucent, so blend it onto the background to
+            // get an opaque surface that hides the fields underneath.
+            color: Color.alphaBlend(theme.panel, theme.background),
+            shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
-              color: theme.panel,
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxHeight: 200),
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  padding: EdgeInsets.zero,
-                  itemCount: options.length,
-                  itemBuilder: (context, index) {
-                    final option = options.elementAt(index);
-                    return ListTile(
-                      title: Text(
-                        option,
-                        style: TextStyle(color: theme.text, fontFamily: 'Sora'),
-                      ),
-                      onTap: () => onSelected(option),
-                    );
-                  },
-                ),
+              side: BorderSide(color: theme.border),
+            ),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 200),
+              child: ListView.builder(
+                shrinkWrap: true,
+                padding: EdgeInsets.zero,
+                itemCount: options.length,
+                itemBuilder: (context, index) {
+                  final option = options.elementAt(index);
+                  return ListTile(
+                    title: Text(
+                      option,
+                      style: TextStyle(color: theme.text, fontFamily: 'Sora'),
+                    ),
+                    onTap: () => onSelected(option),
+                  );
+                },
               ),
             ),
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 }
