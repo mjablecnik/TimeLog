@@ -10,29 +10,31 @@ offline Flutter app. Runtime configuration lives in code and in on-device storag
   in 5-minute steps (`_minDurationMinutes` / `_maxDurationMinutes` / `_durationStep` in
   `lib/ui/screens/timer_screen.dart`) — the two ranges are independent.
 - `shared_preferences` keys (device-local, no cloud sync): selected theme, in-progress timer
-  state (for restoring a running/paused timer after app restart), last-used activity type,
-  pre-filled description/activity type for the next log entry, known project names
-  (autocomplete suggestions for the project field on work entries), and daily-reminder settings
-  (`reminder_enabled`, `reminder_hour`, `reminder_minute` — see `lib/providers/reminder_provider.dart`).
+  state (for restoring a running/paused timer after app restart), last-used activity type and
+  the last-used subtype of each type (`last_activity_type`, `last_subtype_<type>`),
+  pre-filled description/type/subtype/name for the next log entry, the name suggestions
+  (`known_names_v3_<scope>`: one list per category — paid work, unpaid work, housework, other),
+  and daily-reminder settings (`reminder_enabled`, `reminder_hour`, `reminder_minute` — see
+  `lib/providers/reminder_provider.dart`).
 
 ## Project Structure
 
 ```
 timelog_app/
   lib/
-    app.dart                       # Root widget: MaterialApp + bottom-nav shell (Timer, History)
+    app.dart                       # Root widget: MaterialApp + bottom-nav shell (Timer, Tasks, Stats, Settings)
     main.dart                      # Entry point, requests notification permission
     core/
-      activity_types.dart          # Activity type list + badge colors
+      activity_types.dart          # Activity registry: 12 types, subtypes, labels, colours, suggestion scopes
       config.dart                  # TimerConfig (duration limits)
       extensions.dart              # DateTime/Duration/int formatting helpers
       platform_channel.dart        # MethodChannel name constants
       theme.dart                   # AppThemeData + Ember/Midnight/Paper theme definitions
     data/
-      time_entry.dart              # Drift TimeEntries table definition (incl. nullable project column)
-      database.dart                # AppDatabase (Drift), schema migrations (schemaVersion 4)
+      time_entry.dart              # Drift TimeEntries table definition (project, subtype, customName columns)
+      database.dart                # AppDatabase (Drift), schema migrations (schemaVersion 8)
       database.g.dart              # Generated (build_runner) — do not hand-edit
-      stats_data.dart              # StatsPeriod enum + StatsData aggregation model (by activity type, by project)
+      stats_data.dart              # StatsPeriod enum + StatsData aggregation model (by type, subtype, project, custom name)
     providers/
       database_provider.dart       # AppDatabase / DatabaseService providers
       history_provider.dart        # Selected day + day's entries stream
@@ -48,7 +50,7 @@ timelog_app/
       notification_service.dart   # Native local notification channel (timer-completion alert)
       reminder_service.dart        # Daily reminder scheduling via flutter_local_notifications
       live_activity_channel.dart  # iOS Live Activity channel
-      project_service.dart         # Stores/retrieves known project names (shared_preferences) for autocomplete
+      project_service.dart         # Stores/retrieves remembered names per suggestion category (shared_preferences)
     ui/
       screens/
         timer_screen.dart          # Countdown timer, duration adjuster, ringing overlay
@@ -58,10 +60,12 @@ timelog_app/
       widgets/                     # bottom_nav, day_navigator, day_summary, description_sheet,
                                     # duration_adjuster, edit_sheet, empty_state,
                                     # history_entry_card, manual_entry_sheet, ringing_overlay,
-                                    # theme_dots, timer_controls
+                                    # theme_dots, timer_controls, project_selector, ...
+        activity_picker/           # Shared type picker of the entry sheets: type chips, subtype
+                                    # block, project / custom name field with suggestions
       painters/
         ring_painter.dart          # CustomPainter for the countdown progress ring
-        bar_painter.dart           # CustomPainter for the statistics horizontal percentage bars
+        bar_painter.dart           # CustomPainters for the statistics bars (plain and stacked by subtype)
         timeline_painter.dart      # CustomPainter for the statistics daily/weekly entry timeline
   test/
     timer_service_test.dart        # TimerNotifier state-machine unit tests
@@ -81,11 +85,14 @@ timelog_app/
 - **Persistence**: `drift` (SQLite) for time entries (`lib/data/database.dart`), and
   `shared_preferences` for lightweight key-value state (theme, in-flight timer state, known
   project names).
-- **Projects & statistics**: work-type entries (`Práce`, `Volná práce`) carry an optional
-  `project` column. `StatisticsScreen` aggregates entries over a daily/weekly range
-  (`statisticsProvider`) into totals by activity type and by project, plus an untracked-time
-  figure derived from an assumed 16 waking hours/day. It also renders a `TimelinePainter` bar
-  showing entries laid out against a (self-widening) hour range, for the day or week in view.
+- **Activity types and subtypes**: `lib/core/activity_types.dart` holds the registry that
+  defines every type, its subtypes, labels and colours — see "Activity Types" below.
+- **Projects, names & statistics**: `Práce` and `Domácí práce` entries carry an optional
+  `project`; `Ostatní` entries carry a `customName`. `StatisticsScreen` aggregates entries over
+  a daily/weekly range (`statisticsProvider`) into totals by activity type (with a stacked bar
+  and one row per subtype), by project and by custom name, plus an untracked-time figure derived
+  from an assumed 16 waking hours/day. It also renders a `TimelinePainter` bar showing
+  entries laid out against a (self-widening) hour range, for the day or week in view.
 - **Daily reminder**: `ReminderService` (`lib/services/reminder_service.dart`) schedules a
   repeating local notification via `flutter_local_notifications` + `timezone`, independent of
   the native `NotificationService` used for timer-completion alerts. `ReminderProvider`
@@ -100,6 +107,41 @@ timelog_app/
 - **Native platform channels** — the app talks to native (Swift/Kotlin) code over two
   `MethodChannel`s (defined in `lib/core/platform_channel.dart`); see "Platform Channels"
   below for details.
+
+## Activity Types
+
+Entries are classified by one of twelve main types, each with an optional list of subtypes
+(`lib/core/activity_types.dart`, the `activityRegistry`):
+
+| Type (stored key) | Subtypes | Extra field |
+|---|---|---|
+| Work (`Práce`) | paid, unpaid | project |
+| Housework (`Domácí práce`) | – | project |
+| Meeting (`Meeting`) | – | – |
+| Communication (`Komunikace`) | – | – |
+| Travel (`Přesun`, formerly "Commute") | – | – |
+| Entertainment (`Zábava`) | active, passive | – |
+| Exercise (`Cvičení`) | walk, running, gym | – |
+| Self-development (`Seberozvoj`) | books, study, AI consultation | – |
+| Rest (`Odpočinek`) | active, passive | – |
+| Hygiene (`Hygiena`) | general, toilet | – |
+| Meal (`Jídlo`) | breakfast, lunch, dinner, snack | – |
+| Other (`Ostatní`) | – | custom name |
+
+- The stored keys (`time_entries.activity_type`, `time_entries.subtype`) are stable identifiers
+  and are never translated; labels come from the localization files (`activityTypeLabel`,
+  `subtypeLabel`).
+- Colours are never stored. `activityEntryColor(type, subtype, isDark:)` gives the subtype colour,
+  falling back to the type colour and then to grey. Subtypes share the hue of their type and
+  differ in shade. Paper (the light theme) uses its own, darker values.
+- A subtype is always preselected in the entry sheets (the last used one for that type, otherwise
+  the first), so saving is never blocked by a missing choice.
+- Name suggestions are separate for four categories — paid work, unpaid work, housework and other
+  (`SuggestionScope`). The Timer tab (entry sheets) and the Tasks tab (the project dialog) read
+  the same lists through `suggestionsProvider`. A Tasks project carries a category chosen when it
+  is created; long-press on a project chip opens a menu to change it or to delete the project.
+- To add a type or subtype: add it to the registry, add its labels to `app_en.arb` and
+  `app_cs.arb`, run `flutter gen-l10n`, and keep the preview pages in `.design/` in sync.
 
 ## Platform Channels
 
@@ -202,7 +244,9 @@ flutter test test/timer_service_test.dart
   comes back in the `ringing` state instead of `running`.
 - **Schema changes to `TimeEntries` don't take effect**: bump `schemaVersion` and add an
   `onUpgrade` migration step in `lib/data/database.dart`, then regenerate with
-  `dart run build_runner build --delete-conflicting-outputs`.
+  `dart run build_runner build --delete-conflicting-outputs`. Tables created by an earlier
+  step (`createTable`) already contain the current columns, so a later step must not add such a
+  column again (see the guard for `task_projects.scope` in the version 8 step).
 - **App crashes on startup on desktop (Linux/Windows/macOS) when a reminder is scheduled**:
   `flutter_local_notifications` requires per-platform `InitializationSettings` (Linux, Windows,
   macOS, not just Android/iOS) to be passed to `ReminderService.initialize`; all five are

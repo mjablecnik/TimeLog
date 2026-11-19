@@ -12,14 +12,19 @@ Key features:
 
 - Countdown timer with adjustable duration (5–60 minutes, 5-minute steps)
 - Automatic time-entry logging on timer completion or manual stop
-- Nine built-in activity types (Práce, Volná práce, Přesun, Zábava, Cvičení, Volný čas,
-  Odpočinek, Hygiena, Jídlo), each with a distinct color badge
-- Optional project name for work-related entries (Práce, Volná práce), with autocomplete
-  suggestions from previously used project names
+- Twelve built-in activity types — Work, Housework, Meeting, Communication, Travel,
+  Entertainment, Exercise, Self-development, Rest, Hygiene, Meal and Other — each with its own
+  colour. Most have subtypes (for example paid / unpaid work, walk / running / gym, breakfast /
+  lunch / dinner / snack) shown as shades of the type's colour
+- Optional project name for Work and Housework, and a free-text name for Other, with
+  autocomplete suggestions that are kept separate for paid work, unpaid work, housework and
+  other activities
+- Tasks tab: a simple to-do list with projects. Each project has one of the four categories above, shown as a coloured dot, and can be changed or deleted from a menu on long press
 - History screen with day navigation, daily summary, per-entry edit/delete, and manually
   adding a past entry
 - Statistics screen with daily/weekly toggle, a visual timeline of the day/week's entries,
-  time breakdown by activity type and by project, and an untracked-time summary
+  time breakdown by activity type (with subtypes), by project and by name for Other entries,
+  and an untracked-time summary
 - Settings screen with a daily reminder notification (toggle + time picker) that nudges you
   to start a timer, and can auto-start one when tapped
 - Fully offline — entries are persisted locally in SQLite (no server, no account)

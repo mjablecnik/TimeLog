@@ -98,3 +98,29 @@
   MP3, all of which *are* present once the GStreamer runtime shim from the previous entry
   is on `LD_LIBRARY_PATH`).
 - Source: check-build, 2026-08-20 19:51
+
+## `build_runner` fails on Flutter 3.47 / Dart 3.13: analyzer 7.6 cannot read dot-shorthand syntax
+- Project: timelog_app
+- Problem: With the sandbox's Flutter 3.47.9 (Dart 3.13), `dart run build_runner build` ends with
+  `Exception: Missing implementation of visitDotShorthandPropertyAccess` from `riverpod_generator`
+  and `freezed`, and then hangs without exiting. The lockfile pins `analyzer` 7.6.0 (freezed 2.x
+  caps it below 8), which cannot read the newer SDK sources. `pkill -f build_runner` also kills the
+  calling shell, because the pattern matches its own command line; use `pkill -f "[b]uild_runner.dart"`.
+- Solution: Drift code only needs `drift_dev`: copy the project to a scratch directory, remove
+  `freezed`, `json_serializable` and `riverpod_generator` from `dev_dependencies`, raise
+  `drift_dev` to ^2.35.0, `flutter pub get`, then
+  `dart run build_runner build --build-filter lib/data/database.g.dart` and copy the result back. The newer
+  generator emits `$_getPrefetchedDataByColumns` in two table-manager classes, which the locked
+  `drift` 2.28 lacks; replace those two calls with the older `$_getPrefetchedData<...>` form from the previous
+  `database.g.dart`. `timer_service.freezed.dart` has to be edited by hand (the shape is mechanical).
+  The proper fix is to run build_runner with the pinned Flutter 3.44.6.
+- Source: activity-subtypes implementation, 2026-11-19
+
+## Font files in `assets/fonts` are empty in this checkout
+- Project: timelog_app
+- Problem: `assets/fonts/Sora/*.ttf` and `assets/fonts/JetBrainsMono/*.ttf` are 0-byte files, so any
+  rendering in the sandbox (flutter test, goldens) falls back to the test font and text becomes blocks.
+- Solution: for screenshots, load a system font under the same family name with `FontLoader`
+  (e.g. `/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf` as `Sora`). Material icons also render as
+  boxes in `flutter test`.
+- Source: activity-subtypes implementation, 2026-11-19

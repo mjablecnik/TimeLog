@@ -3,12 +3,13 @@
 Planned changes to how an entry is typed, kept in one place so they can be reviewed
 together before anything is built. Everything under "Already in the app" is taken from the
 code (`timelog_app/lib/core/activity_types.dart`), not from the README. Status as of
-2026-11-19.
+2026-11-19: everything in "Proposed structure and colours" is implemented in version 1.1.0
+(spec `001-activity-subtypes`).
 
 The goal is a type structure that is simple but functional: few main types, a small number
 of subgroups where they really help, and colours in the statistics that stay tellable apart.
 
-## Already in the app
+## Before 1.1.0
 
 Nine flat main types, one colour each. Only Entertainment has subtypes (active / passive),
 stored with the entry but **not** reflected in any colour: statistics colour by main type only.
@@ -54,7 +55,7 @@ Things worth a look when reviewing the palette:
 - Subgroups share the hue of their main type and differ only in shade, so the statistics
   stay readable at the main-type level and the subgroup is still recognisable.
 
-## Proposed structure and colours (draft, for review)
+## Structure and colours (implemented in 1.1.0)
 
 Main type, its subgroups and the colour each would show in the statistics. Meeting and
 Communication are their own main types. A subgroup keeps the hue of its main type and only

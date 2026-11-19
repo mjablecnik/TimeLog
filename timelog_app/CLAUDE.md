@@ -34,19 +34,25 @@ See [DOCS.md](DOCS.md#project-structure) for the full annotated tree. Summary:
 
 ## Conventions
 
-- Activity types are hardcoded Czech strings in `lib/core/activity_types.dart` — the
-  `activityTypes` list and the `activityTypeColor()` switch must be updated together; all UI
-  (description sheet, edit sheet, history cards) iterates `activityTypes` so it picks up
-  changes automatically.
-- Work-type activities (`workActivityTypes`, checked via `isWorkActivityType()`) get an optional
-  project field (autocomplete via `ProjectService`) in the description/edit sheets and are the
-  only types included in the Statistics screen's per-project breakdown — update
-  `workActivityTypes` alongside `activityTypes` if a new work-like type is added.
+- Activity types, subtypes, labels and colours are defined once in the `activityRegistry` in
+  `lib/core/activity_types.dart`; every widget reads it (no parallel lists). The type and subtype
+  keys are Czech/ASCII identifiers persisted in the database and are never translated — use
+  `activityTypeLabel()` / `subtypeLabel()` for display. To add a type or subtype, add it to the
+  registry, add its labels to both `.arb` files and run `flutter gen-l10n`.
+- Colours are computed, not stored: `activityEntryColor(type, subtype, isDark:)`. Paper (the
+  light theme) has its own values in the registry.
+- A type's extra field comes from the registry (`TypeExtra`): `Práce` and `Domácí práce` have a
+  project, `Ostatní` has a free-text custom name (own column `custom_name`).
+- All three entry sheets (`DescriptionSheet`, `EditSheet`, `ManualEntrySheet`) use the shared
+  `ActivityPicker` (`lib/ui/widgets/activity_picker/`); change the type/subtype UI there, once.
+- Name suggestions are per category (`SuggestionScope`: paid work, unpaid work, housework,
+  other), stored by `ProjectService` and read through `suggestionsProvider(scope)`, which also
+  merges the Tasks-tab projects of that category. A Tasks project has a `scope` column.
 - Riverpod: `StateNotifierProvider` for mutable app state (`timerProvider`, `themeProvider`),
   plain `Provider`/`FutureProvider` for service singletons. Read theme via
   `ref.watch(themeProvider)` and use `AppThemeData` fields — never hardcode colors.
 - Any change to the `TimeEntries` table (`lib/data/time_entry.dart`) requires bumping
-  `schemaVersion` and adding an `onUpgrade` step in `lib/data/database.dart`, then
+  `schemaVersion` (currently 8) and adding an `onUpgrade` step in `lib/data/database.dart`, then
   regenerating with `build_runner`.
 - Generated files (`database.g.dart`, `timer_service.freezed.dart`) are committed — always
   regenerate and commit them together with the source change that triggered them. The same
@@ -55,8 +61,8 @@ See [DOCS.md](DOCS.md#project-structure) for the full annotated tree. Summary:
 - i18n: every user-facing string goes through generated `AppLocalizations` (`AppLocalizations.of
   (context)!`), backed by `lib/l10n/app_en.arb` (template/source of truth) and `lib/l10n/app_cs.arb`.
   Internal identifiers persisted in the DB or compared via `==`/`switch` (the `activityTypes` /
-  `entertainmentTypes` string values in `lib/core/activity_types.dart`) are never translated in
-  place — use `activityTypeLabel()`/`entertainmentTypeLabel()` to get a localized display string
+  `subtype` keys in `lib/core/activity_types.dart`) are never translated in
+  place — use `activityTypeLabel()`/`subtypeLabel()` to get a localized display string
   for one of those keys. Background code with no `BuildContext` (notification builders in
   `reminder_service.dart`/`recurring_reminder_service.dart`) reads the persisted language via
   `loadAppLocalizations()` (`lib/core/app_locale.dart`). The active language is

@@ -68,7 +68,7 @@ timelog_app/
 
 ### Navigation
 
-- Bottom tabs: Timer, History, Statistics, Settings (via `IndexedStack`)
+- Bottom tabs: Timer, Tasks, Statistics, Settings (via `IndexedStack`); History is pushed from the Statistics screen
 - Sub-screens pushed with `MaterialPageRoute`
 - Global `navigatorKey` in `app.dart` for navigation from outside widget tree (notification taps)
 
