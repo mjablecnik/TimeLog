@@ -1,0 +1,400 @@
+<title>Typy v aplikaci</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600&family=JetBrains+Mono:wght@400&display=swap">
+<style>
+/* Layout: heading + theme switch, then three phone-width mockups (entry sheet, history, statistics) side by side where they fit. */
+:root{
+  --bg:#0F1319; --text:#E6EAF2; --dim:rgba(230,234,242,.55); --faint:rgba(230,234,242,.4);
+  --panel:rgba(255,255,255,.045); --border:rgba(255,255,255,.1); --accent:#78B4C4; --track:rgba(255,255,255,.08);
+  color-scheme:dark;
+  /* proposed palette, dark themes (Midnight, Ember) */
+  --work-paid:#BC2D34; --work-unpaid:#D9595E; --housework:#F2994A; --exercise:#E8D04A; --ex-walk:#F3E58A; --ex-run:#E8D04A; --ex-gym:#C9A92A;
+  --sd:#86C95E; --sd-books:#B0E08E; --sd-study:#86C95E; --sd-ai:#5FAE3C;
+  --ent:#2CC4B0; --ent-a:#2CC4B0; --ent-p:#7FD9CC; --hyg:#46C6EE; --toilet:#8ED9F6; --rest:#4A78F0; --rest-a:#4A78F0; --rest-p:#8AA8F6; --commute:#93A0B4;
+  --meeting:#B27CF0; --comm:#F06BB0; --meal:#A97C50; --other:#C9C3B8; --meal-s:#D9B88F; --meal-b:#C49A68; --meal-l:#A97C50; --meal-d:#856036;
+  /* current palette (for comparison) */
+  --o-work:#EF5350; --o-housework:#FFB74D; --o-commute:#7986CB; --o-ent:#4DB6AC; --o-exercise:#FFB300;
+  --o-sd:#66BB6A; --o-rest:#42A5F5; --o-hyg:#64B5F6; --o-meal:#CE93D8;
+}
+:root[data-app="ember"]{--bg:#1A1310;--text:#EEE6DC;--dim:rgba(238,230,220,.55);--faint:rgba(238,230,220,.4);--accent:#E88A66}
+:root[data-app="paper"]{
+  --bg:#F3EEE6;--text:#2B2420;--dim:rgba(43,36,32,.55);--faint:rgba(43,36,32,.4);
+  --panel:rgba(0,0,0,.04);--border:rgba(0,0,0,.09);--accent:#C25E3C;--track:rgba(0,0,0,.07);color-scheme:light;
+  --work-paid:#8F1B21;--work-unpaid:#C23A40;--housework:#D66A0A;--exercise:#86730A;--ex-walk:#9D8810;--ex-run:#86730A;--ex-gym:#6B5A06;
+  --sd:#3F8A1F;--sd-books:#4F9A25;--sd-study:#3F8A1F;--sd-ai:#2A6E12;
+  --ent:#137E70;--ent-a:#137E70;--ent-p:#1F9989;--hyg:#0A7DA6;--toilet:#1796C8;--rest:#2F5BD8;--rest-a:#2F5BD8;--rest-p:#5A84F2;--commute:#7A8BA4;
+  --meeting:#A766F1;--comm:#F0429C;--meal:#8A5E32;--other:#7A746C;--meal-s:#A87846;--meal-b:#9A6C3E;--meal-l:#8A5E32;--meal-d:#6E4A24;
+  --o-work:#EF5350;--o-housework:#F57C00;--o-commute:#5C6BC0;--o-ent:#26A69A;--o-exercise:#FFB300;
+  --o-sd:#66BB6A;--o-rest:#42A5F5;--o-hyg:#0D47A1;--o-meal:#4A148C;
+}
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:400 14px/1.5 'Sora',system-ui,sans-serif;
+  padding-inline:max(16px,env(safe-area-inset-left,0px)) max(16px,env(safe-area-inset-right,0px));transition:background .2s,color .2s}
+main{max-width:1180px;margin:0 auto;padding-block:28px 56px;display:flex;flex-direction:column;gap:40px}
+h1{font-size:26px;font-weight:600;margin:0 0 6px;text-wrap:balance}
+h2{font-size:17px;font-weight:600;margin:0 0 4px;text-wrap:balance}
+p{margin:0;color:var(--dim);max-width:65ch}
+.themes{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;align-items:center}
+.themes>span{color:var(--dim);font-size:12px;letter-spacing:.06em;text-transform:uppercase;margin-right:4px}
+button{font:inherit;color:var(--text);background:var(--panel);border:1px solid var(--border);border-radius:999px;padding:6px 14px;cursor:pointer}
+button[aria-pressed="true"]{background:var(--accent);color:var(--bg);border-color:var(--accent);font-weight:600}
+button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+section{display:flex;flex-direction:column;gap:14px}
+.row{display:grid;grid-template-columns:minmax(0,392px) minmax(0,1fr);gap:28px;align-items:start}
+@media(max-width:820px){.row{grid-template-columns:minmax(0,1fr)}}
+.notes{display:flex;flex-direction:column;gap:10px}
+.notes h3{margin:0;font-size:13px;font-weight:600}
+.notes ul{margin:0;padding-left:18px;color:var(--dim);display:flex;flex-direction:column;gap:6px;max-width:60ch}
+.notes .ctl{display:flex;gap:8px;flex-wrap:wrap}
+/* phone */
+.phone{width:100%;max-width:392px;border:1px solid var(--border);border-radius:28px;overflow:hidden;background:var(--bg);
+  box-shadow:0 0 0 6px var(--panel)}
+.sheet{padding:18px 22px 22px}
+.grab{width:36px;height:4px;border-radius:2px;background:var(--dim);margin:0 auto 18px}
+.sh-title{display:flex;justify-content:space-between;align-items:center;font-size:18px;font-weight:600;margin-bottom:14px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{--c:var(--text);display:inline-flex;align-items:center;padding:8px 14px;border-radius:20px;font-size:13px;font-weight:600;
+  background:var(--panel);border:1px solid var(--border);color:var(--text);cursor:pointer}
+.chip[aria-pressed="true"]{background:color-mix(in srgb,var(--c) 20%,transparent);border-color:var(--c);color:var(--c);font-weight:600}
+.chip.sm{padding:6px 12px;border-radius:16px;font-size:12px}
+.chip.dash{border-style:dashed}
+.chip i{display:none}
+.lab{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);font-weight:600;margin-bottom:8px}
+.subbox{--c:var(--text);margin-top:26px;padding:12px 14px 14px;border-radius:14px;border:1px solid color-mix(in srgb,var(--c) 55%,transparent);background:color-mix(in srgb,var(--c) 9%,transparent);display:flex;flex-direction:column;gap:10px}
+.subhead{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:13px;font-weight:600;color:var(--c)}
+.subhead small{font-size:11px;font-weight:400;color:var(--dim)}
+.field{margin-top:14px;background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:12px;color:var(--faint);font-size:15px}
+.field.val{color:var(--text)}
+.field.area{min-height:92px}
+.hint{margin-top:6px;display:flex;gap:6px;flex-wrap:wrap}
+.hint span{font-size:12px;color:var(--dim);background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:2px 8px}
+.submit{margin-top:14px;height:48px;border-radius:12px;background:var(--accent);color:var(--bg);display:flex;align-items:center;justify-content:center;font-weight:600;font-size:16px}
+.skip{text-align:center;margin-top:10px;color:var(--dim);font-weight:600;font-size:14px}
+/* history */
+.hist{padding:14px 0 18px;display:flex;flex-direction:column}
+.hist h4,.stat h4{margin:0 16px 6px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);font-weight:600}
+.card{margin:6px 16px;padding:14px 16px;background:var(--panel);border:1px solid var(--border);border-radius:15px}
+.card .top{display:flex;align-items:center;gap:8px}
+.card .time{flex:1;font-family:'JetBrains Mono',ui-monospace,monospace;font-size:14px;color:var(--accent)}
+.badge{--c:var(--text);padding:3px 8px;border-radius:8px;font-size:11px;font-weight:600;color:var(--c);border:1px solid var(--c);background:color-mix(in srgb,var(--c) 20%,transparent)}
+.card .dur{font-size:12px;color:var(--dim)}
+.card .desc{margin-top:8px;font-size:14px}
+.card .meta{margin-top:4px;font-size:12px;font-weight:500;color:var(--dim);display:flex;align-items:center;gap:6px}
+.dot{width:8px;height:8px;border-radius:50%;flex:none;display:inline-block}
+/* stats */
+.stat{padding:16px 0 18px}
+.stat .ttl{text-align:center;font-weight:600;font-size:17px;margin-bottom:10px}
+.tlbox{margin:0 16px 14px;padding:12px;border:1px solid var(--border);border-radius:14px;background:var(--panel)}
+.tl{position:relative;height:26px;border-radius:6px;background:var(--track);overflow:hidden}
+.tl i{position:absolute;top:0;bottom:0;display:block}
+.hrs{display:flex;justify-content:space-between;font-size:10px;color:var(--faint);margin-top:4px;font-variant-numeric:tabular-nums}
+.srow{margin:0 16px 12px}
+.srow .h{display:flex;justify-content:space-between;align-items:baseline;font-size:15px;gap:10px;cursor:default}
+.srow .h.x{cursor:pointer}
+.srow .h small{color:var(--dim);font-size:12px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.bar{height:8px;border-radius:4px;background:var(--track);margin-top:5px;overflow:hidden;display:flex}
+.bar i{display:block;height:100%}
+.ssub{margin:6px 0 0 14px;display:flex;flex-direction:column;gap:5px}
+.ssub div{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--dim);gap:8px}
+.ssub span.l{display:flex;align-items:center;gap:7px}
+.ssub small{font-variant-numeric:tabular-nums}
+.proj{margin:0 16px;display:flex;justify-content:space-between;align-items:center;font-size:14px;padding:3px 0}
+.proj span.l{display:flex;align-items:center;gap:8px}
+.proj small{color:var(--dim);font-size:13px;font-variant-numeric:tabular-nums}
+.chev{display:inline-block;transition:transform .15s;margin-right:4px;color:var(--faint);font-size:11px}
+.open .chev{transform:rotate(90deg)}
+
+/* tasks tab */
+.tasks{padding:16px 0 18px}
+.tasks .ttl{text-align:center;font-weight:600;font-size:17px;margin-bottom:12px}
+.pchips{display:flex;gap:8px;overflow-x:auto;padding:0 16px 4px;scrollbar-width:none}
+.pchip{display:inline-flex;align-items:center;gap:7px;white-space:nowrap;padding:8px 14px;border-radius:20px;font-size:13px;font-weight:600;background:var(--panel);border:1px solid var(--border);color:var(--text);cursor:pointer}
+.pchip[aria-pressed="true"]{border-color:var(--accent);color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,transparent)}
+.pchip.add{padding:8px 14px;color:var(--dim)}
+.task{margin:8px 16px 0;padding:14px 16px;background:var(--panel);border:1px solid var(--border);border-radius:15px;display:flex;gap:12px;align-items:flex-start}
+.task b{width:18px;height:18px;border:2px solid var(--dim);border-radius:4px;flex:none;margin-top:2px}
+.task span{font-weight:600;font-size:14px}
+.task small{display:block;color:var(--dim);font-size:12px;font-weight:400;margin-top:2px}
+.dialog{padding:22px 20px 20px}
+.dialog .dt{font-size:17px;font-weight:600;margin-bottom:14px}
+.sugg{margin-top:6px;border:1px solid var(--border);border-radius:12px;background:var(--panel);overflow:hidden}
+.sugg div{padding:10px 14px;font-size:14px;cursor:pointer;border-top:1px solid var(--border)}
+.sugg div:first-child{border-top:0}
+.sugg small{color:var(--faint);font-size:11px;margin-left:8px}
+.btns{display:flex;justify-content:flex-end;gap:16px;margin-top:16px;font-weight:600;font-size:14px}
+.btns span:first-child{color:var(--dim)}
+.btns span:last-child{color:var(--accent)}
+.tasks{position:relative;min-height:420px}
+.menu{position:absolute;left:0;right:0;bottom:0;background:var(--bg);border-top:1px solid var(--border);border-radius:18px 18px 0 0;padding:14px 20px 18px;box-shadow:0 -10px 30px rgba(0,0,0,.25)}
+.menu .mt{font-weight:600;margin-bottom:8px;color:var(--dim);font-size:13px}
+.menu div[data-act]{padding:12px 0;font-size:15px;font-weight:600;cursor:pointer;border-top:1px solid var(--border)}
+.dim{background:color-mix(in srgb,var(--bg) 55%,black)}
+</style>
+
+<main lang="cs">
+  <header>
+    <h1>Typy v aplikaci</h1>
+    <p>Jak by se typy a podtypy zobrazovaly při zadávání záznamu, v historii a ve statistikách. Všechno se dá proklikat, data jsou ukázková.</p>
+    <div class="themes" role="group" aria-label="Motiv aplikace">
+      <span>Motiv</span>
+      <button type="button" data-t="midnight" aria-pressed="true">Midnight</button>
+      <button type="button" data-t="ember" aria-pressed="false">Ember</button>
+      <button type="button" data-t="paper" aria-pressed="false">Paper</button>
+    </div>
+  </header>
+
+  <section>
+    <div><h2>1. Zadání záznamu</h2><p>Okno po skončení časovače. Vyber typ a pod ním se objeví jeho podtypy nebo pole navíc.</p></div>
+    <div class="row">
+      <div class="phone"><div class="sheet" id="sheet"></div></div>
+      <div class="notes">
+        <h3>Jak to funguje v návrhu</h3>
+        <ul>
+          <li>Hlavních typů je dvanáct. Podtypy se ukážou v druhé řadě pod nimi, jako dnes u Zábavy.</li>
+          <li>Jídlo má podtypy Snídaně, Oběd, Večeře a Svačina.</li>
+          <li>Podtyp je vždy předvybraný: naposledy použitý, jinak první. Odeslání tak nikdy nezablokuje chybějící volba.</li>
+          <li>Práce a Domácí práce mají pole pro projekt, Ostatní má pole pro vlastní název s našeptáváním z dřívějších.</li>
+          <li>Chip Ostatní má čárkovaný okraj, aby bylo vidět, že je to volné pole a ne pevný typ.</li>
+          <li>Podtypy jsou ve zvýrazněném rámečku s nadpisem „Upřesni“ a s větší mezerou nad sebou, aby je nikdo nepřehlédl. Rámeček má barvu zvoleného typu.</li>
+          <li>Typy bez podtypů (Meeting, Komunikace, Cestování) se chovají jako dnes.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div><h2>2. Karty v historii</h2><p>Odznak nese hlavní typ v barvě podtypu. Podtyp, projekt nebo název je na řádku pod popisem, s tečkou ve své barvě.</p></div>
+    <div class="row">
+      <div class="phone"><div class="hist" id="hist"></div></div>
+      <div class="notes">
+        <h3>K posouzení</h3>
+        <ul>
+          <li>Je dobře, že se podtyp pozná jen podle odstínu a řádku pod popisem, nebo má mít vlastní odznak?</li>
+          <li>U Práce se zobrazuje projekt i placená/neplacená. Je to moc řádků, nebo to stačí jako jeden řádek „TimeLog App · placená"?</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div><h2>3. Statistiky</h2><p>Časová osa je obarvená podle podtypů. Rozpis podle typů ukazuje podtypy buď vždy, nebo po rozbalení klepnutím.</p></div>
+    <div class="row">
+      <div class="phone"><div class="stat" id="stat"></div></div>
+      <div class="notes">
+        <div class="ctl" role="group" aria-label="Zobrazení podtypů">
+          <button type="button" data-m="open" aria-pressed="true">Podtypy vždy vidět</button>
+          <button type="button" data-m="tap" aria-pressed="false">Rozbalit klepnutím</button>
+        </div>
+        <h3>K posouzení</h3>
+        <ul>
+          <li>Vždy vidět je přehlednější, ale seznam se prodlouží asi o deset řádků. Rozbalení je kratší, podtypy ale nejsou vidět na první pohled.</li>
+          <li>Ostatní se rozpisuje podle názvu, stejně jako Práce podle projektu. Co se tam opakuje, je kandidát na vlastní typ.</li>
+          <li>Barvy na časové ose rozlišují podtypy, ale dvanáct hlavních barev je při malé velikosti blízko hranice rozlišitelnosti.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div><h2>4. Tasks tab</h2><p>Projekty z Tasks mají kategorii. Je vidět jako tečka na čipu, vybírá se při založení projektu a dá se později změnit. Název se našeptává ze stejných seznamů jako v Timeru.</p></div>
+    <div class="themes" role="group" aria-label="Ukázka"><span>Ukázka</span><button type="button" id="holdBtn" aria-pressed="false">Podržet čip projektu</button><button type="button" id="newBtn" aria-pressed="false">Nový projekt</button></div>
+    <div class="row">
+      <div class="phone"><div class="tasks" id="tasks"></div></div>
+      <div class="phone"><div class="dim"><div class="dialog" id="dialog"></div></div></div>
+    </div>
+    <div class="notes" style="max-width:70ch">
+      <h3>K posouzení</h3>
+      <ul>
+        <li>Vlevo je seznam úkolů s projekty. Tečka před názvem má barvu kategorie: červená placená práce, světlejší červená neplacená, oranžová Domácí práce, šedá Ostatní.</li>
+        <li>Vpravo je dialog „Nový projekt". Přepni kategorii a změní se seznam návrhů, napsaný text zůstane. Návrhy mají vlevo názvy z Tasks a pak ty, co jsi použil v Timeru (označené „z Timeru").</li>
+        <li>Podržení čipu dnes rovnou maže projekt (s potvrzením). V návrhu otevře malou nabídku se dvěma volbami, „Upravit kategorii" a „Smazat". Křížek na čipu zůstává.</li>
+        <li>Úprava mění jen kategorii. Přejmenování není, protože časové záznamy ukládají název projektu jako text a přejmenování by je odpojilo.</li>
+      </ul>
+    </div>
+  </section>
+</main>
+
+<script>
+(function(){
+  var TYPES=[
+    {id:'work',l:'Práce',c:'--work-paid',subs:[['paid','Placená','--work-paid'],['unpaid','Neplacená','--work-unpaid']],extra:'project'},
+    {id:'house',l:'Domácí práce',c:'--housework',subs:[],extra:'project'},
+    {id:'meet',l:'Meeting',c:'--meeting',subs:[]},
+    {id:'comm',l:'Komunikace',c:'--comm',subs:[]},
+    {id:'travel',l:'Cestování',c:'--commute',subs:[]},
+    {id:'ent',l:'Zábava',c:'--ent',subs:[['a','Aktivní zábava','--ent-a'],['p','Pasivní zábava','--ent-p']]},
+    {id:'ex',l:'Cvičení',c:'--exercise',subs:[['walk','Procházka','--ex-walk'],['run','Běhání','--ex-run'],['gym','Posilovna','--ex-gym']]},
+    {id:'sd',l:'Seberozvoj',c:'--sd',subs:[['books','Čtení knih','--sd-books'],['study','Studium','--sd-study'],['ai','Konzultace s AI','--sd-ai']]},
+    {id:'rest',l:'Odpočinek',c:'--rest',subs:[['a','Aktivní odpočinek','--rest-a'],['p','Pasivní odpočinek','--rest-p']]},
+    {id:'hyg',l:'Hygiena',c:'--hyg',subs:[['gen','Obecná','--hyg'],['toilet','Toaleta','--toilet']]},
+    {id:'meal',l:'Jídlo',c:'--meal',subs:[['b','Snídaně','--meal-b'],['l','Oběd','--meal-l'],['d','Večeře','--meal-d'],['s','Svačina','--meal-s']]},
+    {id:'other',l:'Ostatní',c:'--other',subs:[],extra:'name'}
+  ];
+  var BY={};TYPES.forEach(function(t){BY[t.id]=t});
+  function subOf(t,s){var r=null;t.subs.forEach(function(x){if(x[0]===s)r=x});return r}
+  function colOf(t,s){var x=subOf(t,s);return x?x[2]:t.c}
+  function $(id){return document.getElementById(id)}
+
+  /* ---- 1. entry sheet ---- */
+  var sel='work', chosen={}; TYPES.forEach(function(t){if(t.subs.length)chosen[t.id]=t.subs[0][0]});
+  var PROJ=['TimeLog App','Osobní web'], NAMES=['Kytara','Fotografování'];
+  function sheet(){
+    var t=BY[sel],h='<div class="grab"></div><div class="sh-title"><span>Co jsi zvládl?</span><span style="color:var(--dim)">↻</span></div><div class="lab">Typ</div><div class="chips">';
+    TYPES.forEach(function(x){
+      h+='<button type="button" class="chip'+(x.id==='other'?' dash':'')+'" style="--c:var('+x.c+')" data-type="'+x.id+'" aria-pressed="'+(x.id===sel)+'">'+x.l+'</button>';
+    });
+    h+='</div>';
+    if(t.subs.length){
+      h+='<div class="subbox" style="--c:var('+t.c+')"><div class="subhead"><span>↳ Upřesni: '+t.l+'</span><small>vyber jednu možnost</small></div><div class="chips">';
+      t.subs.forEach(function(s){h+='<button type="button" class="chip sm" style="--c:var('+s[2]+')" data-sub="'+s[0]+'" aria-pressed="'+(chosen[t.id]===s[0])+'">'+s[1]+'</button>'});
+      h+='</div></div>';
+    }
+    if(t.extra==='project'){
+      h+='<div class="field val">'+(t.id==='work'?'TimeLog App':'')+(t.id==='work'?'':'<span style="color:var(--faint)">Název projektu (volitelné)</span>')+'</div><div class="hint">'+PROJ.map(function(p){return '<span>'+p+'</span>'}).join('')+'</div>';
+    }
+    if(t.extra==='name'){
+      h+='<div class="field val">Hra na kytaru</div><div class="hint"><span style="color:var(--faint);background:none;border:0;padding-left:0">Dřívější:</span>'+NAMES.map(function(p){return '<span>'+p+'</span>'}).join('')+'</div>';
+    }
+    h+='<div class="field area val">'+(t.id==='work'?'Úprava statistik podle typů':t.id==='other'?'Zkoušel jsem nové akordy':'<span style="color:var(--faint)">Co jsi dělal?</span>')+'</div>';
+    h+='<div class="submit">Odeslat</div><div class="skip">Přeskočit</div>';
+    $('sheet').innerHTML=h;
+  }
+  $('sheet').addEventListener('click',function(e){
+    var b=e.target.closest('button');if(!b)return;
+    if(b.dataset.type){sel=b.dataset.type}
+    else if(b.dataset.sub){chosen[sel]=b.dataset.sub}
+    sheet();
+  });
+  sheet();
+
+  /* ---- example day ---- */
+  // [start, end, type, sub, project/name, description]
+  var E=[
+    ['06:30','07:00','rest','a','','Protažení a meditace'],
+    ['07:00','07:30','hyg','gen','','Ranní hygiena'],
+    ['07:30','08:00','meal','b','','Snídaně'],
+    ['08:00','08:30','travel','','','Cesta do kanceláře'],
+    ['08:30','11:00','work','paid','TimeLog App','Statistiky podle typů'],
+    ['11:00','11:45','meet','','','Týdenní synchronizace'],
+    ['11:45','12:15','comm','','','Telefonát s dodavatelem'],
+    ['12:15','13:00','meal','l','','Oběd'],
+    ['13:00','14:30','work','paid','TimeLog App','Návrh barev typů'],
+    ['14:30','14:40','hyg','toilet','',''],
+    ['14:40','15:40','work','unpaid','Osobní web','Úpravy webu'],
+    ['15:40','15:55','meal','s','','Jablko a ořechy'],
+    ['15:55','16:30','sd','study','','ABAP, interní tabulky'],
+    ['16:30','17:00','sd','ai','','Dotazy k ABAP syntaxi'],
+    ['17:00','17:45','ex','run','','Běh kolem řeky'],
+    ['17:45','18:15','house','','','Úklid kuchyně'],
+    ['18:15','19:00','meal','d','','Večeře'],
+    ['19:00','19:45','sd','books','','Kapitola o architektuře'],
+    ['19:45','20:15','ex','walk','','Procházka'],
+    ['20:15','20:45','other','','Kytara','Nové akordy'],
+    ['20:45','21:30','ent','p','','Seriál'],
+    ['21:30','22:00','ent','a','','Deskovka'],
+    ['22:00','23:00','rest','p','','Čtení před spaním']
+  ];
+  function mins(t){var p=t.split(':');return +p[0]*60+ +p[1]}
+  function fmt(m){var h=Math.floor(m/60),mm=m%60;return h?h+' h '+(mm?mm+' m':''):mm+' m'}
+
+  /* ---- 2. history ---- */
+  var showIdx=[4,10,5,11,12,13,20,9,19];
+  var hh='<h4>Dnes</h4>';
+  showIdx.forEach(function(i){
+    var e=E[i],t=BY[e[2]],sub=subOf(t,e[3]),col=colOf(t,e[3]),d=mins(e[1])-mins(e[0]);
+    var meta='';
+    if(e[2]==='work')meta='<span class="dot" style="background:var('+col+')"></span>'+e[4]+' · '+sub[1].toLowerCase();
+    else if(sub)meta='<span class="dot" style="background:var('+col+')"></span>'+sub[1];
+    else if(e[2]==='other')meta='<span class="dot" style="background:var(--other)"></span>'+e[4];
+    hh+='<div class="card"><div class="top"><span class="time">'+e[0]+' – '+e[1]+'</span><span class="badge" style="--c:var('+col+')">'+t.l+'</span><span class="dur">'+fmt(d)+'</span></div>'+
+      (e[5]?'<div class="desc">'+e[5]+'</div>':'<div class="desc" style="color:var(--faint)">Bez popisu</div>')+(meta?'<div class="meta">'+meta+'</div>':'')+'</div>';
+  });
+  $('hist').innerHTML=hh;
+
+  /* ---- 3. stats ---- */
+  var mode='open',openT={};
+  function stats(){
+    var rs=360,re=1440,tot=0,agg={};
+    E.forEach(function(e){var d=mins(e[1])-mins(e[0]);tot+=d;var a=agg[e[2]]||(agg[e[2]]={t:0,s:{}});a.t+=d;if(e[3])a.s[e[3]]=(a.s[e[3]]||0)+d});
+    var h='<div class="ttl">Dnes</div><div class="tlbox"><div class="tl">';
+    E.forEach(function(e){var t=BY[e[2]],a=(mins(e[0])-rs)/(1440-rs)*100,w=(mins(e[1])-mins(e[0]))/(1440-rs)*100;
+      h+='<i style="left:'+a+'%;width:'+w+'%;background:var('+colOf(t,e[3])+')"></i>'});
+    h+='</div><div class="hrs"><span>6</span><span>9</span><span>12</span><span>15</span><span>18</span><span>21</span><span>24</span></div></div><h4>Podle typu</h4>';
+    var ids=Object.keys(agg).sort(function(a,b){return agg[b].t-agg[a].t});
+    ids.forEach(function(id){
+      var t=BY[id],a=agg[id],pct=Math.round(a.t/tot*100),hasSub=t.subs.length>0;
+      var isOpen=mode==='open'||openT[id];
+      h+='<div class="srow'+(isOpen?' open':'')+'"><div class="h'+(mode==='tap'&&hasSub?' x':'')+'" data-x="'+(hasSub?id:'')+'"><span>'+(mode==='tap'&&hasSub?'<span class="chev">▶</span>':'')+t.l+'</span><small>'+fmt(a.t)+' · '+pct+' %</small></div>';
+      h+='<div class="bar" style="width:'+Math.max(6,a.t/agg[ids[0]].t*100)+'%">';
+      if(hasSub){t.subs.forEach(function(s){if(a.s[s[0]])h+='<i style="flex:'+a.s[s[0]]+';background:var('+s[2]+')"></i>'})}
+      else h+='<i style="flex:1;background:var('+t.c+')"></i>';
+      h+='</div>';
+      if(hasSub&&isOpen){
+        h+='<div class="ssub">';
+        t.subs.forEach(function(s){if(a.s[s[0]])h+='<div><span class="l"><span class="dot" style="background:var('+s[2]+')"></span>'+s[1]+'</span><small>'+fmt(a.s[s[0]])+'</small></div>'});
+        h+='</div>';
+      }
+      h+='</div>';
+    });
+    var pr={},nm={};
+    E.forEach(function(e){var d=mins(e[1])-mins(e[0]);if(e[2]==='work'&&e[4])pr[e[4]]=(pr[e[4]]||0)+d;if(e[2]==='other'&&e[4])nm[e[4]]=(nm[e[4]]||0)+d});
+    h+='<h4 style="margin-top:16px">Podle projektu</h4>';
+    Object.keys(pr).forEach(function(k){h+='<div class="proj"><span class="l"><span class="dot" style="background:var(--work-paid)"></span>'+k+'</span><small>'+fmt(pr[k])+'</small></div>'});
+    h+='<h4 style="margin-top:16px">Ostatní podle názvu</h4>';
+    Object.keys(nm).forEach(function(k){h+='<div class="proj"><span class="l"><span class="dot" style="background:var(--other)"></span>'+k+'</span><small>'+fmt(nm[k])+'</small></div>'});
+    $('stat').innerHTML=h;
+  }
+  $('stat').addEventListener('click',function(e){var x=e.target.closest('[data-x]');if(!x||mode!=='tap'||!x.dataset.x)return;openT[x.dataset.x]=!openT[x.dataset.x];stats()});
+  var mb=document.querySelectorAll('[data-m]');
+  mb.forEach(function(b){b.addEventListener('click',function(){mode=b.dataset.m;mb.forEach(function(y){y.setAttribute('aria-pressed',y===b?'true':'false')});stats()})});
+  stats();
+
+  /* ---- 4. tasks tab ---- */
+  var SC={paid:{l:'Placená práce',c:'--work-paid'},unpaid:{l:'Neplacená práce',c:'--work-unpaid'},house:{l:'Domácí práce',c:'--housework'},other:{l:'Ostatní',c:'--other'}};
+  var SCK=['paid','unpaid','house','other'];
+  var TP=[['Eshop klienta','paid'],['TimeLog App','unpaid'],['Osobní web','unpaid'],['Domácnost','house'],['Kytara','other']];
+  var TIMER={paid:['Redesign webu'],unpaid:['Dokumentace'],house:['Garáž','Zahrada'],other:['Fotografování']};
+  var TASKS={'Eshop klienta':[['Opravit platební bránu','12. 12.'],['Nasadit novou verzi','']],'TimeLog App':[['Napsat spec podtypů',''],['Otestovat světlý motiv','2. 12.']],'Osobní web':[['Přidat sekci o projektech','']],'Domácnost':[['Vyměnit žárovky','']],'Kytara':[['Naučit se akordy','']]};
+  var selP='TimeLog App',menuOpen=false,editMode=false;
+  function tasksTab(){
+    var h='<div class="ttl">Tasks</div><div class="pchips">';
+    TP.forEach(function(p){h+='<button type="button" class="pchip" data-p="'+p[0]+'" aria-pressed="'+(selP===p[0])+'"><span class="dot" style="background:var('+SC[p[1]].c+')"></span>'+p[0]+'</button>'});
+    h+='<button type="button" class="pchip" data-p="" aria-pressed="false">Nepřiřazeno</button><button type="button" class="pchip add">+</button></div>';
+    (TASKS[selP]||[]).forEach(function(t){h+='<div class="task"><b></b><div><span>'+t[0]+'</span>'+(t[1]?'<small>'+t[1]+'</small>':'')+'</div></div>'});
+    if(menuOpen){h+='<div class="menu"><div class="mt">'+selP+'</div><div data-act="edit">Upravit kategorii</div><div data-act="del" style="color:var(--work-unpaid)">Smazat</div></div>'}
+    $('tasks').innerHTML=h;
+  }
+  $('tasks').addEventListener('click',function(e){var a=e.target.closest('[data-act]');if(a){menuOpen=false;if(a.dataset.act==='edit'){editMode=true;dSc=(TP.filter(function(p){return p[0]===selP})[0]||[0,'unpaid'])[1];syncBtns();dialog()}tasksTab();return}var b=e.target.closest('[data-p]');if(!b||b.dataset.p==='')return;selP=b.dataset.p;menuOpen=false;syncBtns();tasksTab()});
+  tasksTab();
+  var dSc='unpaid',dText='';
+  function dialog(){
+    var h='<div class="dt">'+(editMode?'Upravit kategorii':'Nový projekt')+'</div>'+(editMode?'<div class="field val" style="margin:0 0 14px">'+selP+'</div>':'')+'<div class="lab">Kategorie</div><div class="chips">';
+    SCK.forEach(function(k){h+='<button type="button" class="chip sm'+(k==='other'?' dash':'')+'" style="--c:var('+SC[k].c+')" data-sc="'+k+'" aria-pressed="'+(dSc===k)+'">'+SC[k].l+'</button>'});
+    h+='</div>';
+    if(editMode){h+='<div class="btns"><span>Zrušit</span><span>Uložit</span></div>';$('dialog').innerHTML=h;return}
+    h+='<div class="field val" style="margin-top:16px">'+(dText||'<span style="color:var(--faint)">Název projektu</span>')+'</div><div class="sugg">';
+    var tn=TP.filter(function(p){return p[1]===dSc}).map(function(p){return [p[0],'']}),tm=TIMER[dSc].map(function(n){return [n,'z Timeru']});
+    tn.concat(tm).forEach(function(n){h+='<div data-n="'+n[0]+'">'+n[0]+(n[1]?'<small>'+n[1]+'</small>':'')+'</div>'});
+    h+='</div><div class="btns"><span>Zrušit</span><span>Vytvořit</span></div>';
+    $('dialog').innerHTML=h;
+  }
+  $('dialog').addEventListener('click',function(e){
+    var c=e.target.closest('[data-sc]'),n=e.target.closest('[data-n]');
+    if(c){dSc=c.dataset.sc;dialog()}else if(n){dText=n.dataset.n;dialog()}
+  });
+  dialog();
+  function syncBtns(){$('holdBtn').setAttribute('aria-pressed',menuOpen);$('newBtn').setAttribute('aria-pressed',!editMode)}
+  $('holdBtn').addEventListener('click',function(){menuOpen=!menuOpen;syncBtns();tasksTab()});
+  $('newBtn').addEventListener('click',function(){editMode=false;menuOpen=false;dSc='unpaid';syncBtns();dialog();tasksTab()});
+  syncBtns();
+
+  /* theme */
+  var btns=document.querySelectorAll('.themes button');
+  btns.forEach(function(x){x.addEventListener('click',function(){
+    var t=x.getAttribute('data-t');
+    if(t==='midnight')document.documentElement.removeAttribute('data-app');else document.documentElement.setAttribute('data-app',t);
+    btns.forEach(function(y){y.setAttribute('aria-pressed',y===x?'true':'false')});
+  })});
+})();
+</script>

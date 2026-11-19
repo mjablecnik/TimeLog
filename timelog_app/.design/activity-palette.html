@@ -1,0 +1,232 @@
+<title>Paleta TimeLogu</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600&display=swap">
+<style>
+/* Layout: one column; the page itself is drawn in the app's own theme (Midnight default), switchable to Ember / Paper. */
+:root{
+  --bg:#0F1319; --text:#E6EAF2; --dim:rgba(230,234,242,.55); --faint:rgba(230,234,242,.4);
+  --panel:rgba(255,255,255,.045); --border:rgba(255,255,255,.1); --accent:#78B4C4; --track:rgba(255,255,255,.08);
+  color-scheme:dark;
+  /* proposed palette, dark themes (Midnight, Ember) */
+  --work-paid:#BC2D34; --work-unpaid:#D9595E; --housework:#F2994A; --exercise:#E8D04A; --ex-walk:#F3E58A; --ex-run:#E8D04A; --ex-gym:#C9A92A;
+  --sd:#86C95E; --sd-books:#B0E08E; --sd-study:#86C95E; --sd-ai:#5FAE3C;
+  --ent:#2CC4B0; --ent-a:#2CC4B0; --ent-p:#7FD9CC; --hyg:#46C6EE; --toilet:#8ED9F6; --rest:#4A78F0; --rest-a:#4A78F0; --rest-p:#8AA8F6; --commute:#93A0B4;
+  --meeting:#B27CF0; --comm:#F06BB0; --meal:#A97C50; --other:#C9C3B8; --meal-s:#D9B88F; --meal-b:#C49A68; --meal-l:#A97C50; --meal-d:#856036;
+  /* current palette (for comparison) */
+  --o-work:#EF5350; --o-housework:#FFB74D; --o-commute:#7986CB; --o-ent:#4DB6AC; --o-exercise:#FFB300;
+  --o-sd:#66BB6A; --o-rest:#42A5F5; --o-hyg:#64B5F6; --o-meal:#CE93D8;
+}
+:root[data-app="ember"]{--bg:#1A1310;--text:#EEE6DC;--dim:rgba(238,230,220,.55);--faint:rgba(238,230,220,.4);--accent:#E88A66}
+:root[data-app="paper"]{
+  --bg:#F3EEE6;--text:#2B2420;--dim:rgba(43,36,32,.55);--faint:rgba(43,36,32,.4);
+  --panel:rgba(0,0,0,.04);--border:rgba(0,0,0,.09);--accent:#C25E3C;--track:rgba(0,0,0,.07);color-scheme:light;
+  --work-paid:#8F1B21;--work-unpaid:#C23A40;--housework:#D66A0A;--exercise:#86730A;--ex-walk:#9D8810;--ex-run:#86730A;--ex-gym:#6B5A06;
+  --sd:#3F8A1F;--sd-books:#4F9A25;--sd-study:#3F8A1F;--sd-ai:#2A6E12;
+  --ent:#137E70;--ent-a:#137E70;--ent-p:#1F9989;--hyg:#0A7DA6;--toilet:#1796C8;--rest:#2F5BD8;--rest-a:#2F5BD8;--rest-p:#5A84F2;--commute:#7A8BA4;
+  --meeting:#A766F1;--comm:#F0429C;--meal:#8A5E32;--other:#7A746C;--meal-s:#A87846;--meal-b:#9A6C3E;--meal-l:#8A5E32;--meal-d:#6E4A24;
+  --o-work:#EF5350;--o-housework:#F57C00;--o-commute:#5C6BC0;--o-ent:#26A69A;--o-exercise:#FFB300;
+  --o-sd:#66BB6A;--o-rest:#42A5F5;--o-hyg:#0D47A1;--o-meal:#4A148C;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:400 14px/1.5 'Sora',system-ui,sans-serif;
+  padding-inline:max(16px,env(safe-area-inset-left,0px)) max(16px,env(safe-area-inset-right,0px));transition:background .2s,color .2s}
+main{max-width:880px;margin:0 auto;padding-block:28px 56px;display:flex;flex-direction:column;gap:36px}
+h1{font-size:26px;font-weight:600;margin:0 0 6px;text-wrap:balance}
+h2{font-size:17px;font-weight:600;margin:0 0 4px;text-wrap:balance}
+p{margin:0;color:var(--dim);max-width:65ch}
+.lead{margin-top:4px}
+.themes{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;align-items:center}
+.themes span{color:var(--dim);font-size:12px;letter-spacing:.06em;text-transform:uppercase;margin-right:4px}
+button{font:inherit;color:var(--text);background:var(--panel);border:1px solid var(--border);border-radius:999px;padding:6px 14px;cursor:pointer}
+button[aria-pressed="true"]{background:var(--accent);color:var(--bg);border-color:var(--accent);font-weight:600}
+button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+section{display:flex;flex-direction:column;gap:14px}
+.box{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:560px}
+th{font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--faint);font-weight:500;text-align:left;padding:0 10px 8px}
+td{padding:7px 10px;border-top:1px solid var(--border);vertical-align:middle}
+td.hex{font-variant-numeric:tabular-nums;color:var(--dim);font-size:12px}
+.sw{display:inline-block;width:34px;height:18px;border-radius:5px;vertical-align:middle;margin-right:10px}
+.sub td:first-child{padding-left:30px}
+.tag{font-size:11px;color:var(--faint)}
+/* day timeline */
+.tl{display:flex;height:34px;border-radius:8px;overflow:hidden;background:var(--track)}
+.tl i{display:block;height:100%}
+.hours{display:flex;justify-content:space-between;color:var(--faint);font-size:11px;font-variant-numeric:tabular-nums;margin-top:6px}
+/* stats bars */
+.bars{display:grid;grid-template-columns:minmax(110px,150px) 1fr 58px;gap:9px 12px;align-items:center}
+.bars .track{height:14px;border-radius:7px;background:var(--track);overflow:hidden;display:flex}
+.bars .track i{display:block;height:100%}
+.bars .v{color:var(--dim);font-size:12px;font-variant-numeric:tabular-nums;text-align:right}
+.bars .n{display:flex;align-items:center;gap:8px;font-size:13px}
+.bars .n b{width:9px;height:9px;border-radius:50%;flex:none}
+.bars .subrow .n{padding-left:17px;color:var(--dim);font-size:12px}
+/* before / after */
+.pairs{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}
+.pair h3{margin:0 0 10px;font-size:13px;font-weight:600}
+.cmp{display:grid;grid-template-columns:48px 1fr 1fr;gap:6px;align-items:center;font-size:12px;color:var(--dim)}
+.cmp div.c{height:26px;border-radius:6px}
+.cmp .lbl{color:var(--faint);font-size:11px}
+ul.q{margin:0;padding-left:18px;color:var(--dim);display:flex;flex-direction:column;gap:6px;max-width:68ch}
+ul.q li{padding-left:2px}
+</style>
+
+<main lang="cs">
+  <header>
+    <h1>Paleta TimeLogu</h1>
+    <p class="lead">Navržené hlavní typy, podskupiny a barvy, které budou mít na časové ose dne a ve statistikách. Přepínačem motivu aplikace uvidíš barvy na každém pozadí.</p>
+    <div class="themes" role="group" aria-label="Motiv aplikace">
+      <span>Motiv</span>
+      <button type="button" data-t="midnight" aria-pressed="true">Midnight</button>
+      <button type="button" data-t="ember" aria-pressed="false">Ember</button>
+      <button type="button" data-t="paper" aria-pressed="false">Paper</button>
+    </div>
+  </header>
+
+  <section>
+    <div><h2>Struktura a barvy</h2><p>Jedenáct hlavních typů. Podskupina drží odstín hlavního typu a mění jen jas, takže statistiky jdou číst po hlavních typech a podskupina je přesto poznat.</p></div>
+    <div class="box scroll">
+      <table>
+        <thead><tr><th>Typ</th><th>Barva</th><th>Hex (tmavé motivy)</th><th>Poznámka</th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div><h2>Den na časové ose</h2><p>Stejný pruh jako v aplikaci: jeden blok na záznam, obarvený podle typu. Ukázková data, ne skutečné záznamy.</p></div>
+    <div class="box">
+      <div class="tl" id="tl" role="img" aria-label="Ukázková časová osa dne"></div>
+      <div class="hours"><span>06</span><span>09</span><span>12</span><span>15</span><span>18</span><span>21</span><span>24</span></div>
+    </div>
+  </section>
+
+  <section>
+    <div><h2>Rozpis ve statistikách</h2><p>Čas podle typu pro stejný ukázkový den. Podskupiny jsou vidět jako skládaný pruh uvnitř hlavního typu a jako odsazené řádky.</p></div>
+    <div class="box"><div class="bars" id="bars"></div></div>
+  </section>
+
+  <section>
+    <div><h2>Dvojice, které byly příliš blízko</h2><p>Současná barva vlevo, navržená vpravo.</p></div>
+    <div class="pairs" id="pairs"></div>
+  </section>
+
+  <section>
+    <div><h2>K posouzení</h2></div>
+    <ul class="q">
+      <li>Jedenáct hlavních barev je skoro hranice toho, co se dá rozlišit na pohled. Nejblíž si zbývají Odpočinek a Meeting (modrá a fialová) a Hygiena a Cestování (azurová a břidlicová).</li>
+      <li>Cestování (dřív Přesun) je teď neutrální břidlicová místo indiga, protože je to čas mezi činnostmi, ne činnost.</li><li>Cvičení má podskupiny Procházka, Běhání a Posilovna jako tři odstíny žluté. Odpočinek má aktivní a pasivní jako dva odstíny modré, stejně jako Zábava.</li><li>Zábava má aktivní a pasivní podtyp jako dva odstíny tyrkysové: aktivní sytější, pasivní světlejší.</li>
+      <li>Cvičení je jasnější žlutá a Domácí práce zůstává oranžová, takže se už nepletou.</li>
+      <li>Jídlo je hnědé místo fialové, což uvolňuje fialovou pro Meeting. Snídaně, oběd, večeře a svačina jsou čtyři odstíny hnědé, svačina nejsvětlejší a večeře nejtmavší. Mezi sousedními jsou rozdíly asi 11 až 13, takže se spoléhá i na popisek.</li>
+      <li>Seberozvoj používá pro podskupiny tři zelené. Rozdíly jsou malé, takže čtení knih, studium a konzultace s AI se nejlíp rozliší podle popisku.</li>
+      <li>Analýza a porovnávání nových věcí zatím nemá barvu, protože nemá své místo.</li>
+    </ul>
+  </section>
+</main>
+
+<script>
+(function(){
+  var T=[ // [label, css var, hex dark, note, isSub]
+    ['Práce · placená','--work-paid','#BC2D34','tmavší',1],
+    ['Práce · neplacená','--work-unpaid','#D9595E','o něco světlejší',1],
+    ['Domácí práce','--housework','#F2994A','',0],
+    ['Meeting','--meeting','#B27CF0','nový typ',0],
+    ['Komunikace','--comm','#F06BB0','nový typ, např. Messenger, telefon',0],
+    ['Cestování','--commute','#93A0B4','neutrální břidlicová, dřív Přesun',0],
+    ['Zábava','--ent','#2CC4B0','',0],
+    ['· Aktivní zábava','--ent-a','#2CC4B0','sytější',1],
+    ['· Pasivní zábava','--ent-p','#7FD9CC','světlejší',1],
+    ['Cvičení','--exercise','#E8D04A','',0],
+    ['· Procházka','--ex-walk','#F3E58A','nejsvětlejší',1],
+    ['· Běhání','--ex-run','#E8D04A','základní žlutá',1],
+    ['· Posilovna','--ex-gym','#C9A92A','nejtmavší',1],
+    ['Seberozvoj','--sd','#86C95E','',0],
+    ['· Čtení knih','--sd-books','#B0E08E','',1],
+    ['· Studium','--sd-study','#86C95E','',1],
+    ['· Konzultace s AI','--sd-ai','#5FAE3C','',1],
+    ['Odpočinek','--rest','#4A78F0','',0],
+    ['· Aktivní odpočinek','--rest-a','#4A78F0','sytější',1],
+    ['· Pasivní odpočinek','--rest-p','#8AA8F6','světlejší',1],
+    ['Hygiena','--hyg','#46C6EE','',0],
+    ['· Toaleta','--toilet','#8ED9F6','světlejší odstín Hygieny',1],
+    ['Jídlo','--meal','#A97C50','',0],
+    ['· Snídaně','--meal-b','#C49A68','',1],
+    ['· Oběd','--meal-l','#A97C50','',1],
+    ['· Večeře','--meal-d','#856036','nejtmavší',1],
+    ['· Svačina','--meal-s','#D9B88F','nejsvětlejší',1],
+    ['Ostatní','--other','#C9C3B8','vlastní název, jako projekt u Práce; teplá šedá',0]
+  ];
+  var rows=document.getElementById('rows');
+  T.forEach(function(r){
+    var tr=document.createElement('tr'); if(r[4]&&r[0].indexOf('Práce')!==0) tr.className='sub';
+    tr.innerHTML='<td>'+r[0]+'</td><td><span class="sw" style="background:var('+r[1]+')"></span></td><td class="hex">'+r[2]+'</td><td class="tag">'+r[3]+'</td>';
+    rows.appendChild(tr);
+  });
+  // example day: [var, hours]
+  var D=[['--rest-a',.5],['--rest-p',.5],['--hyg',.5],['--meal-b',.5],['--commute',.5],['--work-paid',2.0],['--meeting',.75],['--work-paid',1.25],['--meal-l',.75],['--comm',.5],['--work-unpaid',1.0],['--sd-study',1.0],['--ex-walk',.5],['--ex-run',.25],['--ex-gym',.25],['--housework',.75],['--meal-d',.75],['--ent-a',.75],['--ent-p',.75],['--sd-books',.75],['--toilet',.25],['--rest-p',1.0]];
+  var tot=D.reduce(function(a,d){return a+d[1]},0), tl=document.getElementById('tl');
+  D.forEach(function(d){var i=document.createElement('i');i.style.width=(d[1]/tot*100)+'%';i.style.background='var('+d[0]+')';tl.appendChild(i)});
+  // stats
+  var S=[
+    ['Práce','--work-paid',[['--work-paid',3.25],['--work-unpaid',1.0]],null],
+    ['Meeting','--meeting',[['--meeting',.75]]],
+    ['Komunikace','--comm',[['--comm',.5]]],
+    ['Seberozvoj','--sd',[['--sd-study',1.0],['--sd-books',.75]]],
+    ['Zábava','--ent',[['--ent-a',.75],['--ent-p',.75]]],
+    ['Domácí práce','--housework',[['--housework',.75]]],
+    ['Cvičení','--exercise',[['--ex-walk',.5],['--ex-run',.25],['--ex-gym',.25]]],
+    ['Jídlo','--meal',[['--meal-b',.5],['--meal-l',.75],['--meal-d',.75]]],
+    ['Cestování','--commute',[['--commute',.5]]],
+    ['Hygiena','--hyg',[['--hyg',.5],['--toilet',.25]]],
+    ['Odpočinek','--rest',[['--rest-a',.5],['--rest-p',1.5]]]
+  ];
+  var subs={'Práce':[['Placená','--work-paid',3.25],['Neplacená','--work-unpaid',1.0]],'Seberozvoj':[['Studium','--sd-study',1.0],['Čtení knih','--sd-books',.75]],'Zábava':[['Aktivní','--ent-a',.75],['Pasivní','--ent-p',.75]],'Cvičení':[['Procházka','--ex-walk',.5],['Běhání','--ex-run',.25],['Posilovna','--ex-gym',.25]],'Odpočinek':[['Aktivní','--rest-a',.5],['Pasivní','--rest-p',1.5]],'Jídlo':[['Snídaně','--meal-b',.5],['Oběd','--meal-l',.75],['Večeře','--meal-d',.75]],'Hygiena':[['Obecná','--hyg',.5],['Toaleta','--toilet',.25]]};
+  var max=5, b=document.getElementById('bars');
+  function fmt(h){var m=Math.round(h*60);return Math.floor(m/60)+':'+('0'+m%60).slice(-2)+' h'}
+  function row(name,col,parts,cls){
+    var sum=parts.reduce(function(a,p){return a+p[1]},0);
+    var n=document.createElement('div');n.className='n';n.innerHTML='<b style="background:var('+col+')"></b>'+name;
+    var t=document.createElement('div');t.className='track';t.style.width=(sum/max*100)+'%';
+    parts.forEach(function(p){var i=document.createElement('i');i.style.flex=p[1];i.style.background='var('+p[0]+')';t.appendChild(i)});
+    var wrap=document.createElement('div');wrap.appendChild(t);
+    var v=document.createElement('div');v.className='v';v.textContent=fmt(sum);
+    [n,wrap,v].forEach(function(e){if(cls)e.classList.add(cls);b.appendChild(e)});
+  }
+  S.sort(function(a,c){return c[2].reduce(function(x,p){return x+p[1]},0)-a[2].reduce(function(x,p){return x+p[1]},0)});
+  S.forEach(function(s){
+    row(s[0],s[1],s[2]);
+    (subs[s[0]]||[]).forEach(function(u){
+      var d=document.createElement('div');d.style.display='contents';
+      var n=document.createElement('div');n.className='n subrow';n.innerHTML='<div class="n"><b style="background:var('+u[1]+')"></b>'+u[0]+'</div>';
+      var t=document.createElement('div');t.className='track';t.style.width=(u[2]/max*100)+'%';var i=document.createElement('i');i.style.flex=1;i.style.background='var('+u[1]+')';t.appendChild(i);
+      var wrap=document.createElement('div');wrap.appendChild(t);
+      var v=document.createElement('div');v.className='v';v.textContent=fmt(u[2]);
+      n.className='subrow';wrap.className='subrow';v.className='v subrow';
+      b.appendChild(n);b.appendChild(wrap);b.appendChild(v);
+    });
+  });
+  // pairs
+  var P=[
+    ['Odpočinek a Hygiena','Odpočinek','Hygiena','--o-rest','--o-hyg','--rest','--hyg'],
+    ['Zábava a Seberozvoj','Zábava','Seberozvoj','--o-ent','--o-sd','--ent','--sd'],
+    ['Domácí práce a Cvičení','Domácí práce','Cvičení','--o-housework','--o-exercise','--housework','--exercise'],
+    ['Cestování a Odpočinek','Cestování','Odpočinek','--o-commute','--o-rest','--commute','--rest']
+  ];
+  var pe=document.getElementById('pairs');
+  P.forEach(function(p){
+    var d=document.createElement('div');d.className='box pair';
+    d.innerHTML='<h3>'+p[0]+'</h3><div class="cmp"><span></span><span class="lbl">Současná</span><span class="lbl">Navržená</span>'+
+      '<span>'+p[1]+'</span><div class="c" style="background:var('+p[3]+')"></div><div class="c" style="background:var('+p[5]+')"></div>'+
+      '<span>'+p[2]+'</span><div class="c" style="background:var('+p[4]+')"></div><div class="c" style="background:var('+p[6]+')"></div></div>';
+    pe.appendChild(d);
+  });
+  // theme switch
+  var btns=document.querySelectorAll('.themes button');
+  btns.forEach(function(x){x.addEventListener('click',function(){
+    var t=x.getAttribute('data-t');
+    if(t==='midnight')document.documentElement.removeAttribute('data-app');else document.documentElement.setAttribute('data-app',t);
+    btns.forEach(function(y){y.setAttribute('aria-pressed',y===x?'true':'false')});
+  })});
+})();
+</script>

@@ -95,6 +95,8 @@ for build commands for other platforms.
 See [DOCS.md](DOCS.md) for project structure, architecture (platform channels, database),
 deployment, testing, and troubleshooting.
 
+See [ROADMAP.md](ROADMAP.md) for planned changes (new activity types) and what already exists.
+
 ## Author
 
 **Martin Jablečník**
