@@ -464,10 +464,15 @@ class _StatsBody extends StatelessWidget {
             child: _ActivityTypeBar(
               type: entry.key,
               duration: entry.value,
-              progress: stats.totalTracked.inSeconds == 0
+              share: stats.totalTracked.inSeconds == 0
                   ? 0
                   : entry.value.inSeconds / stats.totalTracked.inSeconds,
-              color: activityTypeColor(entry.key, isDark: isDark),
+              // Every bar is scaled to the type with the longest time.
+              progress: typeEntries.first.value.inSeconds == 0
+                  ? 0
+                  : entry.value.inSeconds / typeEntries.first.value.inSeconds,
+              subtypeDurations: stats.bySubtype[entry.key] ?? const {},
+              isDark: isDark,
               theme: theme,
               l10n: l10n,
             ),
@@ -494,7 +499,57 @@ class _StatsBody extends StatelessWidget {
                     height: 8,
                     margin: const EdgeInsets.only(right: 8),
                     decoration: BoxDecoration(
-                      color: activityTypeColor(entry.activityType, isDark: isDark),
+                      color: activityMainColor(entry.activityType, isDark: isDark),
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  Expanded(
+                    child: Text(
+                      entry.name,
+                      style: TextStyle(
+                        color: theme.text,
+                        fontFamily: 'Sora',
+                        fontSize: 14,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  Text(
+                    formatDuration(l10n, entry.duration),
+                    style: TextStyle(
+                      color: theme.dim,
+                      fontFamily: 'Sora',
+                      fontSize: 13,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
+        if (stats.byCustomName.isNotEmpty) ...[
+          const SizedBox(height: 8),
+          Text(
+            l10n.statsByCustomName,
+            style: TextStyle(
+              color: theme.dim,
+              fontFamily: 'Sora',
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 10),
+          for (final entry in stats.byCustomName)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(
+                children: [
+                  Container(
+                    width: 8,
+                    height: 8,
+                    margin: const EdgeInsets.only(right: 8),
+                    decoration: BoxDecoration(
+                      color: activityMainColor('Ostatní', isDark: isDark),
                       shape: BoxShape.circle,
                     ),
                   ),
@@ -592,23 +647,60 @@ class _StatsBody extends StatelessWidget {
 class _ActivityTypeBar extends StatelessWidget {
   final String type;
   final Duration duration;
+
+  /// Share of the total tracked time, shown as a percentage.
+  final double share;
+
+  /// Bar length as a fraction of the bar width (scaled to the longest type).
   final double progress;
-  final Color color;
+
+  /// Time per subtype key of this type; empty for a type without subtypes.
+  final Map<String, Duration> subtypeDurations;
+  final bool isDark;
   final AppThemeData theme;
   final AppLocalizations l10n;
 
   const _ActivityTypeBar({
     required this.type,
     required this.duration,
+    required this.share,
     required this.progress,
-    required this.color,
+    required this.subtypeDurations,
+    required this.isDark,
     required this.theme,
     required this.l10n,
   });
 
   @override
   Widget build(BuildContext context) {
-    final percent = (progress * 100).round();
+    final percent = (share * 100).round();
+    final registryType = activityTypeOf(type);
+    final subtypes = [
+      for (final subtype in registryType?.subtypes ?? const <ActivitySubtype>[])
+        if ((subtypeDurations[subtype.key] ?? Duration.zero) > Duration.zero)
+          subtype,
+    ];
+
+    // Segments in registry order; time without a subtype is drawn in the
+    // main colour of the type.
+    var classified = Duration.zero;
+    final segments = <BarSegment>[];
+    for (final subtype in subtypes) {
+      final time = subtypeDurations[subtype.key]!;
+      classified += time;
+      segments.add(BarSegment(
+        color: isDark ? subtype.dark : subtype.light,
+        weight: time.inSeconds.toDouble(),
+      ));
+    }
+    final unclassified = duration - classified;
+    if (unclassified > Duration.zero) {
+      segments.add(BarSegment(
+        color: activityMainColor(type, isDark: isDark),
+        weight: unclassified.inSeconds.toDouble(),
+      ));
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -635,10 +727,49 @@ class _ActivityTypeBar extends StatelessWidget {
         SizedBox(
           height: 8,
           child: CustomPaint(
-            painter: BarPainter(progress: progress, color: color, theme: theme),
+            painter: StackedBarPainter(
+              progress: progress,
+              segments: segments,
+              theme: theme,
+            ),
             size: Size.infinite,
           ),
         ),
+        for (final subtype in subtypes)
+          Padding(
+            padding: const EdgeInsets.only(left: 14, top: 5),
+            child: Row(
+              children: [
+                Container(
+                  width: 7,
+                  height: 7,
+                  margin: const EdgeInsets.only(right: 7),
+                  decoration: BoxDecoration(
+                    color: isDark ? subtype.dark : subtype.light,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                Expanded(
+                  child: Text(
+                    subtypeLabel(l10n, type, subtype.key),
+                    style: TextStyle(
+                      color: theme.dim,
+                      fontFamily: 'Sora',
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+                Text(
+                  formatDuration(l10n, subtypeDurations[subtype.key]!),
+                  style: TextStyle(
+                    color: theme.dim,
+                    fontFamily: 'Sora',
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
       ],
     );
   }

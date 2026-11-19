@@ -122,7 +122,12 @@ class TimelinePainter extends CustomPainter {
 
       canvas.drawRect(
         Rect.fromLTRB(x1, 0, x2, barHeight),
-        Paint()..color = activityTypeColor(entry.activityType, isDark: isDark),
+        Paint()
+          ..color = activityEntryColor(
+            entry.activityType,
+            entry.subtype,
+            isDark: isDark,
+          ),
       );
     }
 

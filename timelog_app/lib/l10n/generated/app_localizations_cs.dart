@@ -118,7 +118,7 @@ class AppLocalizationsCs extends AppLocalizations {
   String get activityHousework => 'Domácí práce';
 
   @override
-  String get activityCommute => 'Přesun';
+  String get activityCommute => 'Cestování';
 
   @override
   String get activityEntertainment => 'Zábava';
@@ -139,10 +139,107 @@ class AppLocalizationsCs extends AppLocalizations {
   String get activityMeal => 'Jídlo';
 
   @override
-  String get entertainmentActive => 'Aktivní zábava';
+  String get activityMeeting => 'Meeting';
 
   @override
-  String get entertainmentPassive => 'Pasivní zábava';
+  String get activityCommunication => 'Komunikace';
+
+  @override
+  String get activityOther => 'Ostatní';
+
+  @override
+  String get subtypePaid => 'Placená';
+
+  @override
+  String get subtypeUnpaid => 'Neplacená';
+
+  @override
+  String get subtypeEntertainmentActive => 'Aktivní zábava';
+
+  @override
+  String get subtypeEntertainmentPassive => 'Pasivní zábava';
+
+  @override
+  String get subtypeWalk => 'Procházka';
+
+  @override
+  String get subtypeRunning => 'Běhání';
+
+  @override
+  String get subtypeGym => 'Posilovna';
+
+  @override
+  String get subtypeBooks => 'Čtení knih';
+
+  @override
+  String get subtypeStudy => 'Studium';
+
+  @override
+  String get subtypeAi => 'Konzultace s AI';
+
+  @override
+  String get subtypeRestActive => 'Aktivní odpočinek';
+
+  @override
+  String get subtypeRestPassive => 'Pasivní odpočinek';
+
+  @override
+  String get subtypeGeneral => 'Obecná';
+
+  @override
+  String get subtypeToilet => 'Toaleta';
+
+  @override
+  String get subtypeBreakfast => 'Snídaně';
+
+  @override
+  String get subtypeLunch => 'Oběd';
+
+  @override
+  String get subtypeDinner => 'Večeře';
+
+  @override
+  String get subtypeSnack => 'Svačina';
+
+  @override
+  String get scopeWorkPaid => 'Placená práce';
+
+  @override
+  String get scopeWorkUnpaid => 'Neplacená práce';
+
+  @override
+  String get scopeHousework => 'Domácí práce';
+
+  @override
+  String get scopeOther => 'Ostatní';
+
+  @override
+  String get pickerTypeCaption => 'Typ';
+
+  @override
+  String pickerSubtypeHeading(String type) {
+    return 'Upřesni: $type';
+  }
+
+  @override
+  String get pickerSubtypeHint => 'Vyber jednu možnost';
+
+  @override
+  String get customNameHint => 'Co jsi dělal?';
+
+  @override
+  String get statsByCustomName => 'Ostatní podle názvu';
+
+  @override
+  String get taskProjectCategoryCaption => 'Kategorie';
+
+  @override
+  String get taskProjectEditCategory => 'Upravit kategorii';
+
+  @override
+  String taskProjectChipSemantics(String name, String category) {
+    return '$name, $category';
+  }
 
   @override
   String get timerPrefillTooltip => 'Předvyplnit popis';

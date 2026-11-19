@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../core/activity_types.dart';
 import '../data/database.dart';
 import '../services/task_service.dart';
 import 'database_provider.dart';
@@ -28,16 +29,23 @@ final taskListProvider = StreamProvider<List<TaskItem>>((ref) {
   return service.watchTasksForProject(projectId, includeArchived: showArchived);
 });
 
-final autocompleteProjectsProvider = FutureProvider<List<String>>((ref) async {
+/// Suggested names of one category: the names of the Tasks tab projects of that
+/// category first, then the names used in the timer entries of that category.
+/// Both tabs read the same list, so a name known in one is offered in the other.
+final suggestionsProvider =
+    FutureProvider.family<List<String>, SuggestionScope>((ref, scope) async {
   final taskService = ref.watch(taskServiceProvider);
   final projectService = ref.watch(projectServiceProvider);
+  final db = ref.watch(appDatabaseProvider);
 
-  final taskProjectNames = await taskService.getProjectNames();
-  final timerProjectNames = await projectService.getKnownProjects();
+  await projectService.seedFromEntries(await db.getEntriesWithNames());
+
+  final taskProjectNames = await taskService.getProjectNames(scope);
+  final storedNames = await projectService.getKnownNames(scope);
 
   final seen = <String>{};
   final merged = <String>[];
-  for (final name in [...taskProjectNames, ...timerProjectNames]) {
+  for (final name in [...taskProjectNames, ...storedNames]) {
     if (seen.add(name.toLowerCase())) {
       merged.add(name);
     }

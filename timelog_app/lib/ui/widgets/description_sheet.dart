@@ -8,15 +8,14 @@ import '../../core/theme.dart';
 import '../../data/database.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../providers/database_provider.dart';
-import '../../providers/task_providers.dart';
 import '../../providers/timer_provider.dart';
+import 'activity_picker/activity_picker.dart';
 
-const _lastActivityTypeKey = 'last_activity_type';
-const _lastEntertainmentTypeKey = 'last_entertainment_type';
 const _lastSubmittedDescriptionKey = 'last_submitted_description';
 const _lastSubmittedActivityTypeKey = 'last_submitted_activity_type';
 const _lastSubmittedProjectKey = 'last_submitted_project';
-const _lastSubmittedEntertainmentTypeKey = 'last_submitted_entertainment_type';
+const _lastSubmittedSubtypeKey = 'last_submitted_subtype';
+const _lastSubmittedCustomNameKey = 'last_submitted_custom_name';
 
 class DescriptionSheet extends ConsumerStatefulWidget {
   final AppThemeData theme;
@@ -25,7 +24,8 @@ class DescriptionSheet extends ConsumerStatefulWidget {
   final String? initialDescription;
   final String? initialActivityType;
   final String? initialProject;
-  final String? initialEntertainmentType;
+  final String? initialSubtype;
+  final String? initialCustomName;
   final bool triggeredByStop;
   final bool isPrefillMode;
 
@@ -37,7 +37,8 @@ class DescriptionSheet extends ConsumerStatefulWidget {
     this.initialDescription,
     this.initialActivityType,
     this.initialProject,
-    this.initialEntertainmentType,
+    this.initialSubtype,
+    this.initialCustomName,
     this.triggeredByStop = false,
     this.isPrefillMode = false,
   });
@@ -48,47 +49,34 @@ class DescriptionSheet extends ConsumerStatefulWidget {
 
 class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
   final _controller = TextEditingController();
-  TextEditingController? _projectController;
   String? _error;
   bool _saving = false;
-  late String _selectedType;
-  String? _entertainmentType;
-  List<String> _knownProjects = [];
-  String _initialProject = '';
+
+  /// Selection the picker starts from; null lets the picker restore the last
+  /// used type. Replaced when the last submitted entry is loaded or the form
+  /// is cleared.
+  ActivitySelection? _initialSelection;
+  late ActivitySelection _selection;
+
+  /// Bumped to rebuild the picker with a new initial selection.
+  int _pickerGeneration = 0;
 
   @override
   void initState() {
     super.initState();
     _controller.text = widget.initialDescription ?? '';
-    _initialProject = widget.initialProject ?? '';
-    _selectedType = widget.initialActivityType ?? activityTypes.first;
-    _entertainmentType = widget.initialEntertainmentType;
+    final initialType = widget.initialActivityType;
+    if (initialType != null) {
+      _initialSelection = ActivitySelection(
+        typeKey: initialType,
+        subtypeKey: widget.initialSubtype,
+        project: widget.initialProject ?? '',
+        customName: widget.initialCustomName ?? '',
+      );
+    }
+    _selection = _initialSelection ?? ActivitySelection(typeKey: activityTypes.first);
     if (!widget.isPrefillMode && widget.initialDescription == null) {
       _loadLastSubmitted();
-    } else if (widget.initialActivityType == null) {
-      _loadLastActivityType();
-    }
-    _loadKnownProjects();
-  }
-
-  Future<void> _loadKnownProjects() async {
-    final projects = await ref.read(autocompleteProjectsProvider.future);
-    if (mounted) setState(() => _knownProjects = projects);
-  }
-
-  Future<void> _loadLastActivityType() async {
-    final prefs = await SharedPreferences.getInstance();
-    final saved = prefs.getString(_lastActivityTypeKey);
-    if (saved != null && activityTypes.contains(saved) && mounted) {
-      final savedEntertainment = prefs.getString(_lastEntertainmentTypeKey);
-      setState(() {
-        _selectedType = saved;
-        if (isEntertainmentActivityType(saved) &&
-            savedEntertainment != null &&
-            entertainmentTypes.contains(savedEntertainment)) {
-          _entertainmentType = savedEntertainment;
-        }
-      });
     }
   }
 
@@ -97,19 +85,20 @@ class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
     final description = prefs.getString(_lastSubmittedDescriptionKey);
     final activityType = prefs.getString(_lastSubmittedActivityTypeKey);
     final project = prefs.getString(_lastSubmittedProjectKey);
-    final entertainmentType = prefs.getString(_lastSubmittedEntertainmentTypeKey);
+    final subtype = prefs.getString(_lastSubmittedSubtypeKey);
+    final customName = prefs.getString(_lastSubmittedCustomNameKey);
     if (!mounted) return;
     setState(() {
       if (description != null) _controller.text = description;
-      if (activityType != null && activityTypes.contains(activityType)) {
-        _selectedType = activityType;
-      }
-      if (project != null) {
-        _initialProject = project;
-        _projectController?.text = project;
-      }
-      if (entertainmentType != null && entertainmentTypes.contains(entertainmentType)) {
-        _entertainmentType = entertainmentType;
+      if (activityType != null && activityTypeOf(activityType) != null) {
+        _initialSelection = ActivitySelection(
+          typeKey: activityType,
+          subtypeKey: subtype,
+          project: project ?? '',
+          customName: customName ?? '',
+        );
+        _selection = _initialSelection!;
+        _pickerGeneration++;
       }
     });
   }
@@ -117,39 +106,23 @@ class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
   void _resetForm() {
     setState(() {
       _controller.clear();
-      _selectedType = activityTypes.first;
-      _initialProject = '';
-      _entertainmentType = null;
+      _initialSelection = ActivitySelection(typeKey: activityTypes.first);
+      _selection = _initialSelection!;
+      _pickerGeneration++;
     });
-    _projectController?.clear();
-  }
-
-  Future<void> _selectType(String type) async {
-    setState(() {
-      _selectedType = type;
-      if (!isEntertainmentActivityType(type)) _entertainmentType = null;
-    });
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_lastActivityTypeKey, type);
-  }
-
-  Future<void> _selectEntertainmentType(String type) async {
-    setState(() => _entertainmentType = type);
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_lastEntertainmentTypeKey, type);
   }
 
   Future<void> _saveLastSubmitted(
     String description,
-    String activityType,
-    String project,
-    String entertainmentType,
+    ActivitySelection selection,
   ) async {
+    final values = selection.toRowValues();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_lastSubmittedDescriptionKey, description);
-    await prefs.setString(_lastSubmittedActivityTypeKey, activityType);
-    await prefs.setString(_lastSubmittedProjectKey, project);
-    await prefs.setString(_lastSubmittedEntertainmentTypeKey, entertainmentType);
+    await prefs.setString(_lastSubmittedActivityTypeKey, selection.typeKey);
+    await prefs.setString(_lastSubmittedProjectKey, values.project ?? '');
+    await prefs.setString(_lastSubmittedSubtypeKey, values.subtype ?? '');
+    await prefs.setString(_lastSubmittedCustomNameKey, values.customName ?? '');
   }
 
   @override
@@ -158,11 +131,12 @@ class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
     super.dispose();
   }
 
-  bool get _entertainmentSelectionMissing =>
-      isEntertainmentActivityType(_selectedType) && _entertainmentType == null;
+  /// `Ostatní` needs a name to be submitted (Skip still saves without one).
+  bool get _customNameMissing =>
+      hasCustomNameField(_selection.typeKey) && _selection.customName.trim().isEmpty;
 
   bool get _canSubmit =>
-      _controller.text.trim().isNotEmpty && !_saving && !_entertainmentSelectionMissing;
+      _controller.text.trim().isNotEmpty && !_saving && !_customNameMissing;
 
   Future<void> _submit() async {
     if (!_canSubmit) return;
@@ -174,7 +148,7 @@ class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
   }
 
   Future<void> _skip() async {
-    if (_saving || _entertainmentSelectionMissing) return;
+    if (_saving) return;
 
     final elapsed = widget.endedAt.difference(widget.sessionStart);
     if (elapsed.inSeconds < 120) {
@@ -194,17 +168,13 @@ class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
   Future<void> _savePrefillAndResume() async {
     setState(() => _saving = true);
     final notifier = ref.read(timerProvider.notifier);
-    final project = hasProjectField(_selectedType)
-        ? _projectController?.text.trim()
-        : null;
-    final entertainmentType = isEntertainmentActivityType(_selectedType)
-        ? _entertainmentType
-        : null;
+    final values = _selection.toRowValues();
     notifier.savePrefill(
       _controller.text.trim(),
-      _selectedType,
-      project: project,
-      entertainmentType: entertainmentType,
+      _selection.typeKey,
+      project: values.project,
+      subtype: values.subtype,
+      customName: values.customName,
     );
     notifier.resume();
     if (mounted) Navigator.of(context).pop();
@@ -227,29 +197,27 @@ class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
         return;
       }
 
-      final project = hasProjectField(_selectedType)
-          ? (_projectController?.text.trim() ?? '')
-          : '';
-      final entertainmentType = isEntertainmentActivityType(_selectedType)
-          ? (_entertainmentType ?? '')
-          : '';
+      final values = _selection.toRowValues();
 
       await dbService.insertTimeEntry(
         TimeEntriesCompanion(
           startTime: Value(widget.sessionStart.toIso8601String()),
           endTime: Value(widget.endedAt.toIso8601String()),
           description: Value(description),
-          activityType: Value(_selectedType),
-          project: Value(project.isEmpty ? null : project),
-          entertainmentType: Value(entertainmentType.isEmpty ? null : entertainmentType),
+          activityType: Value(_selection.typeKey),
+          project: Value(values.project),
+          subtype: Value(values.subtype),
+          customName: Value(values.customName),
         ),
       );
 
-      if (project.isNotEmpty) {
-        await ref.read(projectServiceProvider).saveProject(project);
+      final scope = suggestionScopeOf(_selection.typeKey, values.subtype);
+      final name = values.project ?? values.customName;
+      if (scope != null && name != null) {
+        await ref.read(projectServiceProvider).saveName(scope, name);
       }
 
-      await _saveLastSubmitted(description, _selectedType, project, entertainmentType);
+      await _saveLastSubmitted(description, _selection);
 
       if (widget.triggeredByStop) {
         ref.read(timerProvider.notifier).stop();
@@ -331,147 +299,12 @@ class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
                     ],
                   ),
                   const SizedBox(height: 16),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: activityTypes.map((type) {
-                      final isSelected = type == _selectedType;
-                      final color = activityTypeColor(
-                        type,
-                        isDark: theme.themeKey != AppTheme.paper,
-                      );
-                      return GestureDetector(
-                        onTap: () => _selectType(type),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 8,
-                          ),
-                          decoration: BoxDecoration(
-                            color: isSelected
-                                ? color.withValues(alpha: 0.2)
-                                : theme.panel,
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
-                              color: isSelected ? color : theme.border,
-                            ),
-                          ),
-                          child: Text(
-                            activityTypeLabel(l10n, type),
-                            style: TextStyle(
-                              color: isSelected ? color : theme.text,
-                              fontFamily: 'Sora',
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      );
-                    }).toList(),
+                  ActivityPicker(
+                    key: ValueKey(_pickerGeneration),
+                    theme: theme,
+                    initial: _initialSelection,
+                    onChanged: (selection) => setState(() => _selection = selection),
                   ),
-                  if (hasProjectField(_selectedType)) ...[
-                    const SizedBox(height: 16),
-                    Container(
-                      decoration: BoxDecoration(
-                        color: theme.panel,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: theme.border),
-                      ),
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                      child: Autocomplete<String>(
-                        initialValue: TextEditingValue(text: _initialProject),
-                        optionsBuilder: (textEditingValue) {
-                          final query = textEditingValue.text.trim().toLowerCase();
-                          if (query.isEmpty) return _knownProjects;
-                          return _knownProjects.where(
-                            (p) => p.toLowerCase().contains(query),
-                          );
-                        },
-                        fieldViewBuilder: (context, controller, focusNode, onSubmitted) {
-                          _projectController = controller;
-                          return TextField(
-                            controller: controller,
-                            focusNode: focusNode,
-                            style: TextStyle(color: theme.text, fontFamily: 'Sora', fontSize: 15),
-                            decoration: InputDecoration(
-                              hintText: l10n.projectNameHint,
-                              hintStyle: TextStyle(color: theme.faint, fontFamily: 'Sora'),
-                              border: InputBorder.none,
-                            ),
-                          );
-                        },
-                        optionsViewBuilder: (context, onSelected, options) {
-                          return Align(
-                            alignment: Alignment.topLeft,
-                            child: Material(
-                              elevation: 4,
-                              borderRadius: BorderRadius.circular(12),
-                              color: theme.panel,
-                              child: ConstrainedBox(
-                                constraints: const BoxConstraints(maxHeight: 200),
-                                child: ListView.builder(
-                                  shrinkWrap: true,
-                                  padding: EdgeInsets.zero,
-                                  itemCount: options.length,
-                                  itemBuilder: (context, index) {
-                                    final option = options.elementAt(index);
-                                    return ListTile(
-                                      title: Text(
-                                        option,
-                                        style: TextStyle(color: theme.text, fontFamily: 'Sora'),
-                                      ),
-                                      onTap: () => onSelected(option),
-                                    );
-                                  },
-                                ),
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ],
-                  if (isEntertainmentActivityType(_selectedType)) ...[
-                    const SizedBox(height: 16),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: entertainmentTypes.map((type) {
-                        final isSelected = type == _entertainmentType;
-                        final color = activityTypeColor(
-                          _selectedType,
-                          isDark: theme.themeKey != AppTheme.paper,
-                        );
-                        return GestureDetector(
-                          onTap: () => _selectEntertainmentType(type),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 6,
-                            ),
-                            decoration: BoxDecoration(
-                              color: isSelected
-                                  ? color.withValues(alpha: 0.2)
-                                  : theme.panel,
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(
-                                color: isSelected ? color : theme.border,
-                              ),
-                            ),
-                            child: Text(
-                              entertainmentTypeLabel(l10n, type),
-                              style: TextStyle(
-                                color: isSelected ? color : theme.text,
-                                fontFamily: 'Sora',
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                  ],
                   const SizedBox(height: 16),
                   Container(
                     decoration: BoxDecoration(
@@ -543,7 +376,7 @@ class _DescriptionSheetState extends ConsumerState<DescriptionSheet> {
                   ),
                   if (!widget.isPrefillMode)
                     TextButton(
-                      onPressed: (_saving || _entertainmentSelectionMissing) ? null : _skip,
+                      onPressed: _saving ? null : _skip,
                       style: TextButton.styleFrom(
                         foregroundColor: theme.dim,
                       ),

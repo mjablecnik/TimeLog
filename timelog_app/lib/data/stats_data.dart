@@ -19,6 +19,15 @@ class ProjectStat {
   });
 }
 
+/// A custom name of an `Ostatní` entry in the statistics breakdown.
+@immutable
+class NameStat {
+  final String name;
+  final Duration duration;
+
+  const NameStat({required this.name, required this.duration});
+}
+
 /// Aggregated time-tracking statistics for a given period.
 @immutable
 class StatsData {
@@ -30,9 +39,14 @@ class StatsData {
   /// `Domácí práce` activity types.
   final List<ProjectStat> byProject;
 
-  /// Breakdown of `Zábava` (entertainment) time by sub-type
-  /// (`Aktivní zábava` / `Pasivní zábava`).
-  final Map<String, Duration> byEntertainmentType;
+  /// Time per subtype: type key -> subtype key -> duration. Time of a type
+  /// that has no subtype is not listed here (it is the difference to
+  /// [byActivityType]).
+  final Map<String, Map<String, Duration>> bySubtype;
+
+  /// Time of `Ostatní` entries per custom name, longest first. Names are
+  /// compared ignoring letter case.
+  final List<NameStat> byCustomName;
 
   /// Raw entries for the period, used by the timeline widget.
   final List<TimeEntry> entries;
@@ -42,7 +56,8 @@ class StatsData {
     required this.untrackedTime,
     required this.byActivityType,
     required this.byProject,
-    this.byEntertainmentType = const {},
+    this.bySubtype = const {},
+    this.byCustomName = const [],
     required this.entries,
   });
 }

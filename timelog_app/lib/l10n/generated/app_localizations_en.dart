@@ -117,7 +117,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get activityHousework => 'Housework';
 
   @override
-  String get activityCommute => 'Commute';
+  String get activityCommute => 'Travel';
 
   @override
   String get activityEntertainment => 'Entertainment';
@@ -138,10 +138,107 @@ class AppLocalizationsEn extends AppLocalizations {
   String get activityMeal => 'Meal';
 
   @override
-  String get entertainmentActive => 'Active entertainment';
+  String get activityMeeting => 'Meeting';
 
   @override
-  String get entertainmentPassive => 'Passive entertainment';
+  String get activityCommunication => 'Communication';
+
+  @override
+  String get activityOther => 'Other';
+
+  @override
+  String get subtypePaid => 'Paid';
+
+  @override
+  String get subtypeUnpaid => 'Unpaid';
+
+  @override
+  String get subtypeEntertainmentActive => 'Active entertainment';
+
+  @override
+  String get subtypeEntertainmentPassive => 'Passive entertainment';
+
+  @override
+  String get subtypeWalk => 'Walk';
+
+  @override
+  String get subtypeRunning => 'Running';
+
+  @override
+  String get subtypeGym => 'Gym';
+
+  @override
+  String get subtypeBooks => 'Reading books';
+
+  @override
+  String get subtypeStudy => 'Study';
+
+  @override
+  String get subtypeAi => 'AI consultation';
+
+  @override
+  String get subtypeRestActive => 'Active rest';
+
+  @override
+  String get subtypeRestPassive => 'Passive rest';
+
+  @override
+  String get subtypeGeneral => 'General';
+
+  @override
+  String get subtypeToilet => 'Toilet';
+
+  @override
+  String get subtypeBreakfast => 'Breakfast';
+
+  @override
+  String get subtypeLunch => 'Lunch';
+
+  @override
+  String get subtypeDinner => 'Dinner';
+
+  @override
+  String get subtypeSnack => 'Snack';
+
+  @override
+  String get scopeWorkPaid => 'Paid work';
+
+  @override
+  String get scopeWorkUnpaid => 'Unpaid work';
+
+  @override
+  String get scopeHousework => 'Housework';
+
+  @override
+  String get scopeOther => 'Other';
+
+  @override
+  String get pickerTypeCaption => 'Type';
+
+  @override
+  String pickerSubtypeHeading(String type) {
+    return 'Refine: $type';
+  }
+
+  @override
+  String get pickerSubtypeHint => 'Choose one';
+
+  @override
+  String get customNameHint => 'What did you do?';
+
+  @override
+  String get statsByCustomName => 'Other by name';
+
+  @override
+  String get taskProjectCategoryCaption => 'Category';
+
+  @override
+  String get taskProjectEditCategory => 'Edit category';
+
+  @override
+  String taskProjectChipSemantics(String name, String category) {
+    return '$name, $category';
+  }
 
   @override
   String get timerPrefillTooltip => 'Pre-fill description';

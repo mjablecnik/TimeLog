@@ -42,6 +42,12 @@ void main() {
   testWidgets(
     'ManualEntrySheet starts blank, blocks empty submission, validates time order, and inserts on success',
     (tester) async {
+      // The sheet got taller (type caption, subtype block); a tall window keeps
+      // the whole ListView built so the assertions below can see every widget.
+      tester.view.physicalSize = const Size(800, 2400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+
       final db = AppDatabase.forTesting(NativeDatabase.memory());
       addTearDown(db.close);
 
@@ -133,6 +139,9 @@ void main() {
       expect(saved.description, 'Test description');
       expect(saved.activityType, 'Práce');
       expect(saved.project, isNull);
+      // A new entry defaults to paid work.
+      expect(saved.subtype, 'paid');
+      expect(saved.customName, isNull);
       expect(DateTime.parse(saved.startTime).toLocal(), DateTime(2026, 1, 15, 12, 0));
       expect(DateTime.parse(saved.endTime).toLocal(), DateTime(2026, 1, 15, 14, 0));
     },

@@ -7,7 +7,7 @@ import '../../core/theme.dart';
 import '../../data/database.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../providers/database_provider.dart';
-import '../../providers/task_providers.dart';
+import 'activity_picker/activity_picker.dart';
 
 class EditSheet extends ConsumerStatefulWidget {
   final AppThemeData theme;
@@ -25,26 +25,26 @@ class EditSheet extends ConsumerStatefulWidget {
 
 class _EditSheetState extends ConsumerState<EditSheet> {
   late final TextEditingController _controller;
-  TextEditingController? _projectController;
-  late String _selectedType;
-  String? _entertainmentType;
+  late final ActivitySelection _initialSelection;
+  late ActivitySelection _selection;
   late DateTime _startTime;
   late DateTime _endTime;
   String? _error;
   bool _saving = false;
-  List<String> _knownProjects = [];
-  String _initialProject = '';
 
   @override
   void initState() {
     super.initState();
     _controller = TextEditingController(text: widget.entry.description);
-    _initialProject = widget.entry.project ?? '';
-    _selectedType = widget.entry.activityType;
-    _entertainmentType = widget.entry.entertainmentType;
+    _initialSelection = ActivitySelection(
+      typeKey: widget.entry.activityType,
+      subtypeKey: widget.entry.subtype,
+      project: widget.entry.project ?? '',
+      customName: widget.entry.customName ?? '',
+    );
+    _selection = _initialSelection;
     _startTime = DateTime.parse(widget.entry.startTime).toLocal();
     _endTime = DateTime.parse(widget.entry.endTime).toLocal();
-    _loadKnownProjects();
   }
 
   String _formatTime(DateTime dt) {
@@ -76,22 +76,17 @@ class _EditSheetState extends ConsumerState<EditSheet> {
     });
   }
 
-  Future<void> _loadKnownProjects() async {
-    final projects = await ref.read(autocompleteProjectsProvider.future);
-    if (mounted) setState(() => _knownProjects = projects);
-  }
-
   @override
   void dispose() {
     _controller.dispose();
     super.dispose();
   }
 
-  bool get _entertainmentSelectionMissing =>
-      isEntertainmentActivityType(_selectedType) && _entertainmentType == null;
+  bool get _customNameMissing =>
+      hasCustomNameField(_selection.typeKey) && _selection.customName.trim().isEmpty;
 
   bool get _canSave =>
-      _controller.text.trim().isNotEmpty && !_saving && !_entertainmentSelectionMissing;
+      _controller.text.trim().isNotEmpty && !_saving && !_customNameMissing;
 
   Future<void> _save() async {
     final l10n = AppLocalizations.of(context)!;
@@ -120,25 +115,23 @@ class _EditSheetState extends ConsumerState<EditSheet> {
         return;
       }
 
-      final project = hasProjectField(_selectedType)
-          ? (_projectController?.text.trim() ?? '')
-          : '';
-      final entertainmentType = isEntertainmentActivityType(_selectedType)
-          ? _entertainmentType
-          : null;
+      final values = _selection.toRowValues();
 
       await dbService.updateDescription(
         widget.entry.id,
         _controller.text.trim(),
-        activityType: _selectedType,
-        project: Value(project.isEmpty ? null : project),
-        entertainmentType: Value(entertainmentType),
+        activityType: _selection.typeKey,
+        project: Value(values.project),
+        subtype: Value(values.subtype),
+        customName: Value(values.customName),
         startTime: _startTime,
         endTime: _endTime,
       );
 
-      if (project.isNotEmpty) {
-        await ref.read(projectServiceProvider).saveProject(project);
+      final scope = suggestionScopeOf(_selection.typeKey, values.subtype);
+      final name = values.project ?? values.customName;
+      if (scope != null && name != null) {
+        await ref.read(projectServiceProvider).saveName(scope, name);
       }
 
       if (mounted) Navigator.of(context).pop();
@@ -220,158 +213,11 @@ class _EditSheetState extends ConsumerState<EditSheet> {
                   ],
                 ),
                 const SizedBox(height: 16),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: activityTypes.map((type) {
-                    final isSelected = type == _selectedType;
-                    final color = activityTypeColor(
-                      type,
-                      isDark: theme.themeKey != AppTheme.paper,
-                    );
-                    return GestureDetector(
-                      onTap: () => setState(() {
-                        _selectedType = type;
-                        if (!isEntertainmentActivityType(type)) {
-                          _entertainmentType = null;
-                        }
-                      }),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? color.withValues(alpha: 0.2)
-                              : theme.panel,
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                            color: isSelected ? color : theme.border,
-                          ),
-                        ),
-                        child: Text(
-                          activityTypeLabel(l10n, type),
-                          style: TextStyle(
-                            color: isSelected ? color : theme.text,
-                            fontFamily: 'Sora',
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    );
-                  }).toList(),
+                ActivityPicker(
+                  theme: theme,
+                  initial: _initialSelection,
+                  onChanged: (selection) => setState(() => _selection = selection),
                 ),
-                if (hasProjectField(_selectedType)) ...[
-                  const SizedBox(height: 16),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: theme.panel,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: theme.border),
-                    ),
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                    child: Autocomplete<String>(
-                      initialValue: TextEditingValue(text: _initialProject),
-                      optionsBuilder: (textEditingValue) {
-                        final query = textEditingValue.text.trim().toLowerCase();
-                        if (query.isEmpty) return _knownProjects;
-                        return _knownProjects.where(
-                          (p) => p.toLowerCase().contains(query),
-                        );
-                      },
-                      fieldViewBuilder: (context, controller, focusNode, onSubmitted) {
-                        _projectController = controller;
-                        return TextField(
-                          controller: controller,
-                          focusNode: focusNode,
-                          style: TextStyle(color: theme.text, fontFamily: 'Sora', fontSize: 15),
-                          decoration: InputDecoration(
-                            hintText: l10n.projectNameHint,
-                            hintStyle: TextStyle(color: theme.faint, fontFamily: 'Sora'),
-                            border: InputBorder.none,
-                          ),
-                        );
-                      },
-                      optionsViewBuilder: (context, onSelected, options) {
-                        return Align(
-                          alignment: Alignment.topLeft,
-                          child: Material(
-                            elevation: 4,
-                            borderRadius: BorderRadius.circular(12),
-                            color: theme.panel,
-                            surfaceTintColor: Colors.transparent,
-                            child: Container(
-                              decoration: BoxDecoration(
-                                color: theme.panel,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: theme.border),
-                              ),
-                              constraints: const BoxConstraints(maxHeight: 200),
-                              child: ListView.builder(
-                                shrinkWrap: true,
-                                padding: EdgeInsets.zero,
-                                itemCount: options.length,
-                                itemBuilder: (context, index) {
-                                  final option = options.elementAt(index);
-                                  return ListTile(
-                                    title: Text(
-                                      option,
-                                      style: TextStyle(color: theme.text, fontFamily: 'Sora'),
-                                    ),
-                                    onTap: () => onSelected(option),
-                                  );
-                                },
-                              ),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ],
-                if (isEntertainmentActivityType(_selectedType)) ...[
-                  const SizedBox(height: 16),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: entertainmentTypes.map((type) {
-                      final isSelected = type == _entertainmentType;
-                      final color = activityTypeColor(
-                        _selectedType,
-                        isDark: theme.themeKey != AppTheme.paper,
-                      );
-                      return GestureDetector(
-                        onTap: () => setState(() => _entertainmentType = type),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          decoration: BoxDecoration(
-                            color: isSelected
-                                ? color.withValues(alpha: 0.2)
-                                : theme.panel,
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: isSelected ? color : theme.border,
-                            ),
-                          ),
-                          child: Text(
-                            entertainmentTypeLabel(l10n, type),
-                            style: TextStyle(
-                              color: isSelected ? color : theme.text,
-                              fontFamily: 'Sora',
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ],
                 const SizedBox(height: 16),
                 Container(
                   decoration: BoxDecoration(

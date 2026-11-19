@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 
+import '../core/activity_types.dart';
 import '../data/database.dart';
 
 class TaskService {
@@ -17,16 +18,31 @@ class TaskService {
     return _db.watchAllTaskProjects();
   }
 
-  Future<int> createProject(String name) {
-    return _db.insertTaskProject(TaskProjectsCompanion.insert(name: name));
+  Future<int> createProject(
+    String name, {
+    SuggestionScope scope = SuggestionScope.workUnpaid,
+  }) {
+    return _db.insertTaskProject(
+      TaskProjectsCompanion.insert(name: name, scope: Value(scope.name)),
+    );
+  }
+
+  /// Changes the category of a project; its name and tasks stay untouched.
+  Future<void> updateProjectScope(int projectId, SuggestionScope scope) {
+    return _db.updateTaskProjectScope(projectId, scope.name);
   }
 
   Future<void> deleteProject(int projectId) {
     return _db.deleteTaskProject(projectId);
   }
 
-  Future<List<String>> getProjectNames() {
-    return _db.getTaskProjectNames();
+  /// Names of the projects of one category, alphabetically.
+  Future<List<String>> getProjectNames(SuggestionScope scope) async {
+    final projects = await _db.getTaskProjectsAlphabetical();
+    return [
+      for (final project in projects)
+        if (suggestionScopeFromName(project.scope) == scope) project.name,
+    ];
   }
 
   // --- Tasks ---

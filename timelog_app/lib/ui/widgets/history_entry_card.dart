@@ -116,6 +116,14 @@ class _HistoryEntryCardState extends ConsumerState<HistoryEntryCard> {
     final entry = widget.entry;
     final theme = widget.theme;
     final l10n = AppLocalizations.of(context)!;
+    final meta = entryMetaLine(
+      l10n,
+      typeKey: entry.activityType,
+      subtypeKey: entry.subtype,
+      project: entry.project,
+      customName: entry.customName,
+      isDark: theme.themeKey != AppTheme.paper,
+    );
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
@@ -143,8 +151,9 @@ class _HistoryEntryCardState extends ConsumerState<HistoryEntryCard> {
               ),
               Builder(
                 builder: (context) {
-                  final color = activityTypeColor(
+                  final color = activityEntryColor(
                     entry.activityType,
+                    entry.subtype,
                     isDark: theme.themeKey != AppTheme.paper,
                   );
                   return Container(
@@ -189,33 +198,35 @@ class _HistoryEntryCardState extends ConsumerState<HistoryEntryCard> {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
-          if (entry.project != null && entry.project!.isNotEmpty) ...[
+          if (meta != null) ...[
             const SizedBox(height: 4),
-            Text(
-              entry.project!,
-              style: TextStyle(
-                fontFamily: 'Sora',
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                color: theme.dim,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
-          if (entry.entertainmentType != null &&
-              entry.entertainmentType!.isNotEmpty) ...[
-            const SizedBox(height: 4),
-            Text(
-              entertainmentTypeLabel(l10n, entry.entertainmentType!),
-              style: TextStyle(
-                fontFamily: 'Sora',
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                color: theme.dim,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+            Row(
+              children: [
+                if (meta.dotColor != null) ...[
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: meta.dotColor,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                ],
+                Expanded(
+                  child: Text(
+                    meta.text,
+                    style: TextStyle(
+                      fontFamily: 'Sora',
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: theme.dim,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
             ),
           ],
           if (_deleteError != null) ...[

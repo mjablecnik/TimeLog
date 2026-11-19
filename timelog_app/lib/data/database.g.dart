@@ -98,6 +98,32 @@ class $TimeEntriesTable extends TimeEntries
         type: DriftSqlType.string,
         requiredDuringInsert: false,
       );
+  static const VerificationMeta _subtypeMeta = const VerificationMeta(
+    'subtype',
+  );
+  @override
+  late final GeneratedColumn<String> subtype = GeneratedColumn<String>(
+    'subtype',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _customNameMeta = const VerificationMeta(
+    'customName',
+  );
+  @override
+  late final GeneratedColumn<String> customName = GeneratedColumn<String>(
+    'custom_name',
+    aliasedName,
+    true,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 0,
+      maxTextLength: 200,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -119,6 +145,8 @@ class $TimeEntriesTable extends TimeEntries
     activityType,
     project,
     entertainmentType,
+    subtype,
+    customName,
     createdAt,
   ];
   @override
@@ -187,6 +215,18 @@ class $TimeEntriesTable extends TimeEntries
         ),
       );
     }
+    if (data.containsKey('subtype')) {
+      context.handle(
+        _subtypeMeta,
+        subtype.isAcceptableOrUnknown(data['subtype']!, _subtypeMeta),
+      );
+    }
+    if (data.containsKey('custom_name')) {
+      context.handle(
+        _customNameMeta,
+        customName.isAcceptableOrUnknown(data['custom_name']!, _customNameMeta),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -230,6 +270,14 @@ class $TimeEntriesTable extends TimeEntries
         DriftSqlType.string,
         data['${effectivePrefix}entertainment_type'],
       ),
+      subtype: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}subtype'],
+      ),
+      customName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}custom_name'],
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -251,6 +299,8 @@ class TimeEntry extends DataClass implements Insertable<TimeEntry> {
   final String activityType;
   final String? project;
   final String? entertainmentType;
+  final String? subtype;
+  final String? customName;
   final DateTime createdAt;
   const TimeEntry({
     required this.id,
@@ -260,6 +310,8 @@ class TimeEntry extends DataClass implements Insertable<TimeEntry> {
     required this.activityType,
     this.project,
     this.entertainmentType,
+    this.subtype,
+    this.customName,
     required this.createdAt,
   });
   @override
@@ -275,6 +327,12 @@ class TimeEntry extends DataClass implements Insertable<TimeEntry> {
     }
     if (!nullToAbsent || entertainmentType != null) {
       map['entertainment_type'] = Variable<String>(entertainmentType);
+    }
+    if (!nullToAbsent || subtype != null) {
+      map['subtype'] = Variable<String>(subtype);
+    }
+    if (!nullToAbsent || customName != null) {
+      map['custom_name'] = Variable<String>(customName);
     }
     map['created_at'] = Variable<DateTime>(createdAt);
     return map;
@@ -293,6 +351,12 @@ class TimeEntry extends DataClass implements Insertable<TimeEntry> {
       entertainmentType: entertainmentType == null && nullToAbsent
           ? const Value.absent()
           : Value(entertainmentType),
+      subtype: subtype == null && nullToAbsent
+          ? const Value.absent()
+          : Value(subtype),
+      customName: customName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(customName),
       createdAt: Value(createdAt),
     );
   }
@@ -312,6 +376,8 @@ class TimeEntry extends DataClass implements Insertable<TimeEntry> {
       entertainmentType: serializer.fromJson<String?>(
         json['entertainmentType'],
       ),
+      subtype: serializer.fromJson<String?>(json['subtype']),
+      customName: serializer.fromJson<String?>(json['customName']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
   }
@@ -326,6 +392,8 @@ class TimeEntry extends DataClass implements Insertable<TimeEntry> {
       'activityType': serializer.toJson<String>(activityType),
       'project': serializer.toJson<String?>(project),
       'entertainmentType': serializer.toJson<String?>(entertainmentType),
+      'subtype': serializer.toJson<String?>(subtype),
+      'customName': serializer.toJson<String?>(customName),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
   }
@@ -338,6 +406,8 @@ class TimeEntry extends DataClass implements Insertable<TimeEntry> {
     String? activityType,
     Value<String?> project = const Value.absent(),
     Value<String?> entertainmentType = const Value.absent(),
+    Value<String?> subtype = const Value.absent(),
+    Value<String?> customName = const Value.absent(),
     DateTime? createdAt,
   }) => TimeEntry(
     id: id ?? this.id,
@@ -349,6 +419,8 @@ class TimeEntry extends DataClass implements Insertable<TimeEntry> {
     entertainmentType: entertainmentType.present
         ? entertainmentType.value
         : this.entertainmentType,
+    subtype: subtype.present ? subtype.value : this.subtype,
+    customName: customName.present ? customName.value : this.customName,
     createdAt: createdAt ?? this.createdAt,
   );
   TimeEntry copyWithCompanion(TimeEntriesCompanion data) {
@@ -366,6 +438,10 @@ class TimeEntry extends DataClass implements Insertable<TimeEntry> {
       entertainmentType: data.entertainmentType.present
           ? data.entertainmentType.value
           : this.entertainmentType,
+      subtype: data.subtype.present ? data.subtype.value : this.subtype,
+      customName: data.customName.present
+          ? data.customName.value
+          : this.customName,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
   }
@@ -380,6 +456,8 @@ class TimeEntry extends DataClass implements Insertable<TimeEntry> {
           ..write('activityType: $activityType, ')
           ..write('project: $project, ')
           ..write('entertainmentType: $entertainmentType, ')
+          ..write('subtype: $subtype, ')
+          ..write('customName: $customName, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
@@ -394,6 +472,8 @@ class TimeEntry extends DataClass implements Insertable<TimeEntry> {
     activityType,
     project,
     entertainmentType,
+    subtype,
+    customName,
     createdAt,
   );
   @override
@@ -407,6 +487,8 @@ class TimeEntry extends DataClass implements Insertable<TimeEntry> {
           other.activityType == this.activityType &&
           other.project == this.project &&
           other.entertainmentType == this.entertainmentType &&
+          other.subtype == this.subtype &&
+          other.customName == this.customName &&
           other.createdAt == this.createdAt);
 }
 
@@ -418,6 +500,8 @@ class TimeEntriesCompanion extends UpdateCompanion<TimeEntry> {
   final Value<String> activityType;
   final Value<String?> project;
   final Value<String?> entertainmentType;
+  final Value<String?> subtype;
+  final Value<String?> customName;
   final Value<DateTime> createdAt;
   const TimeEntriesCompanion({
     this.id = const Value.absent(),
@@ -427,6 +511,8 @@ class TimeEntriesCompanion extends UpdateCompanion<TimeEntry> {
     this.activityType = const Value.absent(),
     this.project = const Value.absent(),
     this.entertainmentType = const Value.absent(),
+    this.subtype = const Value.absent(),
+    this.customName = const Value.absent(),
     this.createdAt = const Value.absent(),
   });
   TimeEntriesCompanion.insert({
@@ -437,6 +523,8 @@ class TimeEntriesCompanion extends UpdateCompanion<TimeEntry> {
     this.activityType = const Value.absent(),
     this.project = const Value.absent(),
     this.entertainmentType = const Value.absent(),
+    this.subtype = const Value.absent(),
+    this.customName = const Value.absent(),
     this.createdAt = const Value.absent(),
   }) : startTime = Value(startTime),
        endTime = Value(endTime),
@@ -449,6 +537,8 @@ class TimeEntriesCompanion extends UpdateCompanion<TimeEntry> {
     Expression<String>? activityType,
     Expression<String>? project,
     Expression<String>? entertainmentType,
+    Expression<String>? subtype,
+    Expression<String>? customName,
     Expression<DateTime>? createdAt,
   }) {
     return RawValuesInsertable({
@@ -459,6 +549,8 @@ class TimeEntriesCompanion extends UpdateCompanion<TimeEntry> {
       if (activityType != null) 'activity_type': activityType,
       if (project != null) 'project': project,
       if (entertainmentType != null) 'entertainment_type': entertainmentType,
+      if (subtype != null) 'subtype': subtype,
+      if (customName != null) 'custom_name': customName,
       if (createdAt != null) 'created_at': createdAt,
     });
   }
@@ -471,6 +563,8 @@ class TimeEntriesCompanion extends UpdateCompanion<TimeEntry> {
     Value<String>? activityType,
     Value<String?>? project,
     Value<String?>? entertainmentType,
+    Value<String?>? subtype,
+    Value<String?>? customName,
     Value<DateTime>? createdAt,
   }) {
     return TimeEntriesCompanion(
@@ -481,6 +575,8 @@ class TimeEntriesCompanion extends UpdateCompanion<TimeEntry> {
       activityType: activityType ?? this.activityType,
       project: project ?? this.project,
       entertainmentType: entertainmentType ?? this.entertainmentType,
+      subtype: subtype ?? this.subtype,
+      customName: customName ?? this.customName,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -509,6 +605,12 @@ class TimeEntriesCompanion extends UpdateCompanion<TimeEntry> {
     if (entertainmentType.present) {
       map['entertainment_type'] = Variable<String>(entertainmentType.value);
     }
+    if (subtype.present) {
+      map['subtype'] = Variable<String>(subtype.value);
+    }
+    if (customName.present) {
+      map['custom_name'] = Variable<String>(customName.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -525,6 +627,8 @@ class TimeEntriesCompanion extends UpdateCompanion<TimeEntry> {
           ..write('activityType: $activityType, ')
           ..write('project: $project, ')
           ..write('entertainmentType: $entertainmentType, ')
+          ..write('subtype: $subtype, ')
+          ..write('customName: $customName, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
@@ -1415,6 +1519,16 @@ class $TaskProjectsTable extends TaskProjects
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _scopeMeta = const VerificationMeta('scope');
+  @override
+  late final GeneratedColumn<String> scope = GeneratedColumn<String>(
+    'scope',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('workUnpaid'),
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -1428,7 +1542,7 @@ class $TaskProjectsTable extends TaskProjects
     defaultValue: currentDateAndTime,
   );
   @override
-  List<GeneratedColumn> get $columns => [id, name, createdAt];
+  List<GeneratedColumn> get $columns => [id, name, scope, createdAt];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -1451,6 +1565,12 @@ class $TaskProjectsTable extends TaskProjects
       );
     } else if (isInserting) {
       context.missing(_nameMeta);
+    }
+    if (data.containsKey('scope')) {
+      context.handle(
+        _scopeMeta,
+        scope.isAcceptableOrUnknown(data['scope']!, _scopeMeta),
+      );
     }
     if (data.containsKey('created_at')) {
       context.handle(
@@ -1475,6 +1595,10 @@ class $TaskProjectsTable extends TaskProjects
         DriftSqlType.string,
         data['${effectivePrefix}name'],
       )!,
+      scope: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}scope'],
+      )!,
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -1491,10 +1615,12 @@ class $TaskProjectsTable extends TaskProjects
 class TaskProject extends DataClass implements Insertable<TaskProject> {
   final int id;
   final String name;
+  final String scope;
   final DateTime createdAt;
   const TaskProject({
     required this.id,
     required this.name,
+    required this.scope,
     required this.createdAt,
   });
   @override
@@ -1502,6 +1628,7 @@ class TaskProject extends DataClass implements Insertable<TaskProject> {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
     map['name'] = Variable<String>(name);
+    map['scope'] = Variable<String>(scope);
     map['created_at'] = Variable<DateTime>(createdAt);
     return map;
   }
@@ -1510,6 +1637,7 @@ class TaskProject extends DataClass implements Insertable<TaskProject> {
     return TaskProjectsCompanion(
       id: Value(id),
       name: Value(name),
+      scope: Value(scope),
       createdAt: Value(createdAt),
     );
   }
@@ -1522,6 +1650,7 @@ class TaskProject extends DataClass implements Insertable<TaskProject> {
     return TaskProject(
       id: serializer.fromJson<int>(json['id']),
       name: serializer.fromJson<String>(json['name']),
+      scope: serializer.fromJson<String>(json['scope']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
   }
@@ -1531,20 +1660,27 @@ class TaskProject extends DataClass implements Insertable<TaskProject> {
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
       'name': serializer.toJson<String>(name),
+      'scope': serializer.toJson<String>(scope),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
   }
 
-  TaskProject copyWith({int? id, String? name, DateTime? createdAt}) =>
-      TaskProject(
-        id: id ?? this.id,
-        name: name ?? this.name,
-        createdAt: createdAt ?? this.createdAt,
-      );
+  TaskProject copyWith({
+    int? id,
+    String? name,
+    String? scope,
+    DateTime? createdAt,
+  }) => TaskProject(
+    id: id ?? this.id,
+    name: name ?? this.name,
+    scope: scope ?? this.scope,
+    createdAt: createdAt ?? this.createdAt,
+  );
   TaskProject copyWithCompanion(TaskProjectsCompanion data) {
     return TaskProject(
       id: data.id.present ? data.id.value : this.id,
       name: data.name.present ? data.name.value : this.name,
+      scope: data.scope.present ? data.scope.value : this.scope,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
   }
@@ -1554,44 +1690,51 @@ class TaskProject extends DataClass implements Insertable<TaskProject> {
     return (StringBuffer('TaskProject(')
           ..write('id: $id, ')
           ..write('name: $name, ')
+          ..write('scope: $scope, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, name, createdAt);
+  int get hashCode => Object.hash(id, name, scope, createdAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is TaskProject &&
           other.id == this.id &&
           other.name == this.name &&
+          other.scope == this.scope &&
           other.createdAt == this.createdAt);
 }
 
 class TaskProjectsCompanion extends UpdateCompanion<TaskProject> {
   final Value<int> id;
   final Value<String> name;
+  final Value<String> scope;
   final Value<DateTime> createdAt;
   const TaskProjectsCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
+    this.scope = const Value.absent(),
     this.createdAt = const Value.absent(),
   });
   TaskProjectsCompanion.insert({
     this.id = const Value.absent(),
     required String name,
+    this.scope = const Value.absent(),
     this.createdAt = const Value.absent(),
   }) : name = Value(name);
   static Insertable<TaskProject> custom({
     Expression<int>? id,
     Expression<String>? name,
+    Expression<String>? scope,
     Expression<DateTime>? createdAt,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (name != null) 'name': name,
+      if (scope != null) 'scope': scope,
       if (createdAt != null) 'created_at': createdAt,
     });
   }
@@ -1599,11 +1742,13 @@ class TaskProjectsCompanion extends UpdateCompanion<TaskProject> {
   TaskProjectsCompanion copyWith({
     Value<int>? id,
     Value<String>? name,
+    Value<String>? scope,
     Value<DateTime>? createdAt,
   }) {
     return TaskProjectsCompanion(
       id: id ?? this.id,
       name: name ?? this.name,
+      scope: scope ?? this.scope,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -1617,6 +1762,9 @@ class TaskProjectsCompanion extends UpdateCompanion<TaskProject> {
     if (name.present) {
       map['name'] = Variable<String>(name.value);
     }
+    if (scope.present) {
+      map['scope'] = Variable<String>(scope.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -1628,6 +1776,7 @@ class TaskProjectsCompanion extends UpdateCompanion<TaskProject> {
     return (StringBuffer('TaskProjectsCompanion(')
           ..write('id: $id, ')
           ..write('name: $name, ')
+          ..write('scope: $scope, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
@@ -2313,6 +2462,8 @@ typedef $$TimeEntriesTableCreateCompanionBuilder =
       Value<String> activityType,
       Value<String?> project,
       Value<String?> entertainmentType,
+      Value<String?> subtype,
+      Value<String?> customName,
       Value<DateTime> createdAt,
     });
 typedef $$TimeEntriesTableUpdateCompanionBuilder =
@@ -2324,6 +2475,8 @@ typedef $$TimeEntriesTableUpdateCompanionBuilder =
       Value<String> activityType,
       Value<String?> project,
       Value<String?> entertainmentType,
+      Value<String?> subtype,
+      Value<String?> customName,
       Value<DateTime> createdAt,
     });
 
@@ -2368,6 +2521,16 @@ class $$TimeEntriesTableFilterComposer
 
   ColumnFilters<String> get entertainmentType => $composableBuilder(
     column: $table.entertainmentType,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get subtype => $composableBuilder(
+    column: $table.subtype,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get customName => $composableBuilder(
+    column: $table.customName,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -2421,6 +2584,16 @@ class $$TimeEntriesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get subtype => $composableBuilder(
+    column: $table.subtype,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get customName => $composableBuilder(
+    column: $table.customName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -2460,6 +2633,14 @@ class $$TimeEntriesTableAnnotationComposer
 
   GeneratedColumn<String> get entertainmentType => $composableBuilder(
     column: $table.entertainmentType,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get subtype =>
+      $composableBuilder(column: $table.subtype, builder: (column) => column);
+
+  GeneratedColumn<String> get customName => $composableBuilder(
+    column: $table.customName,
     builder: (column) => column,
   );
 
@@ -2505,6 +2686,8 @@ class $$TimeEntriesTableTableManager
                 Value<String> activityType = const Value.absent(),
                 Value<String?> project = const Value.absent(),
                 Value<String?> entertainmentType = const Value.absent(),
+                Value<String?> subtype = const Value.absent(),
+                Value<String?> customName = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
               }) => TimeEntriesCompanion(
                 id: id,
@@ -2514,6 +2697,8 @@ class $$TimeEntriesTableTableManager
                 activityType: activityType,
                 project: project,
                 entertainmentType: entertainmentType,
+                subtype: subtype,
+                customName: customName,
                 createdAt: createdAt,
               ),
           createCompanionCallback:
@@ -2525,6 +2710,8 @@ class $$TimeEntriesTableTableManager
                 Value<String> activityType = const Value.absent(),
                 Value<String?> project = const Value.absent(),
                 Value<String?> entertainmentType = const Value.absent(),
+                Value<String?> subtype = const Value.absent(),
+                Value<String?> customName = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
               }) => TimeEntriesCompanion.insert(
                 id: id,
@@ -2534,10 +2721,21 @@ class $$TimeEntriesTableTableManager
                 activityType: activityType,
                 project: project,
                 entertainmentType: entertainmentType,
+                subtype: subtype,
+                customName: customName,
                 createdAt: createdAt,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<$TimeEntriesTable, TimeEntry>(table),
+                  BaseReferences<_$AppDatabase, $TimeEntriesTable, TimeEntry>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),
@@ -2598,10 +2796,7 @@ final class $$RecurringRemindersTableReferences
   _completionRecordsRefsTable(_$AppDatabase db) =>
       MultiTypedResultKey.fromTable(
         db.completionRecords,
-        aliasName: $_aliasNameGenerator(
-          db.recurringReminders.id,
-          db.completionRecords.reminderId,
-        ),
+        aliasName: 'recurring_reminders__id__completion_records__reminder_id',
       );
 
   $$CompletionRecordsTableProcessedTableManager get completionRecordsRefs {
@@ -2884,7 +3079,9 @@ class $$RecurringRemindersTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$RecurringRemindersTable, RecurringReminder>(
+                    table,
+                  ),
                   $$RecurringRemindersTableReferences(db, table, e),
                 ),
               )
@@ -2967,13 +3164,9 @@ final class $$CompletionRecordsTableReferences
     super.$_typedResult,
   );
 
-  static $RecurringRemindersTable _reminderIdTable(_$AppDatabase db) =>
-      db.recurringReminders.createAlias(
-        $_aliasNameGenerator(
-          db.completionRecords.reminderId,
-          db.recurringReminders.id,
-        ),
-      );
+  static $RecurringRemindersTable _reminderIdTable(_$AppDatabase db) => db
+      .recurringReminders
+      .createAlias('completion_records__reminder_id__recurring_reminders__id');
 
   $$RecurringRemindersTableProcessedTableManager get reminderId {
     final $_column = $_itemColumn<int>('reminder_id')!;
@@ -3191,7 +3384,7 @@ class $$CompletionRecordsTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$CompletionRecordsTable, CompletionRecord>(table),
                   $$CompletionRecordsTableReferences(db, table, e),
                 ),
               )
@@ -3261,12 +3454,14 @@ typedef $$TaskProjectsTableCreateCompanionBuilder =
     TaskProjectsCompanion Function({
       Value<int> id,
       required String name,
+      Value<String> scope,
       Value<DateTime> createdAt,
     });
 typedef $$TaskProjectsTableUpdateCompanionBuilder =
     TaskProjectsCompanion Function({
       Value<int> id,
       Value<String> name,
+      Value<String> scope,
       Value<DateTime> createdAt,
     });
 
@@ -3278,7 +3473,7 @@ final class $$TaskProjectsTableReferences
     _$AppDatabase db,
   ) => MultiTypedResultKey.fromTable(
     db.tasks,
-    aliasName: $_aliasNameGenerator(db.taskProjects.id, db.tasks.projectId),
+    aliasName: 'task_projects__id__tasks__project_id',
   );
 
   $$TasksTableProcessedTableManager get tasksRefs {
@@ -3310,6 +3505,11 @@ class $$TaskProjectsTableFilterComposer
 
   ColumnFilters<String> get name => $composableBuilder(
     column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get scope => $composableBuilder(
+    column: $table.scope,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -3363,6 +3563,11 @@ class $$TaskProjectsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get scope => $composableBuilder(
+    column: $table.scope,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -3383,6 +3588,9 @@ class $$TaskProjectsTableAnnotationComposer
 
   GeneratedColumn<String> get name =>
       $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get scope =>
+      $composableBuilder(column: $table.scope, builder: (column) => column);
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -3443,26 +3651,30 @@ class $$TaskProjectsTableTableManager
               ({
                 Value<int> id = const Value.absent(),
                 Value<String> name = const Value.absent(),
+                Value<String> scope = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
               }) => TaskProjectsCompanion(
                 id: id,
                 name: name,
+                scope: scope,
                 createdAt: createdAt,
               ),
           createCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
                 required String name,
+                Value<String> scope = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
               }) => TaskProjectsCompanion.insert(
                 id: id,
                 name: name,
+                scope: scope,
                 createdAt: createdAt,
               ),
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$TaskProjectsTable, TaskProject>(table),
                   $$TaskProjectsTableReferences(db, table, e),
                 ),
               )
@@ -3547,9 +3759,7 @@ final class $$TasksTableReferences
   $$TasksTableReferences(super.$_db, super.$_table, super.$_typedResult);
 
   static $TaskProjectsTable _projectIdTable(_$AppDatabase db) =>
-      db.taskProjects.createAlias(
-        $_aliasNameGenerator(db.tasks.projectId, db.taskProjects.id),
-      );
+      db.taskProjects.createAlias('tasks__project_id__task_projects__id');
 
   $$TaskProjectsTableProcessedTableManager? get projectId {
     final $_column = $_itemColumn<int>('project_id');
@@ -3867,8 +4077,10 @@ class $$TasksTableTableManager
               ),
           withReferenceMapper: (p0) => p0
               .map(
-                (e) =>
-                    (e.readTable(table), $$TasksTableReferences(db, table, e)),
+                (e) => (
+                  e.readTable<$TasksTable, TaskItem>(table),
+                  $$TasksTableReferences(db, table, e),
+                ),
               )
               .toList(),
           prefetchHooksCallback: ({projectId = false}) {

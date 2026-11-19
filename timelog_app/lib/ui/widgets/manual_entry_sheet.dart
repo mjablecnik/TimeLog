@@ -8,7 +8,7 @@ import '../../data/database.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../providers/database_provider.dart';
 import '../../providers/history_provider.dart' show logicalDay;
-import '../../providers/task_providers.dart';
+import 'activity_picker/activity_picker.dart';
 
 class ManualEntrySheet extends ConsumerStatefulWidget {
   final AppThemeData theme;
@@ -26,20 +26,19 @@ class ManualEntrySheet extends ConsumerStatefulWidget {
 
 class _ManualEntrySheetState extends ConsumerState<ManualEntrySheet> {
   final _controller = TextEditingController();
-  TextEditingController? _projectController;
-  String _selectedType = activityTypes.first;
-  String? _entertainmentType;
+  // New manual entries start with the first type; the subtype is restored by
+  // the picker from the last one used for that type.
+  final _initialSelection = ActivitySelection(typeKey: activityTypes.first);
+  late ActivitySelection _selection = _initialSelection;
   late DateTime _startTime;
   late DateTime _endTime;
   String? _error;
   bool _saving = false;
-  List<String> _knownProjects = [];
 
   @override
   void initState() {
     super.initState();
     _initDefaultTimes();
-    _loadKnownProjects();
   }
 
   Future<void> _initDefaultTimes() async {
@@ -86,11 +85,6 @@ class _ManualEntrySheetState extends ConsumerState<ManualEntrySheet> {
     });
   }
 
-  Future<void> _loadKnownProjects() async {
-    final projects = await ref.read(autocompleteProjectsProvider.future);
-    if (mounted) setState(() => _knownProjects = projects);
-  }
-
   String _formatTime(DateTime dt) {
     final h = dt.hour.toString().padLeft(2, '0');
     final m = dt.minute.toString().padLeft(2, '0');
@@ -134,11 +128,11 @@ class _ManualEntrySheetState extends ConsumerState<ManualEntrySheet> {
     super.dispose();
   }
 
-  bool get _entertainmentSelectionMissing =>
-      isEntertainmentActivityType(_selectedType) && _entertainmentType == null;
+  bool get _customNameMissing =>
+      hasCustomNameField(_selection.typeKey) && _selection.customName.trim().isEmpty;
 
   bool get _canSubmit =>
-      _controller.text.trim().isNotEmpty && !_saving && !_entertainmentSelectionMissing;
+      _controller.text.trim().isNotEmpty && !_saving && !_customNameMissing;
 
   Future<void> _submit() async {
     final l10n = AppLocalizations.of(context)!;
@@ -167,26 +161,24 @@ class _ManualEntrySheetState extends ConsumerState<ManualEntrySheet> {
         return;
       }
 
-      final project = hasProjectField(_selectedType)
-          ? (_projectController?.text.trim() ?? '')
-          : '';
-      final entertainmentType = isEntertainmentActivityType(_selectedType)
-          ? _entertainmentType
-          : null;
+      final values = _selection.toRowValues();
 
       await dbService.insertTimeEntry(
         TimeEntriesCompanion(
           startTime: Value(_startTime.toIso8601String()),
           endTime: Value(_endTime.toIso8601String()),
           description: Value(_controller.text.trim()),
-          activityType: Value(_selectedType),
-          project: Value(project.isEmpty ? null : project),
-          entertainmentType: Value(entertainmentType),
+          activityType: Value(_selection.typeKey),
+          project: Value(values.project),
+          subtype: Value(values.subtype),
+          customName: Value(values.customName),
         ),
       );
 
-      if (project.isNotEmpty) {
-        await ref.read(projectServiceProvider).saveProject(project);
+      final scope = suggestionScopeOf(_selection.typeKey, values.subtype);
+      final name = values.project ?? values.customName;
+      if (scope != null && name != null) {
+        await ref.read(projectServiceProvider).saveName(scope, name);
       }
 
       if (mounted) Navigator.of(context).pop();
@@ -268,168 +260,11 @@ class _ManualEntrySheetState extends ConsumerState<ManualEntrySheet> {
                       ],
                     ),
                     const SizedBox(height: 16),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: activityTypes.map((type) {
-                        final isSelected = type == _selectedType;
-                        final color = activityTypeColor(
-                          type,
-                          isDark: theme.themeKey != AppTheme.paper,
-                        );
-                        return GestureDetector(
-                          onTap: () => setState(() {
-                            _selectedType = type;
-                            if (!isEntertainmentActivityType(type)) {
-                              _entertainmentType = null;
-                            }
-                          }),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 8,
-                            ),
-                            decoration: BoxDecoration(
-                              color: isSelected
-                                  ? color.withValues(alpha: 0.2)
-                                  : theme.panel,
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: isSelected ? color : theme.border,
-                              ),
-                            ),
-                            child: Text(
-                              activityTypeLabel(l10n, type),
-                              style: TextStyle(
-                                color: isSelected ? color : theme.text,
-                                fontFamily: 'Sora',
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        );
-                      }).toList(),
+                    ActivityPicker(
+                      theme: theme,
+                      initial: _initialSelection,
+                      onChanged: (selection) => setState(() => _selection = selection),
                     ),
-                    if (isEntertainmentActivityType(_selectedType)) ...[
-                      const SizedBox(height: 16),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: entertainmentTypes.map((type) {
-                          final isSelected = type == _entertainmentType;
-                          final color = activityTypeColor(
-                            _selectedType,
-                            isDark: theme.themeKey != AppTheme.paper,
-                          );
-                          return GestureDetector(
-                            onTap: () =>
-                                setState(() => _entertainmentType = type),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 6,
-                              ),
-                              decoration: BoxDecoration(
-                                color: isSelected
-                                    ? color.withValues(alpha: 0.2)
-                                    : theme.panel,
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(
-                                  color: isSelected ? color : theme.border,
-                                ),
-                              ),
-                              child: Text(
-                                entertainmentTypeLabel(l10n, type),
-                                style: TextStyle(
-                                  color: isSelected ? color : theme.text,
-                                  fontFamily: 'Sora',
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                    ],
-                    if (hasProjectField(_selectedType)) ...[
-                      const SizedBox(height: 16),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: theme.panel,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: theme.border),
-                        ),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 4),
-                        child: Autocomplete<String>(
-                          optionsBuilder: (textEditingValue) {
-                            final query =
-                                textEditingValue.text.trim().toLowerCase();
-                            if (query.isEmpty) return _knownProjects;
-                            return _knownProjects.where(
-                              (p) => p.toLowerCase().contains(query),
-                            );
-                          },
-                          fieldViewBuilder:
-                              (context, controller, focusNode, onSubmitted) {
-                            _projectController = controller;
-                            return TextField(
-                              controller: controller,
-                              focusNode: focusNode,
-                              style: TextStyle(
-                                  color: theme.text,
-                                  fontFamily: 'Sora',
-                                  fontSize: 15),
-                              decoration: InputDecoration(
-                                hintText: l10n.projectNameHint,
-                                hintStyle: TextStyle(
-                                    color: theme.faint, fontFamily: 'Sora'),
-                                border: InputBorder.none,
-                              ),
-                            );
-                          },
-                          optionsViewBuilder: (context, onSelected, options) {
-                            return Align(
-                              alignment: Alignment.topLeft,
-                              child: Material(
-                                elevation: 4,
-                                borderRadius: BorderRadius.circular(12),
-                                color: theme.panel,
-                                surfaceTintColor: Colors.transparent,
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    color: theme.panel,
-                                    borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(color: theme.border),
-                                  ),
-                                  constraints:
-                                      const BoxConstraints(maxHeight: 200),
-                                  child: ListView.builder(
-                                    shrinkWrap: true,
-                                    padding: EdgeInsets.zero,
-                                    itemCount: options.length,
-                                    itemBuilder: (context, index) {
-                                      final option = options.elementAt(index);
-                                      return ListTile(
-                                        title: Text(
-                                          option,
-                                          style: TextStyle(
-                                              color: theme.text,
-                                              fontFamily: 'Sora'),
-                                        ),
-                                        onTap: () => onSelected(option),
-                                      );
-                                    },
-                                  ),
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ],
                     const SizedBox(height: 16),
                     Container(
                       decoration: BoxDecoration(

@@ -45,6 +45,12 @@ void main() {
   testWidgets(
     'editing times validates end > start and persists the update, preserving the original date',
     (tester) async {
+      // The sheet got taller (type caption, subtype block); a tall window keeps
+      // the whole ListView built so the assertions below can see every widget.
+      tester.view.physicalSize = const Size(800, 2400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+
       final db = AppDatabase.forTesting(NativeDatabase.memory());
       addTearDown(db.close);
 

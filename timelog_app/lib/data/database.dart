@@ -26,7 +26,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 8;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -58,8 +58,28 @@ class AppDatabase extends _$AppDatabase {
             await m.createTable(completionRecords);
           }
           if (from < 7) {
+            // Created from the current definition, so `task_projects` already
+            // has the `scope` column added in version 8.
             await m.createTable(taskProjects);
             await m.createTable(tasks);
+          }
+          if (from < 8) {
+            await m.addColumn(timeEntries, timeEntries.subtype);
+            await m.addColumn(timeEntries, timeEntries.customName);
+            // Everything logged before subtypes existed is treated as unpaid work.
+            await customStatement(
+              "UPDATE time_entries SET subtype = 'unpaid' WHERE activity_type = 'Práce'",
+            );
+            await customStatement(
+              "UPDATE time_entries SET subtype = 'active' WHERE activity_type = 'Zábava' AND entertainment_type = 'Aktivní zábava'",
+            );
+            await customStatement(
+              "UPDATE time_entries SET subtype = 'passive' WHERE activity_type = 'Zábava' AND entertainment_type = 'Pasivní zábava'",
+            );
+            if (from >= 7) {
+              // Version 7 already has the task tables, without `scope`.
+              await m.addColumn(taskProjects, taskProjects.scope);
+            }
           }
         },
       );
@@ -165,13 +185,26 @@ class AppDatabase extends _$AppDatabase {
     return (delete(taskProjects)..where((t) => t.id.equals(id))).go();
   }
 
-  Future<List<String>> getTaskProjectNames() async {
-    final rows = await (select(taskProjects)
+  Future<List<TaskProject>> getTaskProjectsAlphabetical() {
+    return (select(taskProjects)
           ..orderBy([
             (t) => OrderingTerm(expression: t.name.collate(Collate.noCase)),
           ]))
         .get();
-    return rows.map((r) => r.name).toList();
+  }
+
+  /// Changes the category of a task project; nothing else is touched.
+  Future<void> updateTaskProjectScope(int id, String scope) {
+    return (update(taskProjects)..where((t) => t.id.equals(id)))
+        .write(TaskProjectsCompanion(scope: Value(scope)));
+  }
+
+  /// Time entries that carry a project or a custom name; used once to fill the
+  /// scoped suggestion lists.
+  Future<List<TimeEntry>> getEntriesWithNames() {
+    return (select(timeEntries)
+          ..where((t) => t.project.isNotNull() | t.customName.isNotNull()))
+        .get();
   }
 
   // --- Tasks CRUD ---

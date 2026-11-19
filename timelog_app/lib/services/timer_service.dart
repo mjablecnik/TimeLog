@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../core/activity_types.dart';
 import '../core/config.dart';
 import 'alarm_service.dart';
 import 'live_activity_channel.dart';
@@ -27,7 +28,8 @@ class TimerState with _$TimerState {
     String? prefillDescription,
     String? prefillActivityType,
     String? prefillProject,
-    String? prefillEntertainmentType,
+    String? prefillSubtype,
+    String? prefillCustomName,
     LogTrigger? logTrigger,
   }) = _TimerState;
 }
@@ -40,7 +42,10 @@ const _kTimerSecondsLeft = 'timer_secondsLeft';
 const _kPrefillDescription = 'timer_prefillDescription';
 const _kPrefillActivityType = 'timer_prefillActivityType';
 const _kPrefillProject = 'timer_prefillProject';
-const _kPrefillEntertainmentType = 'timer_prefillEntertainmentType';
+const _kPrefillSubtype = 'timer_prefillSubtype';
+const _kPrefillCustomName = 'timer_prefillCustomName';
+// Legacy key of versions before subtypes; read once and removed.
+const _kLegacyPrefillEntertainmentType = 'timer_prefillEntertainmentType';
 
 class TimerNotifier extends StateNotifier<TimerState> with WidgetsBindingObserver {
   Timer? _ticker;
@@ -92,7 +97,25 @@ class TimerNotifier extends StateNotifier<TimerState> with WidgetsBindingObserve
     final prefillDescription = prefs.getString(_kPrefillDescription);
     final prefillActivityType = prefs.getString(_kPrefillActivityType);
     final prefillProject = prefs.getString(_kPrefillProject);
-    final prefillEntertainmentType = prefs.getString(_kPrefillEntertainmentType);
+    var prefillSubtype = prefs.getString(_kPrefillSubtype);
+    final prefillCustomName = prefs.getString(_kPrefillCustomName);
+
+    // A draft saved by a version before subtypes: map the old entertainment
+    // value to the new subtype key and drop the old key.
+    final legacyEntertainment = prefs.getString(_kLegacyPrefillEntertainmentType);
+    if (legacyEntertainment != null) {
+      if (prefillSubtype == null && prefillActivityType == 'Zábava') {
+        if (legacyEntertainment == 'Aktivní zábava') prefillSubtype = 'active';
+        if (legacyEntertainment == 'Pasivní zábava') prefillSubtype = 'passive';
+      }
+      await prefs.remove(_kLegacyPrefillEntertainmentType);
+    }
+    // Ignore a subtype that the type does not define.
+    if (prefillSubtype != null &&
+        (prefillActivityType == null ||
+            subtypeOf(prefillActivityType, prefillSubtype) == null)) {
+      prefillSubtype = null;
+    }
 
     final totalSeconds =
         prefs.getInt(_kTimerTotalSeconds) ?? (TimerConfig.defaultDurationMinutes * 60);
@@ -150,12 +173,14 @@ class TimerNotifier extends StateNotifier<TimerState> with WidgetsBindingObserve
     if (prefillDescription != null ||
         prefillActivityType != null ||
         prefillProject != null ||
-        prefillEntertainmentType != null) {
+        prefillSubtype != null ||
+        prefillCustomName != null) {
       state = state.copyWith(
         prefillDescription: prefillDescription,
         prefillActivityType: prefillActivityType,
         prefillProject: prefillProject,
-        prefillEntertainmentType: prefillEntertainmentType,
+        prefillSubtype: prefillSubtype,
+        prefillCustomName: prefillCustomName,
       );
     }
   }
@@ -313,13 +338,15 @@ class TimerNotifier extends StateNotifier<TimerState> with WidgetsBindingObserve
     String description,
     String activityType, {
     String? project,
-    String? entertainmentType,
+    String? subtype,
+    String? customName,
   }) {
     state = state.copyWith(
       prefillDescription: description,
       prefillActivityType: activityType,
       prefillProject: project,
-      prefillEntertainmentType: entertainmentType,
+      prefillSubtype: subtype,
+      prefillCustomName: customName,
     );
     SharedPreferences.getInstance().then((prefs) {
       prefs.setString(_kPrefillDescription, description);
@@ -329,10 +356,15 @@ class TimerNotifier extends StateNotifier<TimerState> with WidgetsBindingObserve
       } else {
         prefs.remove(_kPrefillProject);
       }
-      if (entertainmentType != null && entertainmentType.isNotEmpty) {
-        prefs.setString(_kPrefillEntertainmentType, entertainmentType);
+      if (subtype != null && subtype.isNotEmpty) {
+        prefs.setString(_kPrefillSubtype, subtype);
       } else {
-        prefs.remove(_kPrefillEntertainmentType);
+        prefs.remove(_kPrefillSubtype);
+      }
+      if (customName != null && customName.isNotEmpty) {
+        prefs.setString(_kPrefillCustomName, customName);
+      } else {
+        prefs.remove(_kPrefillCustomName);
       }
     });
   }
@@ -342,13 +374,16 @@ class TimerNotifier extends StateNotifier<TimerState> with WidgetsBindingObserve
       prefillDescription: null,
       prefillActivityType: null,
       prefillProject: null,
-      prefillEntertainmentType: null,
+      prefillSubtype: null,
+      prefillCustomName: null,
     );
     SharedPreferences.getInstance().then((prefs) {
       prefs.remove(_kPrefillDescription);
       prefs.remove(_kPrefillActivityType);
       prefs.remove(_kPrefillProject);
-      prefs.remove(_kPrefillEntertainmentType);
+      prefs.remove(_kPrefillSubtype);
+      prefs.remove(_kPrefillCustomName);
+      prefs.remove(_kLegacyPrefillEntertainmentType);
     });
   }
 

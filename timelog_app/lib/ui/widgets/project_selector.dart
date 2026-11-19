@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../core/activity_types.dart';
 import '../../core/theme.dart';
 import '../../data/database.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../providers/task_providers.dart';
+import 'activity_picker/suggestion_field.dart';
 
 /// Horizontal scrollable chip bar showing all Task_Projects alphabetically,
 /// followed by the always-present "Nepřiřazeno" (Unassigned) entry and an
@@ -45,8 +48,17 @@ class ProjectSelector extends ConsumerWidget {
               theme: theme,
               label: project.name,
               isSelected: selectedId == project.id,
+              dotColor: suggestionScopeColor(
+                suggestionScopeFromName(project.scope),
+                isDark: theme.themeKey != AppTheme.paper,
+              ),
+              semanticsLabel: l10n.taskProjectChipSemantics(
+                project.name,
+                suggestionScopeLabel(l10n, suggestionScopeFromName(project.scope)),
+              ),
               onTap: () =>
                   ref.read(selectedTaskProjectProvider.notifier).state = project.id,
+              onLongPress: () => _showProjectMenu(context, ref, project),
               onDelete: () => _confirmDeleteProject(context, ref, project),
             ),
             const SizedBox(width: 8),
@@ -70,14 +82,18 @@ class ProjectSelector extends ConsumerWidget {
 
   Future<void> _createProject(BuildContext context, WidgetRef ref) async {
     final l10n = AppLocalizations.of(context)!;
-    final name = await showDialog<String>(
+    final result = await showDialog<({String name, SuggestionScope scope})>(
       context: context,
-      builder: (ctx) => _CreateProjectDialog(theme: theme),
+      builder: (ctx) => _ProjectDialog(theme: theme),
     );
-    if (name == null) return;
+    if (result == null) return;
 
     try {
-      await ref.read(taskServiceProvider).createProject(name);
+      await ref
+          .read(taskServiceProvider)
+          .createProject(result.name, scope: result.scope);
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_lastTaskProjectScopeKey, result.scope.name);
     } catch (_) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -85,6 +101,89 @@ class ProjectSelector extends ConsumerWidget {
         );
       }
     }
+  }
+
+  /// Long press on a project chip: edit its category or delete it.
+  Future<void> _showProjectMenu(
+    BuildContext context,
+    WidgetRef ref,
+    TaskProject project,
+  ) async {
+    final l10n = AppLocalizations.of(context)!;
+    final action = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: theme.background,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  project.name,
+                  style: TextStyle(
+                    color: theme.dim,
+                    fontFamily: 'Sora',
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+            ListTile(
+              key: const ValueKey('project-menu-edit'),
+              title: Text(
+                l10n.taskProjectEditCategory,
+                style: TextStyle(
+                  color: theme.text,
+                  fontFamily: 'Sora',
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              onTap: () => Navigator.of(ctx).pop('edit'),
+            ),
+            ListTile(
+              key: const ValueKey('project-menu-delete'),
+              title: Text(
+                l10n.commonDelete,
+                style: TextStyle(
+                  color: Colors.red[400],
+                  fontFamily: 'Sora',
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              onTap: () => Navigator.of(ctx).pop('delete'),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (!context.mounted) return;
+    if (action == 'delete') {
+      await _confirmDeleteProject(context, ref, project);
+    } else if (action == 'edit') {
+      await _editCategory(context, ref, project);
+    }
+  }
+
+  Future<void> _editCategory(
+    BuildContext context,
+    WidgetRef ref,
+    TaskProject project,
+  ) async {
+    final result = await showDialog<({String name, SuggestionScope scope})>(
+      context: context,
+      builder: (ctx) => _ProjectDialog(theme: theme, existing: project),
+    );
+    if (result == null) return;
+    await ref
+        .read(taskServiceProvider)
+        .updateProjectScope(project.id, result.scope);
   }
 
   Future<void> _confirmDeleteProject(
@@ -152,21 +251,27 @@ class _ProjectChip extends StatelessWidget {
   final String label;
   final bool isSelected;
   final VoidCallback onTap;
+  final VoidCallback? onLongPress;
   final VoidCallback? onDelete;
+  final Color? dotColor;
+  final String? semanticsLabel;
 
   const _ProjectChip({
     required this.theme,
     required this.label,
     required this.isSelected,
     required this.onTap,
+    this.onLongPress,
     this.onDelete,
+    this.dotColor,
+    this.semanticsLabel,
   });
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    final chip = GestureDetector(
       onTap: onTap,
-      onLongPress: onDelete,
+      onLongPress: onLongPress ?? onDelete,
       child: Container(
         padding: EdgeInsets.only(left: 14, right: onDelete != null ? 6 : 14),
         decoration: BoxDecoration(
@@ -177,6 +282,14 @@ class _ProjectChip extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
+            if (dotColor != null) ...[
+              Container(
+                width: 8,
+                height: 8,
+                decoration: BoxDecoration(color: dotColor, shape: BoxShape.circle),
+              ),
+              const SizedBox(width: 7),
+            ],
             Text(
               label,
               style: TextStyle(
@@ -200,6 +313,9 @@ class _ProjectChip extends StatelessWidget {
         ),
       ),
     );
+    if (semanticsLabel == null) return chip;
+    // The dot says nothing to a screen reader, so the label names the category.
+    return Semantics(label: semanticsLabel, button: true, child: ExcludeSemantics(child: chip));
   }
 }
 
@@ -228,59 +344,124 @@ class _AddProjectButton extends StatelessWidget {
   }
 }
 
-class _CreateProjectDialog extends StatefulWidget {
-  final AppThemeData theme;
+/// Preference key of the category last chosen when creating a project.
+const _lastTaskProjectScopeKey = 'last_task_project_scope';
 
-  const _CreateProjectDialog({required this.theme});
+/// Creates a project (name and category) or, with [existing], changes the
+/// category of a project; the name of an existing project cannot be edited.
+class _ProjectDialog extends StatefulWidget {
+  final AppThemeData theme;
+  final TaskProject? existing;
+
+  const _ProjectDialog({required this.theme, this.existing});
 
   @override
-  State<_CreateProjectDialog> createState() => _CreateProjectDialogState();
+  State<_ProjectDialog> createState() => _ProjectDialogState();
 }
 
-class _CreateProjectDialogState extends State<_CreateProjectDialog> {
-  final _controller = TextEditingController();
+class _ProjectDialogState extends State<_ProjectDialog> {
+  String _name = '';
+  late SuggestionScope _scope;
+
+  bool get _isEdit => widget.existing != null;
 
   @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
+  void initState() {
+    super.initState();
+    _scope = suggestionScopeFromName(widget.existing?.scope);
+    if (!_isEdit) _loadLastScope();
   }
 
-  bool get _isValid => _controller.text.trim().isNotEmpty;
+  Future<void> _loadLastScope() async {
+    final prefs = await SharedPreferences.getInstance();
+    final saved = prefs.getString(_lastTaskProjectScopeKey);
+    if (saved != null && mounted) {
+      setState(() => _scope = suggestionScopeFromName(saved));
+    }
+  }
+
+  bool get _isValid => _isEdit || _name.trim().isNotEmpty;
+
+  void _confirm() {
+    if (!_isValid) return;
+    Navigator.of(context).pop((
+      name: _isEdit ? widget.existing!.name : _name.trim(),
+      scope: _scope,
+    ));
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = widget.theme;
     final l10n = AppLocalizations.of(context)!;
+    final isDark = theme.themeKey != AppTheme.paper;
     return AlertDialog(
       backgroundColor: theme.background,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       title: Text(
-        l10n.projectCreateTitle,
+        _isEdit ? l10n.taskProjectEditCategory : l10n.projectCreateTitle,
         style: TextStyle(color: theme.text, fontFamily: 'Sora', fontWeight: FontWeight.w600),
       ),
-      content: Container(
-        decoration: BoxDecoration(
-          color: theme.panel,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: theme.border),
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        child: TextField(
-          controller: _controller,
-          autofocus: true,
-          maxLength: 100,
-          style: TextStyle(color: theme.text, fontFamily: 'Sora'),
-          decoration: InputDecoration(
-            hintText: l10n.projectNameFieldHint,
-            hintStyle: TextStyle(color: theme.faint, fontFamily: 'Sora'),
-            border: InputBorder.none,
-            counterStyle: TextStyle(color: theme.faint, fontSize: 11),
-          ),
-          onChanged: (_) => setState(() {}),
-          onSubmitted: (_) {
-            if (_isValid) Navigator.of(context).pop(_controller.text.trim());
-          },
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (_isEdit) ...[
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                decoration: BoxDecoration(
+                  color: theme.panel,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: theme.border),
+                ),
+                child: Text(
+                  widget.existing!.name,
+                  style: TextStyle(color: theme.text, fontFamily: 'Sora'),
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+            Text(
+              l10n.taskProjectCategoryCaption.toUpperCase(),
+              style: TextStyle(
+                color: theme.faint,
+                fontFamily: 'Sora',
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.9,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final scope in SuggestionScope.values)
+                  _ScopeChip(
+                    key: ValueKey('scope-chip-${scope.name}'),
+                    theme: theme,
+                    label: suggestionScopeLabel(l10n, scope),
+                    color: suggestionScopeColor(scope, isDark: isDark),
+                    isSelected: scope == _scope,
+                    onTap: () => setState(() => _scope = scope),
+                  ),
+              ],
+            ),
+            if (!_isEdit) ...[
+              const SizedBox(height: 16),
+              SuggestionField(
+                theme: theme,
+                scope: _scope,
+                hint: l10n.projectNameFieldHint,
+                initialText: '',
+                autofocus: true,
+                maxLength: 100,
+                onChanged: (text) => setState(() => _name = text),
+              ),
+            ],
+          ],
         ),
       ),
       actions: [
@@ -289,11 +470,9 @@ class _CreateProjectDialogState extends State<_CreateProjectDialog> {
           child: Text(l10n.commonCancel, style: TextStyle(color: theme.dim, fontFamily: 'Sora')),
         ),
         TextButton(
-          onPressed: _isValid
-              ? () => Navigator.of(context).pop(_controller.text.trim())
-              : null,
+          onPressed: _isValid ? _confirm : null,
           child: Text(
-            l10n.commonCreate,
+            _isEdit ? l10n.commonSave : l10n.commonCreate,
             style: TextStyle(
               color: _isValid ? theme.accent : theme.faint,
               fontFamily: 'Sora',
@@ -302,6 +481,53 @@ class _CreateProjectDialogState extends State<_CreateProjectDialog> {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _ScopeChip extends StatelessWidget {
+  final AppThemeData theme;
+  final String label;
+  final Color color;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _ScopeChip({
+    super.key,
+    required this.theme,
+    required this.label,
+    required this.color,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      selected: isSelected,
+      label: label,
+      excludeSemantics: true,
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: isSelected ? color.withValues(alpha: 0.2) : theme.panel,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: isSelected ? color : theme.border),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              color: isSelected ? color : theme.text,
+              fontFamily: 'Sora',
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

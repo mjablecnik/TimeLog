@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/activity_types.dart';
@@ -29,7 +30,7 @@ final statisticsProvider = FutureProvider<StatsData>((ref) async {
   final end = _rangeEnd(period, start);
   final entries = await dbService.getEntriesForRange(start, end);
 
-  return _computeStats(entries, period);
+  return computeStats(entries, period);
 });
 
 DateTime _rangeStart(StatsPeriod period, DateTime date) {
@@ -45,12 +46,17 @@ DateTime _rangeEnd(StatsPeriod period, DateTime start) {
   return start.add(Duration(days: days)).subtract(const Duration(milliseconds: 1));
 }
 
-StatsData _computeStats(List<TimeEntry> entries, StatsPeriod period) {
+/// Aggregates [entries] into the statistics of one period.
+@visibleForTesting
+StatsData computeStats(List<TimeEntry> entries, StatsPeriod period) {
   final byActivityType = <String, Duration>{};
   // Key: "activityType\x00projectName" to keep entries unique per type
   final projectMap = <String, Duration>{};
   final projectTypes = <String, String>{};
-  final byEntertainmentType = <String, Duration>{};
+  final bySubtype = <String, Map<String, Duration>>{};
+  // Key: lower-cased custom name; value keeps the casing of the latest entry.
+  final nameDurations = <String, Duration>{};
+  final nameLabels = <String, String>{};
   var totalTracked = Duration.zero;
 
   for (final entry in entries) {
@@ -72,15 +78,21 @@ StatsData _computeStats(List<TimeEntry> entries, StatsPeriod period) {
       projectTypes[key] = entry.activityType;
     }
 
-    final entertainmentType = entry.entertainmentType;
-    if (isEntertainmentActivityType(entry.activityType) &&
-        entertainmentType != null &&
-        entertainmentType.isNotEmpty) {
-      byEntertainmentType.update(
-        entertainmentType,
-        (value) => value + duration,
-        ifAbsent: () => duration,
-      );
+    if (subtypeOf(entry.activityType, entry.subtype) != null) {
+      bySubtype
+          .putIfAbsent(entry.activityType, () => {})
+          .update(entry.subtype!, (value) => value + duration,
+              ifAbsent: () => duration);
+    }
+
+    final customName = entry.customName?.trim();
+    if (hasCustomNameField(entry.activityType) &&
+        customName != null &&
+        customName.isNotEmpty) {
+      final key = customName.toLowerCase();
+      nameDurations.update(key, (value) => value + duration,
+          ifAbsent: () => duration);
+      nameLabels.putIfAbsent(key, () => customName);
     }
   }
 
@@ -94,6 +106,11 @@ StatsData _computeStats(List<TimeEntry> entries, StatsPeriod period) {
   }).toList()
     ..sort((a, b) => b.duration.compareTo(a.duration));
 
+  final nameStats = nameDurations.entries
+      .map((e) => NameStat(name: nameLabels[e.key]!, duration: e.value))
+      .toList()
+    ..sort((a, b) => b.duration.compareTo(a.duration));
+
   final wakingHours = period == StatsPeriod.daily ? 16 : 16 * 7;
   final untracked = Duration(hours: wakingHours) - totalTracked;
 
@@ -102,7 +119,8 @@ StatsData _computeStats(List<TimeEntry> entries, StatsPeriod period) {
     untrackedTime: untracked.isNegative ? Duration.zero : untracked,
     byActivityType: byActivityType,
     byProject: projectStats,
-    byEntertainmentType: byEntertainmentType,
+    bySubtype: bySubtype,
+    byCustomName: nameStats,
     entries: entries,
   );
 }

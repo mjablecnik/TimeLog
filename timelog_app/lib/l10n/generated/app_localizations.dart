@@ -299,7 +299,7 @@ abstract class AppLocalizations {
   /// No description provided for @activityCommute.
   ///
   /// In en, this message translates to:
-  /// **'Commute'**
+  /// **'Travel'**
   String get activityCommute;
 
   /// No description provided for @activityEntertainment.
@@ -338,17 +338,203 @@ abstract class AppLocalizations {
   /// **'Meal'**
   String get activityMeal;
 
-  /// No description provided for @entertainmentActive.
+  /// No description provided for @activityMeeting.
+  ///
+  /// In en, this message translates to:
+  /// **'Meeting'**
+  String get activityMeeting;
+
+  /// No description provided for @activityCommunication.
+  ///
+  /// In en, this message translates to:
+  /// **'Communication'**
+  String get activityCommunication;
+
+  /// No description provided for @activityOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get activityOther;
+
+  /// No description provided for @subtypePaid.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid'**
+  String get subtypePaid;
+
+  /// No description provided for @subtypeUnpaid.
+  ///
+  /// In en, this message translates to:
+  /// **'Unpaid'**
+  String get subtypeUnpaid;
+
+  /// No description provided for @subtypeEntertainmentActive.
   ///
   /// In en, this message translates to:
   /// **'Active entertainment'**
-  String get entertainmentActive;
+  String get subtypeEntertainmentActive;
 
-  /// No description provided for @entertainmentPassive.
+  /// No description provided for @subtypeEntertainmentPassive.
   ///
   /// In en, this message translates to:
   /// **'Passive entertainment'**
-  String get entertainmentPassive;
+  String get subtypeEntertainmentPassive;
+
+  /// No description provided for @subtypeWalk.
+  ///
+  /// In en, this message translates to:
+  /// **'Walk'**
+  String get subtypeWalk;
+
+  /// No description provided for @subtypeRunning.
+  ///
+  /// In en, this message translates to:
+  /// **'Running'**
+  String get subtypeRunning;
+
+  /// No description provided for @subtypeGym.
+  ///
+  /// In en, this message translates to:
+  /// **'Gym'**
+  String get subtypeGym;
+
+  /// No description provided for @subtypeBooks.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading books'**
+  String get subtypeBooks;
+
+  /// No description provided for @subtypeStudy.
+  ///
+  /// In en, this message translates to:
+  /// **'Study'**
+  String get subtypeStudy;
+
+  /// No description provided for @subtypeAi.
+  ///
+  /// In en, this message translates to:
+  /// **'AI consultation'**
+  String get subtypeAi;
+
+  /// No description provided for @subtypeRestActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Active rest'**
+  String get subtypeRestActive;
+
+  /// No description provided for @subtypeRestPassive.
+  ///
+  /// In en, this message translates to:
+  /// **'Passive rest'**
+  String get subtypeRestPassive;
+
+  /// No description provided for @subtypeGeneral.
+  ///
+  /// In en, this message translates to:
+  /// **'General'**
+  String get subtypeGeneral;
+
+  /// No description provided for @subtypeToilet.
+  ///
+  /// In en, this message translates to:
+  /// **'Toilet'**
+  String get subtypeToilet;
+
+  /// No description provided for @subtypeBreakfast.
+  ///
+  /// In en, this message translates to:
+  /// **'Breakfast'**
+  String get subtypeBreakfast;
+
+  /// No description provided for @subtypeLunch.
+  ///
+  /// In en, this message translates to:
+  /// **'Lunch'**
+  String get subtypeLunch;
+
+  /// No description provided for @subtypeDinner.
+  ///
+  /// In en, this message translates to:
+  /// **'Dinner'**
+  String get subtypeDinner;
+
+  /// No description provided for @subtypeSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'Snack'**
+  String get subtypeSnack;
+
+  /// No description provided for @scopeWorkPaid.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid work'**
+  String get scopeWorkPaid;
+
+  /// No description provided for @scopeWorkUnpaid.
+  ///
+  /// In en, this message translates to:
+  /// **'Unpaid work'**
+  String get scopeWorkUnpaid;
+
+  /// No description provided for @scopeHousework.
+  ///
+  /// In en, this message translates to:
+  /// **'Housework'**
+  String get scopeHousework;
+
+  /// No description provided for @scopeOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get scopeOther;
+
+  /// No description provided for @pickerTypeCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Type'**
+  String get pickerTypeCaption;
+
+  /// No description provided for @pickerSubtypeHeading.
+  ///
+  /// In en, this message translates to:
+  /// **'Refine: {type}'**
+  String pickerSubtypeHeading(String type);
+
+  /// No description provided for @pickerSubtypeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose one'**
+  String get pickerSubtypeHint;
+
+  /// No description provided for @customNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'What did you do?'**
+  String get customNameHint;
+
+  /// No description provided for @statsByCustomName.
+  ///
+  /// In en, this message translates to:
+  /// **'Other by name'**
+  String get statsByCustomName;
+
+  /// No description provided for @taskProjectCategoryCaption.
+  ///
+  /// In en, this message translates to:
+  /// **'Category'**
+  String get taskProjectCategoryCaption;
+
+  /// No description provided for @taskProjectEditCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit category'**
+  String get taskProjectEditCategory;
+
+  /// No description provided for @taskProjectChipSemantics.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}, {category}'**
+  String taskProjectChipSemantics(String name, String category);
 
   /// No description provided for @timerPrefillTooltip.
   ///

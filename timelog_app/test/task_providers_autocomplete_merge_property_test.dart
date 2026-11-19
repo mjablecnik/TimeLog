@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:timelog_app/core/activity_types.dart';
 import 'package:timelog_app/data/database.dart';
 import 'package:timelog_app/providers/database_provider.dart';
 import 'package:timelog_app/providers/task_providers.dart';
@@ -19,9 +20,9 @@ import 'package:timelog_app/services/project_service.dart';
 // exercises the same property without adding that dependency.
 void main() {
   test(
-    'Property 15: autocompleteProjectsProvider merges Task_Project names and '
-    'ProjectService names into a case-insensitively unique list with all '
-    'Task_Project names before ProjectService-only names',
+    'Property 15: suggestionsProvider merges the Task_Project names and the '
+    'ProjectService names of one scope into a case-insensitively unique list '
+    'with all Task_Project names before ProjectService-only names',
     () async {
       final random = Random(20260820);
       const namePool = [
@@ -54,23 +55,33 @@ void main() {
           final taskProjectCount = random.nextInt(6); // 0..5
           final timerProjectCount = random.nextInt(6); // 0..5
 
+          // The suggestions of one scope only see the projects of that scope;
+          // projects of other scopes are created too, to prove they stay out.
+          final scope = SuggestionScope.values[random.nextInt(4)];
+          SuggestionScope randomScope() =>
+              random.nextBool() ? scope : SuggestionScope.values[random.nextInt(4)];
+
           final taskService = container.read(taskServiceProvider);
           for (var i = 0; i < taskProjectCount; i++) {
-            await taskService
-                .createProject(namePool[random.nextInt(namePool.length)]);
+            await taskService.createProject(
+              namePool[random.nextInt(namePool.length)],
+              scope: randomScope(),
+            );
           }
 
           final projectService = ProjectService();
           for (var i = 0; i < timerProjectCount; i++) {
-            await projectService
-                .saveProject(namePool[random.nextInt(namePool.length)]);
+            await projectService.saveName(
+              randomScope(),
+              namePool[random.nextInt(namePool.length)],
+            );
           }
 
-          final taskProjectNames = await taskService.getProjectNames();
-          final timerProjectNames = await projectService.getKnownProjects();
+          final taskProjectNames = await taskService.getProjectNames(scope);
+          final timerProjectNames = await projectService.getKnownNames(scope);
 
           final merged =
-              await container.read(autocompleteProjectsProvider.future);
+              await container.read(suggestionsProvider(scope).future);
           final mergedLower = merged.map((n) => n.toLowerCase()).toList();
 
           // Uniqueness: no two entries share a case-insensitive name.
