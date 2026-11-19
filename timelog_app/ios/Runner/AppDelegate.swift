@@ -2,6 +2,9 @@ import Flutter
 import UIKit
 import UserNotifications
 
+/// Scene delegate named in Info.plist; Flutter's base class does the work.
+class SceneDelegate: FlutterSceneDelegate {}
+
 @main
 @objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
     private var liveActivityManager: AnyObject?
