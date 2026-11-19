@@ -96,6 +96,7 @@ See [DOCS.md](DOCS.md#project-structure) for the full annotated tree. Summary:
   desktop platform (Linux/Windows/macOS), not just Android/iOS, or it crashes on startup.
   `getNotificationAppLaunchDetails()` throws `UnimplementedError` on Linux — always call it
   through `getLaunchPayload()`, which already catches that.
+- iOS uses the UIScene lifecycle (`UIApplicationSceneManifest` in `Info.plist`, `FlutterSceneDelegate`). Plugins and the platform channels are set up in `AppDelegate.didInitializeImplicitFlutterEngine` — there is no `window` in `didFinishLaunchingWithOptions`, so never read `window?.rootViewController` there.
 - iOS Live Activity code requires iOS 16.2+ and is guarded by
   `ActivityAuthorizationInfo().areActivitiesEnabled`; it no-ops (returns `false`) rather than
   throwing when unsupported/disabled — don't add error handling around it, that's by design.

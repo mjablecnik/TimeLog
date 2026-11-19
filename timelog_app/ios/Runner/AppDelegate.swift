@@ -3,7 +3,7 @@ import UIKit
 import UserNotifications
 
 @main
-@objc class AppDelegate: FlutterAppDelegate {
+@objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
     private var liveActivityManager: AnyObject?
     private var methodChannel: FlutterMethodChannel?
 
@@ -11,26 +11,34 @@ import UserNotifications
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
     ) -> Bool {
-        GeneratedPluginRegistrant.register(with: self)
-
         // Ensure this AppDelegate receives notification delegate callbacks
         // (willPresent for foreground display, didReceive for tap handling).
         UNUserNotificationCenter.current().delegate = self
 
-        setupLiveActivityChannel()
-        setupNotificationChannel()
         observeWidgetActions()
         return super.application(application, didFinishLaunchingWithOptions: launchOptions)
     }
 
+    // MARK: - Flutter engine (UIScene lifecycle)
+
+    /// With the UIScene lifecycle there is no window yet in
+    /// `didFinishLaunchingWithOptions`, so plugins and platform channels are set
+    /// up here, once the implicit Flutter engine exists.
+    func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
+        GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
+
+        let messenger = engineBridge.applicationRegistrar.messenger()
+        setupLiveActivityChannel(messenger: messenger)
+        setupNotificationChannel(messenger: messenger)
+        handlePendingWidgetAction()
+    }
+
     // MARK: - Notifications
 
-    private func setupNotificationChannel() {
-        guard let controller = window?.rootViewController as? FlutterViewController else { return }
-
+    private func setupNotificationChannel(messenger: FlutterBinaryMessenger) {
         let channel = FlutterMethodChannel(
             name: "com.jablecnik.timelog/notifications",
-            binaryMessenger: controller.binaryMessenger
+            binaryMessenger: messenger
         )
 
         channel.setMethodCallHandler { call, result in
@@ -100,12 +108,10 @@ import UserNotifications
         }
     }
 
-    private func setupLiveActivityChannel() {
-        guard let controller = window?.rootViewController as? FlutterViewController else { return }
-
+    private func setupLiveActivityChannel(messenger: FlutterBinaryMessenger) {
         let channel = FlutterMethodChannel(
             name: "com.jablecnik.timelog/live_activity",
-            binaryMessenger: controller.binaryMessenger
+            binaryMessenger: messenger
         )
         self.methodChannel = channel
 
