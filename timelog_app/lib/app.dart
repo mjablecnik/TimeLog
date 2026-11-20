@@ -10,9 +10,10 @@ import 'providers/main_tab_provider.dart';
 import 'providers/recurring_reminders_provider.dart';
 import 'providers/reminder_action_provider.dart';
 import 'providers/statistics_provider.dart';
+import 'providers/task_providers.dart' show taskProjectPersistenceProvider;
 import 'providers/theme_provider.dart';
 import 'ui/screens/timer_screen.dart';
-import 'ui/screens/tasks_screen.dart';
+import 'ui/screens/history_screen.dart';
 import 'ui/screens/statistics_screen.dart';
 import 'ui/screens/settings_screen.dart';
 import 'ui/screens/reminder_action_screen.dart';
@@ -70,7 +71,7 @@ class _MainShellState extends ConsumerState<_MainShell> with WidgetsBindingObser
 
   static const List<Widget> _screens = [
     TimerScreen(),
-    TasksScreen(),
+    HistoryScreen(),
     StatisticsScreen(),
     SettingsScreen(),
   ];
@@ -150,6 +151,8 @@ class _MainShellState extends ConsumerState<_MainShell> with WidgetsBindingObser
       }
     });
 
+    // Tasks screen is no longer a tab; keep project-selection persistence wired.
+    ref.watch(taskProjectPersistenceProvider);
     final selectedIndex = ref.watch(mainTabIndexProvider);
 
     return Scaffold(

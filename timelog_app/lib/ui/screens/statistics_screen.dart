@@ -13,7 +13,6 @@ import '../../providers/history_provider.dart' show logicalDay;
 import '../../providers/theme_provider.dart';
 import '../painters/bar_painter.dart';
 import '../painters/timeline_painter.dart';
-import 'history_screen.dart';
 
 DateTime _weekStart(DateTime date) {
   final start = date.subtract(Duration(days: date.weekday - 1));
@@ -65,16 +64,6 @@ class StatisticsScreen extends ConsumerWidget {
                     fontFamily: 'Sora',
                     fontSize: 20,
                     fontWeight: FontWeight.w600,
-                  ),
-                ),
-                Positioned(
-                  right: 16,
-                  child: IconButton(
-                    icon: Icon(Icons.history, color: theme.text),
-                    tooltip: l10n.historyTitle,
-                    onPressed: () => Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const HistoryScreen()),
-                    ),
                   ),
                 ),
               ],

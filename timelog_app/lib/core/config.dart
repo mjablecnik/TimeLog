@@ -3,9 +3,7 @@
 const int dayStartHour = 3;
 
 /// Index of the Stats tab within `_MainShellState._screens` / `AppBottomNav`
-/// (see `app.dart`) — History is reached from Stats (top-right icon), not
-/// its own tab, but stays visually "under" Stats in the bottom nav while
-/// viewing it.
+/// (see `app.dart`). Tabs: Timer, History, Stats, Settings.
 const statsTabIndex = 2;
 
 class TimerConfig {

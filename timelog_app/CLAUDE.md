@@ -28,8 +28,8 @@ See [DOCS.md](DOCS.md#project-structure) for the full annotated tree. Summary:
 - `lib/data/` — Drift table (`time_entry.dart`) + database (`database.dart`); `.g.dart` is generated
 - `lib/services/` — business logic (timer state machine, alarm, notifications, daily reminder, live activity, DB access, known-project storage)
 - `lib/providers/` — Riverpod wiring between services and UI
-- `lib/ui/screens/`, `lib/ui/widgets/`, `lib/ui/painters/` — presentation layer (Timer, Tasks,
-  Statistics, Settings tabs; History is reached from Statistics, see Conventions below)
+- `lib/ui/screens/`, `lib/ui/widgets/`, `lib/ui/painters/` — presentation layer (Timer, History,
+  Statistics, Settings tabs; `tasks_screen.dart` is no longer reachable from the nav)
 - `ios/Runner/LiveActivityManager.swift` + `ios/TimeLogWidgetExtension/` — native iOS Live Activity
 
 ## Conventions
@@ -71,13 +71,10 @@ See [DOCS.md](DOCS.md#project-structure) for the full annotated tree. Summary:
   `loadAppLocalizations()` (`lib/core/app_locale.dart`). The active language is
   `localeProvider` (`lib/providers/locale_provider.dart`), persisted to SharedPreferences under
   `app_language` (`'en'`/`'cs'`, absent = follow system locale).
-- Bottom nav has 4 tabs (Timer, Tasks, Statistics, Settings) — `statsTabIndex` in
-  `lib/core/config.dart`. `HistoryScreen` isn't one of them; it's pushed via `Navigator` from
-  the history icon in Statistics' top-right corner and keeps the Stats tab highlighted while
-  open (`AppBottomNav` on `HistoryScreen`'s own `Scaffold` is given `selectedIndex:
-  statsTabIndex`). The selected main-shell tab lives in `mainTabIndexProvider`
-  (`lib/providers/main_tab_provider.dart`) rather than local `State`, so `HistoryScreen` can
-  switch tabs (pop + set the provider) without a callback back into `_MainShell`.
+- Bottom nav has 4 tabs (Timer, History, Statistics, Settings) — `statsTabIndex` in
+  `lib/core/config.dart`. `TasksScreen` was removed from the nav but its code is kept; the shell
+  watches `taskProjectPersistenceProvider` itself. The selected tab lives in `mainTabIndexProvider`
+  (`lib/providers/main_tab_provider.dart`).
 
 ## Important notes
 

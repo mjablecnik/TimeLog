@@ -22,7 +22,7 @@ offline Flutter app. Runtime configuration lives in code and in on-device storag
 ```
 timelog_app/
   lib/
-    app.dart                       # Root widget: MaterialApp + bottom-nav shell (Timer, Tasks, Stats, Settings)
+    app.dart                       # Root widget: MaterialApp + bottom-nav shell (Timer, History, Stats, Settings)
     main.dart                      # Entry point, requests notification permission
     core/
       activity_types.dart          # Activity registry: 12 types, subtypes, labels, colours, suggestion scopes

@@ -38,9 +38,9 @@ class AppBottomNav extends StatelessWidget {
                 onTap: () => onTap(0),
               ),
               _NavItem(
-                icon: Icons.checklist_outlined,
-                activeIcon: Icons.checklist,
-                label: l10n.tasksTitle,
+                icon: Icons.history,
+                activeIcon: Icons.history,
+                label: l10n.historyTitle,
                 isActive: selectedIndex == 1,
                 theme: theme,
                 onTap: () => onTap(1),
