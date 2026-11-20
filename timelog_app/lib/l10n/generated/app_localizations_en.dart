@@ -463,6 +463,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsRecurringRemindersLabel => 'Recurring reminders';
 
   @override
+  String get settingsDataSection => 'Data';
+
+  @override
+  String get settingsExportButton => 'Export data';
+
+  @override
+  String get settingsExportHint =>
+      'Saves all data into one file you can move elsewhere.';
+
+  @override
+  String get settingsExportFailed => 'The export failed. Please try again.';
+
+  @override
   String get settingsTestingSection => 'Testing';
 
   @override

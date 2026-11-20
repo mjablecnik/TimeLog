@@ -49,6 +49,7 @@ The bottom navigation has four tabs: Timer, History, Statistics and Settings.
 
 ## Platforms and storage
 
+- **Data export**: Settings → Data → Export data saves every table and the stored settings into one JSON file and opens the share sheet (see DOCS.md)
 - Fully offline — entries are persisted locally in SQLite (no server, no account)
 - Cross-platform Flutter app: Android, iOS, Linux, macOS, Windows, Web
 

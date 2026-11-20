@@ -466,6 +466,20 @@ class AppLocalizationsCs extends AppLocalizations {
   String get settingsRecurringRemindersLabel => 'Opakované připomínky';
 
   @override
+  String get settingsDataSection => 'Data';
+
+  @override
+  String get settingsExportButton => 'Exportovat data';
+
+  @override
+  String get settingsExportHint =>
+      'Uloží všechna data do jednoho souboru, který přeneseš jinam.';
+
+  @override
+  String get settingsExportFailed =>
+      'Export se nepodařil. Zkus to prosím znovu.';
+
+  @override
   String get settingsTestingSection => 'Testování';
 
   @override

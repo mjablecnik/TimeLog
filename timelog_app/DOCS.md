@@ -32,6 +32,7 @@ timelog_app/
       theme.dart                   # AppThemeData + Ember/Midnight/Paper theme definitions
     data/
       time_entry.dart              # Drift TimeEntries table definition (project, subtype, customName columns)
+      database_export.dart         # Schema-independent JSON export of all tables + preferences
       database.dart                # AppDatabase (Drift): time entries, recurring reminders, completions, task projects, tasks; schemaVersion 8
       database.g.dart              # Generated (build_runner) — do not hand-edit
       stats_data.dart              # StatsPeriod enum + StatsData aggregation model (by type, subtype, project, custom name)
@@ -57,6 +58,7 @@ timelog_app/
       task_service.dart            # Tasks and task projects (Tasks screen)
       live_activity_channel.dart  # iOS Live Activity channel
       project_service.dart         # Stores/retrieves remembered names per suggestion category (shared_preferences)
+      export_service.dart          # Writes the data export JSON and opens the share sheet
     ui/
       screens/
         timer_screen.dart          # Countdown timer, duration adjuster, ringing overlay
@@ -94,6 +96,15 @@ timelog_app/
 - **Persistence**: `drift` (SQLite) for time entries (`lib/data/database.dart`), and
   `shared_preferences` for lightweight key-value state (theme, in-flight timer state, known
   project names).
+- **Data export**: Settings → Data → Export data (`ExportService`, `lib/services/export_service.dart`)
+  writes `timelog-export-<date>.json` to the temporary directory and opens the system share
+  sheet. The file holds every table of the database (`lib/data/database_export.dart` walks
+  `db.allTables`, so a table or column added later is exported without changes) and every
+  `shared_preferences` entry (language, theme, reminder settings, project name suggestions, the
+  running timer). Layout: `format` (`timelog-export`), `formatVersion`, `app`, `appVersion`,
+  `schemaVersion`, `exportedAt`, `rowCounts` (rows per table, for checking an import), `tables`
+  (table name to a list of rows keyed by column name; integers stay integers, a BLOB would be
+  `{"$blob": "<base64>"}`) and `preferences`. There is no import.
 - **Activity types and subtypes**: `lib/core/activity_types.dart` holds the registry that
   defines every type, its subtypes, labels and colours — see "Activity Types" below.
 - **Projects, names & statistics**: `Práce` and `Domácí práce` entries carry an optional

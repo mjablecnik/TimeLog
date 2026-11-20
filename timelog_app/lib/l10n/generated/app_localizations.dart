@@ -950,6 +950,30 @@ abstract class AppLocalizations {
   /// **'Recurring reminders'**
   String get settingsRecurringRemindersLabel;
 
+  /// No description provided for @settingsDataSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Data'**
+  String get settingsDataSection;
+
+  /// No description provided for @settingsExportButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Export data'**
+  String get settingsExportButton;
+
+  /// No description provided for @settingsExportHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Saves all data into one file you can move elsewhere.'**
+  String get settingsExportHint;
+
+  /// No description provided for @settingsExportFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'The export failed. Please try again.'**
+  String get settingsExportFailed;
+
   /// No description provided for @settingsTestingSection.
   ///
   /// In en, this message translates to:

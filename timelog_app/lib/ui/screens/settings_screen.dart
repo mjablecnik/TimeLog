@@ -116,8 +116,8 @@ class SettingsScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: theme.background,
       body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+        // Scrolls, so the added Data group never overflows a small screen.
+        child: ListView(
           children: [
             const SizedBox(height: 12),
             Text(
@@ -292,6 +292,21 @@ class SettingsScreen extends ConsumerWidget {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Text(
+                l10n.settingsDataSection,
+                style: TextStyle(
+                  color: theme.dim,
+                  fontFamily: 'Sora',
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+            const _ExportRow(),
+            const SizedBox(height: 20),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Text(
                 l10n.settingsTestingSection,
                 style: TextStyle(
                   color: theme.dim,
@@ -384,6 +399,7 @@ class SettingsScreen extends ConsumerWidget {
                 ),
               ),
             ),
+            const SizedBox(height: 20),
           ],
         ),
       ),
@@ -424,6 +440,86 @@ class _LanguageOption extends StatelessWidget {
             ),
             if (isSelected) Icon(Icons.check, color: theme.accent, size: 20),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Saves all app data into one JSON file and opens the share sheet. Ignores
+/// taps while an export is running.
+class _ExportRow extends ConsumerStatefulWidget {
+  const _ExportRow();
+
+  @override
+  ConsumerState<_ExportRow> createState() => _ExportRowState();
+}
+
+class _ExportRowState extends ConsumerState<_ExportRow> {
+  bool _busy = false;
+
+  Future<void> _export() async {
+    if (_busy) return;
+    // The share sheet anchors on this row on iPad.
+    final box = context.findRenderObject() as RenderBox?;
+    final origin = box == null ? null : box.localToGlobal(Offset.zero) & box.size;
+    final messenger = ScaffoldMessenger.of(context);
+    final failed = AppLocalizations.of(context)!.settingsExportFailed;
+    setState(() => _busy = true);
+    try {
+      await ref.read(exportServiceProvider).shareExport(origin: origin);
+    } catch (_) {
+      messenger.showSnackBar(SnackBar(content: Text(failed)));
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = ref.watch(themeProvider);
+    final l10n = AppLocalizations.of(context)!;
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        color: theme.panel,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: theme.border),
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: _export,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.settingsExportButton,
+                      style: TextStyle(
+                        color: theme.text,
+                        fontFamily: 'Sora',
+                        fontSize: 14,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      l10n.settingsExportHint,
+                      style: TextStyle(
+                        color: theme.dim,
+                        fontFamily: 'Sora',
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(Icons.ios_share, color: theme.dim, size: 20),
+            ],
+          ),
         ),
       ),
     );
