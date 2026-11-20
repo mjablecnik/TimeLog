@@ -216,6 +216,11 @@ const List<ActivityType> activityRegistry = [
         dark: Color(0xFFD9B88F),
         light: Color(0xFFA87846),
       ),
+      ActivitySubtype(
+        key: 'shopping',
+        dark: Color(0xFF9C8B78),
+        light: Color(0xFF6B5B4A),
+      ),
     ],
   ),
   ActivityType(
@@ -418,6 +423,8 @@ String subtypeLabel(AppLocalizations l10n, String typeKey, String subtypeKey) {
       return l10n.subtypeDinner;
     case 'Jídlo/snack':
       return l10n.subtypeSnack;
+    case 'Jídlo/shopping':
+      return l10n.subtypeShopping;
     default:
       return subtypeKey;
   }

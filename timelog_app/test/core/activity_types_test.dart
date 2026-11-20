@@ -44,7 +44,7 @@ void main() {
       expect(keys('Seberozvoj'), ['books', 'study', 'ai']);
       expect(keys('Odpočinek'), ['active', 'passive']);
       expect(keys('Hygiena'), ['general', 'toilet']);
-      expect(keys('Jídlo'), ['breakfast', 'lunch', 'dinner', 'snack']);
+      expect(keys('Jídlo'), ['breakfast', 'lunch', 'dinner', 'snack', 'shopping']);
       for (final type in [
         'Domácí práce',
         'Meeting',
@@ -98,6 +98,7 @@ void main() {
       }
       expect(subtypeLabel(cs, 'Práce', 'paid'), 'Placená');
       expect(subtypeLabel(en, 'Jídlo', 'snack'), 'Snack');
+      expect(subtypeLabel(en, 'Jídlo', 'shopping'), 'Shopping');
     });
   });
 

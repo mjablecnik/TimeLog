@@ -15,7 +15,7 @@ Key features:
 - Twelve built-in activity types — Work, Housework, Meeting, Communication, Travel,
   Entertainment, Exercise, Self-development, Rest, Hygiene, Meal and Other — each with its own
   colour. Most have subtypes (for example paid / unpaid work, walk / running / gym, breakfast /
-  lunch / dinner / snack) shown as shades of the type's colour
+  lunch / dinner / snack / shopping) shown as shades of the type's colour
 - Optional project name for Work and Housework, and a free-text name for Other, with
   autocomplete suggestions that are kept separate for paid work, unpaid work, housework and
   other activities

@@ -464,6 +464,12 @@ abstract class AppLocalizations {
   /// **'Snack'**
   String get subtypeSnack;
 
+  /// No description provided for @subtypeShopping.
+  ///
+  /// In en, this message translates to:
+  /// **'Shopping'**
+  String get subtypeShopping;
+
   /// No description provided for @scopeWorkPaid.
   ///
   /// In en, this message translates to:

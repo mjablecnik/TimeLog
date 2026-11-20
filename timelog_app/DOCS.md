@@ -125,7 +125,7 @@ Entries are classified by one of twelve main types, each with an optional list o
 | Self-development (`Seberozvoj`) | books, study, AI consultation | – |
 | Rest (`Odpočinek`) | active, passive | – |
 | Hygiene (`Hygiena`) | general, toilet | – |
-| Meal (`Jídlo`) | breakfast, lunch, dinner, snack | – |
+| Meal (`Jídlo`) | breakfast, lunch, dinner, snack, shopping | – |
 | Other (`Ostatní`) | – | custom name |
 
 - The stored keys (`time_entries.activity_type`, `time_entries.subtype`) are stable identifiers

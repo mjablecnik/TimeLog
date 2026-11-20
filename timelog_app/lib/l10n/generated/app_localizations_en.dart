@@ -201,6 +201,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get subtypeSnack => 'Snack';
 
   @override
+  String get subtypeShopping => 'Shopping';
+
+  @override
   String get scopeWorkPaid => 'Paid work';
 
   @override

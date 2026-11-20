@@ -202,6 +202,9 @@ class AppLocalizationsCs extends AppLocalizations {
   String get subtypeSnack => 'Svačina';
 
   @override
+  String get subtypeShopping => 'Nákup';
+
+  @override
   String get scopeWorkPaid => 'Placená práce';
 
   @override
