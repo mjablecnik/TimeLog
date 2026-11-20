@@ -32,13 +32,17 @@ timelog_app/
       theme.dart                   # AppThemeData + Ember/Midnight/Paper theme definitions
     data/
       time_entry.dart              # Drift TimeEntries table definition (project, subtype, customName columns)
-      database.dart                # AppDatabase (Drift), schema migrations (schemaVersion 8)
+      database.dart                # AppDatabase (Drift): time entries, recurring reminders, completions, task projects, tasks; schemaVersion 8
       database.g.dart              # Generated (build_runner) — do not hand-edit
       stats_data.dart              # StatsPeriod enum + StatsData aggregation model (by type, subtype, project, custom name)
     providers/
       database_provider.dart       # AppDatabase / DatabaseService providers
       history_provider.dart        # Selected day + day's entries stream
       reminder_provider.dart       # ReminderSettings state, persistence, and scheduling via ReminderService
+      recurring_reminders_provider.dart  # Recurring reminders list; reminder_action_provider.dart: notification taps
+      task_providers.dart          # Tasks and projects state (Tasks screen, not in the nav)
+      locale_provider.dart         # Persisted language (Czech / English)
+      main_tab_provider.dart       # Selected bottom-nav tab
       statistics_provider.dart     # Selected period/date state + computed StatsData for the range
       theme_provider.dart          # Persisted theme selection
       timer_provider.dart          # Wires TimerNotifier with its service dependencies
@@ -49,6 +53,8 @@ timelog_app/
       alarm_service.dart           # Alarm sound playback (audioplayers)
       notification_service.dart   # Native local notification channel (timer-completion alert)
       reminder_service.dart        # Daily reminder scheduling via flutter_local_notifications
+      recurring_reminder_service.dart  # Scheduling engine of the recurring reminders (window, interval, snooze)
+      task_service.dart            # Tasks and task projects (Tasks screen)
       live_activity_channel.dart  # iOS Live Activity channel
       project_service.dart         # Stores/retrieves remembered names per suggestion category (shared_preferences)
     ui/
@@ -56,7 +62,10 @@ timelog_app/
         timer_screen.dart          # Countdown timer, duration adjuster, ringing overlay
         history_screen.dart        # Day navigator + list of logged entries
         statistics_screen.dart     # Daily/weekly period toggle, timeline, activity-type and project breakdowns
-        settings_screen.dart       # Daily reminder toggle + time picker
+        settings_screen.dart       # Daily reminder toggle + time picker, theme, language, link to recurring reminders
+        reminder_settings_screen.dart  # List and editing of the recurring reminders
+        reminder_action_screen.dart    # Opened from a reminder notification (Done, Snooze)
+        tasks_screen.dart          # To-do list with projects; not reachable from the nav
       widgets/                     # bottom_nav, day_navigator, day_summary, description_sheet,
                                     # duration_adjuster, edit_sheet, empty_state,
                                     # history_entry_card, manual_entry_sheet, ringing_overlay,
@@ -137,9 +146,9 @@ Entries are classified by one of twelve main types, each with an optional list o
 - A subtype is always preselected in the entry sheets (the last used one for that type, otherwise
   the first), so saving is never blocked by a missing choice.
 - Name suggestions are separate for four categories — paid work, unpaid work, housework and other
-  (`SuggestionScope`). The Timer tab (entry sheets) and the Tasks tab (the project dialog) read
-  the same lists through `suggestionsProvider`. A Tasks project carries a category chosen when it
-  is created; long-press on a project chip opens a menu to change it or to delete the project.
+  (`SuggestionScope`). The entry sheets and the Tasks screen's project dialog read the same lists
+  through `suggestionsProvider`. A Tasks project carries a category chosen when it is created. The
+  Tasks screen (`tasks_screen.dart`) is no longer reachable from the bottom navigation.
 - To add a type or subtype: add it to the registry, add its labels to `app_en.arb` and
   `app_cs.arb`, run `flutter gen-l10n`, and keep the preview pages in `.design/` in sync.
 
@@ -227,6 +236,12 @@ flutter test test/timer_service_test.dart
   reminder toggle off and never schedules a reminder.
 - `test/reminder_provider_test.dart` — unit tests for `ReminderProvider` state, persistence to
   `SharedPreferences`, and scheduling/canceling via `ReminderService`.
+- `test/recurring_reminder_service_test.dart`, `test/settings_screen_recurring_reminders_nav_test.dart`
+  — scheduling of recurring reminders and the Settings link to them.
+- `test/task_*_test.dart` — property tests of the task service and providers.
+- `test/data/migration_v8_test.dart`, `test/core/`, `test/providers/`, `test/services/`, `test/ui/` —
+  the migration, the activity registry, statistics by subtype, scoped name suggestions and the
+  activity picker.
 - `test/manual_entry_sheet_test.dart` — validates the manual history entry sheet's default
   times, time-order validation, and that a successful submission inserts a `TimeEntries` row.
 

@@ -4,34 +4,16 @@ A countdown timer app with time tracking capabilities, built with Flutter.
 
 ## Description
 
-TimeLog helps you run focused countdown sessions and automatically keeps a log of how you
-spent that time. When a session ends (or is stopped early), you tag it with a description
-and an activity type, and it's saved to a local history you can browse by day.
+TimeLog is a countdown timer that keeps a log of how you spent your time.
 
-Key features:
+- Start a focus session; when it ends, tag it with a description and an activity type.
+- Browse your history by day and see statistics for the day or week.
+- Daily and recurring reminders, an alarm and an iOS Live Activity.
+- Three colour themes, Czech and English.
+- Fully offline: no server, no account.
 
-- Countdown timer with adjustable duration (5–60 minutes, 5-minute steps)
-- Automatic time-entry logging on timer completion or manual stop
-- Twelve built-in activity types — Work, Housework, Meeting, Communication, Travel,
-  Entertainment, Exercise, Self-development, Rest, Hygiene, Meal and Other — each with its own
-  colour. Most have subtypes (for example paid / unpaid work, walk / running / gym, breakfast /
-  lunch / dinner / snack / shopping) shown as shades of the type's colour
-- Optional project name for Work and Housework, and a free-text name for Other, with
-  autocomplete suggestions that are kept separate for paid work, unpaid work, housework and
-  other activities
-- Tasks tab: a simple to-do list with projects. Each project has one of the four categories above, shown as a coloured dot, and can be changed or deleted from a menu on long press
-- History screen with day navigation, daily summary, per-entry edit/delete, and manually
-  adding a past entry
-- Statistics screen with daily/weekly toggle, a visual timeline of the day/week's entries,
-  time breakdown by activity type (with subtypes), by project and by name for Other entries,
-  and an untracked-time summary
-- Settings screen with a daily reminder notification (toggle + time picker) that nudges you
-  to start a timer, and can auto-start one when tapped
-- Fully offline — entries are persisted locally in SQLite (no server, no account)
-- Alarm sound + native notification when the timer finishes, even while backgrounded
-- iOS Live Activity / Dynamic Island support with pause/resume/stop actions from the lock screen
-- Three color themes (Ember, Midnight, Paper) — Midnight is the default
-- Cross-platform Flutter app: Android, iOS, Linux, macOS, Windows, Web
+Runs on Android, iOS, Linux, macOS, Windows and the web. Every feature in detail:
+[FEATURES.md](FEATURES.md).
 
 ## Screenshots
 
@@ -41,7 +23,6 @@ Key features:
   <img src="timelog_app/screenshots/03-tag-entry.png" width="32%" />
 </p>
 <p>
-  <img src="timelog_app/screenshots/04-tasks.png" width="32%" />
   <img src="timelog_app/screenshots/05-stats.png" width="32%" />
   <img src="timelog_app/screenshots/06-history.png" width="32%" />
 </p>
@@ -100,7 +81,7 @@ for build commands for other platforms.
 See [DOCS.md](DOCS.md) for project structure, architecture (platform channels, database),
 deployment, testing, and troubleshooting.
 
-See [ROADMAP.md](ROADMAP.md) for planned changes (new activity types) and what already exists.
+See [FEATURES.md](FEATURES.md) for the full feature list and [ROADMAP.md](ROADMAP.md) for planned changes (new activity types) and what already exists.
 
 ## Author
 

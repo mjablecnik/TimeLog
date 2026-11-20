@@ -3,7 +3,7 @@
 ## Project overview
 
 TimeLog — a Flutter countdown timer + time-tracking app with per-entry project tracking, a
-statistics tab, and a daily reminder notification. State management: `flutter_riverpod`. Local
+statistics tab, and daily and recurring reminders. State management: `flutter_riverpod`. Local
 persistence: `drift` (SQLite) for time entries, `shared_preferences` for lightweight state. Dart
 SDK `^3.10.4`. Fully offline, no backend, no environment variables.
 
